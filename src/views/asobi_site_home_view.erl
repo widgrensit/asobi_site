@@ -39,7 +39,7 @@ render(Bindings) ->
             %% Hero
             {section, [{class, ~"hero"}], [
                 {'div', [{class, ~"hero-inner"}], [
-                    {span, [{class, ~"hero-badge"}], [~"Early Access"]},
+                    {span, [{class, ~"hero-badge"}], [~"Preview"]},
                     {p, [{class, ~"hero-eyebrow"}], [~"Open Source Game Backend"]},
                     {h1, [{class, ~"hero-title"}], [~"Your game never goes down."]},
                     {p, [{class, ~"hero-subtitle"}], [
@@ -48,7 +48,7 @@ render(Bindings) ->
                         ~"100K+ concurrent connections per node."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
-                        ~"Asobi is in active development. The core backend and SDKs are functional but APIs may change before 1.0."
+                        ~"Asobi is early but fully open-source and ready to play with. Spin it up, prototype your next game, and help shape the future of game backends on the BEAM."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
                         {a, [{href, ~"#get-started"}, {class, ~"btn btn-primary"}], [
