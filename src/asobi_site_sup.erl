@@ -1,0 +1,13 @@
+-module(asobi_site_sup).
+-behaviour(supervisor).
+
+-export([start_link/0]).
+-export([init/1]).
+
+-spec start_link() -> {ok, pid()}.
+start_link() ->
+    supervisor:start_link({local, ?MODULE}, ?MODULE, []).
+
+-spec init(list()) -> {ok, {supervisor:sup_flags(), [supervisor:child_spec()]}}.
+init([]) ->
+    {ok, {#{strategy => one_for_all}, []}}.

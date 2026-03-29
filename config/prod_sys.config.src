@@ -1,0 +1,23 @@
+%% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-
+
+[
+    {kernel, [
+        {logger_level, info},
+        {logger, [
+            {handler, default, logger_std_h, #{
+                formatter => {nova_jsonlogger, #{
+                    map_depth => 3,
+                    term_depth => 50
+                }}
+            }}
+        ]}
+    ]},
+    {nova, [
+        {environment, prod},
+        {cowboy_configuration, #{
+            port => 4040
+        }},
+        {bootstrap_application, asobi_site},
+        {json_lib, json}
+    ]}
+].

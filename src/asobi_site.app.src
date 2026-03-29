@@ -1,0 +1,19 @@
+%% -*- mode: erlang;erlang-indent-level: 4;indent-tabs-mode: nil -*-
+{application, asobi_site, [
+    {description, "Marketing homepage for asobi.dev"},
+    {vsn, git},
+    {registered, []},
+    {mod, {asobi_site_app, []}},
+    {included_applications, []},
+    {applications, [
+        kernel,
+        stdlib,
+        nova,
+        arizona,
+        arizona_nova
+    ]},
+    {env, []},
+    {modules, []},
+    {licenses, ["Apache-2.0"]},
+    {links, [{"GitHub", "https://github.com/widgrensit/asobi_site"}]}
+]}.
