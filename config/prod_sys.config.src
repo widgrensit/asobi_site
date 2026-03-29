@@ -15,9 +15,13 @@
     {nova, [
         {environment, prod},
         {cowboy_configuration, #{
-            port => 4040
+            port => 8080,
+            ip => {0, 0, 0, 0}
         }},
         {bootstrap_application, asobi_site},
         {json_lib, json}
+    ]},
+    {arizona_nova, [
+        {live_reload, false}
     ]}
 ].
