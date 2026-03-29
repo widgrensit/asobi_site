@@ -577,6 +577,21 @@ code {
     font-size: 0.8rem;
 }
 
+/* ---- Community ---- */
+
+.community-section {
+    text-align: center;
+}
+
+.btn-lg {
+    padding: 16px 40px;
+    font-size: 1.1rem;
+}
+
+.nav-link-btn {
+    color: var(--text-muted) !important;
+}
+
 /* ---- Guide Pages ---- */
 
 .guide-page {

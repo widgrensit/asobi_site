@@ -24,6 +24,9 @@ render(Bindings) ->
                         {a, [{href, ~"#sdks"}], [~"SDKs"]},
                         {a, [{href, ~"#why-beam"}], [~"Why BEAM"]},
                         {a, [{href, ~"#get-started"}], [~"Get Started"]},
+                        {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
+                            ~"Discord"
+                        ]},
                         {a,
                             [
                                 {href, ~"https://github.com/widgrensit/asobi"},
@@ -353,6 +356,19 @@ render(Bindings) ->
                 ]}
             ]},
 
+            %% Community
+            {section, [{id, ~"community"}, {class, ~"section section-dark"}], [
+                {'div', [{class, ~"section-inner community-section"}], [
+                    {h2, [{class, ~"section-title"}], [~"Join the community"]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Ask questions, share what you're building, and help shape Asobi."
+                    ]},
+                    {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"btn btn-primary btn-lg"}], [
+                        ~"Join us on Discord"
+                    ]}
+                ]}
+            ]},
+
             %% Footer
             {footer, [{class, ~"site-footer"}], [
                 {'div', [{class, ~"footer-inner"}], [
@@ -367,6 +383,7 @@ render(Bindings) ->
                         {'div', [{class, ~"footer-col"}], [
                             {h4, [], [~"Project"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"GitHub"]},
+                            {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi/issues"}], [
                                 ~"Issues"
                             ]},
