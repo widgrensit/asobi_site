@@ -22,8 +22,11 @@ render(Bindings) ->
                     {'div', [{class, ~"nav-links"}], [
                         {a, [{href, ~"#features"}], [~"Features"]},
                         {a, [{href, ~"#sdks"}], [~"SDKs"]},
-                        {a, [{href, ~"#why-beam"}], [~"Why BEAM"]},
+                        {a, [{href, ~"/demo"}], [~"Demo"]},
                         {a, [{href, ~"#get-started"}], [~"Get Started"]},
+                        {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
+                            ~"Discord"
+                        ]},
                         {a,
                             [
                                 {href, ~"https://github.com/widgrensit/asobi"},
@@ -39,7 +42,7 @@ render(Bindings) ->
             %% Hero
             {section, [{class, ~"hero"}], [
                 {'div', [{class, ~"hero-inner"}], [
-                    {span, [{class, ~"hero-badge"}], [~"Early Access"]},
+                    {span, [{class, ~"hero-badge"}], [~"Preview"]},
                     {p, [{class, ~"hero-eyebrow"}], [~"Open Source Game Backend"]},
                     {h1, [{class, ~"hero-title"}], [~"Your game never goes down."]},
                     {p, [{class, ~"hero-subtitle"}], [
@@ -48,7 +51,7 @@ render(Bindings) ->
                         ~"100K+ concurrent connections per node."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
-                        ~"Asobi is in active development. The core backend and SDKs are functional but APIs may change before 1.0."
+                        ~"Asobi is early but fully open-source and ready to play with. Spin it up, prototype your next game, and help shape the future of game backends on the BEAM."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
                         {a, [{href, ~"#get-started"}, {class, ~"btn btn-primary"}], [
@@ -353,6 +356,24 @@ render(Bindings) ->
                 ]}
             ]},
 
+            %% Community
+            {section, [{id, ~"community"}, {class, ~"section section-dark"}], [
+                {'div', [{class, ~"section-inner community-section"}], [
+                    {h2, [{class, ~"section-title"}], [~"Join the community"]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Ask questions, share what you're building, and help shape Asobi."
+                    ]},
+                    {a,
+                        [
+                            {href, ~"https://discord.gg/vYSfYYyXpu"},
+                            {class, ~"btn btn-primary btn-lg"}
+                        ],
+                        [
+                            ~"Join us on Discord"
+                        ]}
+                ]}
+            ]},
+
             %% Footer
             {footer, [{class, ~"site-footer"}], [
                 {'div', [{class, ~"footer-inner"}], [
@@ -367,6 +388,7 @@ render(Bindings) ->
                         {'div', [{class, ~"footer-col"}], [
                             {h4, [], [~"Project"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"GitHub"]},
+                            {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi/issues"}], [
                                 ~"Issues"
                             ]},

@@ -1,4 +1,9 @@
-app = 'asobi_site'
+# fly.toml app configuration file generated for asobi-site on 2026-03-29T21:26:20+02:00
+#
+# See https://fly.io/docs/reference/configuration/ for information about how to use this file.
+#
+
+app = 'asobi-site'
 primary_region = 'arn'
 
 [build]
@@ -15,3 +20,4 @@ primary_region = 'arn'
   memory = '256mb'
   cpu_kind = 'shared'
   cpus = 1
+  memory_mb = 256
