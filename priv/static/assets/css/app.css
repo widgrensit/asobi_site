@@ -684,6 +684,150 @@ code {
     border-color: var(--accent);
 }
 
+/* ---- Demo Page ---- */
+
+.demo-page {
+    background: var(--bg);
+}
+
+.demo-hero {
+    padding: 160px 24px 80px;
+    text-align: center;
+    background:
+        radial-gradient(ellipse at 50% 0%, rgba(52, 211, 153, 0.1) 0%, transparent 60%),
+        var(--bg);
+}
+
+.demo-hero-inner {
+    max-width: 720px;
+    margin: 0 auto;
+}
+
+.demo-mechanics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 20px;
+}
+
+.mechanic-card {
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 24px;
+    transition: border-color 0.2s;
+}
+
+.mechanic-card:hover {
+    border-color: var(--green);
+}
+
+.mechanic-icon {
+    font-size: 1.75rem;
+    margin-bottom: 12px;
+}
+
+.mechanic-card h3 {
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 8px;
+    color: var(--green);
+}
+
+.mechanic-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+}
+
+.demo-arch {
+    max-width: 640px;
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    gap: 24px;
+}
+
+.arch-step {
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+}
+
+.arch-num {
+    flex-shrink: 0;
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--green);
+    color: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 700;
+    font-size: 1rem;
+}
+
+.arch-content h3 {
+    font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+    font-size: 1rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+    color: var(--green);
+}
+
+.arch-content p {
+    color: var(--text-muted);
+    font-size: 0.92rem;
+    line-height: 1.6;
+}
+
+.demo-client-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 20px;
+}
+
+.demo-client-card {
+    display: flex;
+    flex-direction: column;
+    background: var(--bg-card);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 28px;
+    color: inherit;
+    transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.demo-client-card:hover {
+    color: inherit;
+    border-color: var(--accent);
+    box-shadow: 0 0 20px var(--accent-glow);
+}
+
+.demo-client-engine {
+    font-size: 1.15rem;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.demo-client-card p {
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    line-height: 1.6;
+    flex: 1;
+}
+
+.demo-client-note {
+    text-align: center;
+    color: var(--text-muted);
+    font-size: 0.9rem;
+    margin-top: 32px;
+}
+
+.nav-active {
+    color: var(--accent) !important;
+}
+
 /* ---- Responsive ---- */
 
 @media (max-width: 768px) {

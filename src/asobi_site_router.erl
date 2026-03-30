@@ -16,6 +16,7 @@ routes(_Environment) ->
                 arizona_nova_live:route(~"/godot", asobi_site_godot_view, #{layout => Layout}),
                 arizona_nova_live:route(~"/defold", asobi_site_defold_view, #{layout => Layout}),
                 arizona_nova_live:route(~"/dart", asobi_site_dart_view, #{layout => Layout}),
+                arizona_nova_live:route(~"/demo", asobi_site_demo_view, #{layout => Layout}),
                 {~"/ws", arizona_nova_ws, #{protocol => ws}},
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}

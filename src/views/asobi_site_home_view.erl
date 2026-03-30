@@ -22,7 +22,7 @@ render(Bindings) ->
                     {'div', [{class, ~"nav-links"}], [
                         {a, [{href, ~"#features"}], [~"Features"]},
                         {a, [{href, ~"#sdks"}], [~"SDKs"]},
-                        {a, [{href, ~"#why-beam"}], [~"Why BEAM"]},
+                        {a, [{href, ~"/demo"}], [~"Demo"]},
                         {a, [{href, ~"#get-started"}], [~"Get Started"]},
                         {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
                             ~"Discord"
@@ -363,9 +363,14 @@ render(Bindings) ->
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Ask questions, share what you're building, and help shape Asobi."
                     ]},
-                    {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"btn btn-primary btn-lg"}], [
-                        ~"Join us on Discord"
-                    ]}
+                    {a,
+                        [
+                            {href, ~"https://discord.gg/vYSfYYyXpu"},
+                            {class, ~"btn btn-primary btn-lg"}
+                        ],
+                        [
+                            ~"Join us on Discord"
+                        ]}
                 ]}
             ]},
 
