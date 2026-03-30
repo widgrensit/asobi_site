@@ -208,6 +208,19 @@ render(Bindings) ->
                             ]},
                         {a,
                             [
+                                {href, ~"https://github.com/widgrensit/asobi-defold-demo"},
+                                {class, ~"demo-client-card"}
+                            ],
+                            [
+                                {'div', [{class, ~"demo-client-engine"}], [~"Defold"]},
+                                {span, [{class, ~"sdk-lang"}], [~"Lua"]},
+                                {p, [], [
+                                    ~"Defold arena client with game objects and collision detection."
+                                ]},
+                                {span, [{class, ~"sdk-link"}], [~"View on GitHub"]}
+                            ]},
+                        {a,
+                            [
                                 {href, ~"https://github.com/widgrensit/asobi-flame-demo"},
                                 {class, ~"demo-client-card"}
                             ],
