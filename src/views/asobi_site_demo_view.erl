@@ -251,6 +251,52 @@ render(Bindings) ->
                 ]}
             ]},
 
+            %% Try it yourself
+            {section, [{class, ~"section"}], [
+                {'div', [{class, ~"section-inner"}], [
+                    {h2, [{class, ~"section-title"}], [~"Try it yourself"]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Get the arena running locally in a few minutes. You need Erlang/OTP 27+, PostgreSQL, and one of the game engines above."
+                    ]},
+                    {'div', [{class, ~"demo-steps"}], [
+                        {'div', [{class, ~"arch-step"}], [
+                            {'div', [{class, ~"arch-num"}], [~"1"]},
+                            {'div', [{class, ~"arch-content"}], [
+                                {h3, [], [~"Start the backend"]},
+                                {pre, [], [
+                                    {code, [], [
+                                        ~"git clone https://github.com/widgrensit/asobi-arena\ncd asobi-arena\ndocker compose up -d\nrebar3 shell"
+                                    ]}
+                                ]}
+                            ]}
+                        ]},
+                        {'div', [{class, ~"arch-step"}], [
+                            {'div', [{class, ~"arch-num"}], [~"2"]},
+                            {'div', [{class, ~"arch-content"}], [
+                                {h3, [], [~"Clone a client demo"]},
+                                {pre, [], [
+                                    {code, [], [
+                                        ~"# Pick your engine:\ngit clone https://github.com/widgrensit/asobi-godot-demo\n# or: asobi-unity-demo, asobi-defold-demo, asobi-flame-demo"
+                                    ]}
+                                ]}
+                            ]}
+                        ]},
+                        {'div', [{class, ~"arch-step"}], [
+                            {'div', [{class, ~"arch-num"}], [~"3"]},
+                            {'div', [{class, ~"arch-content"}], [
+                                {h3, [], [~"Open the project and play"]},
+                                {p, [], [
+                                    ~"Open the demo in your engine, hit play, and register a player. Open a second window to matchmake against yourself. WASD to move, mouse to aim, click to shoot."
+                                ]}
+                            ]}
+                        ]}
+                    ]},
+                    {p, [{class, ~"demo-client-note"}], [
+                        ~"The backend runs on port 8084 by default. Check each demo's README for engine-specific setup."
+                    ]}
+                ]}
+            ]},
+
             %% Footer
             {footer, [{class, ~"site-footer"}], [
                 {'div', [{class, ~"footer-inner"}], [
