@@ -265,7 +265,7 @@ render(Bindings) ->
                                 {h3, [], [~"Start the backend"]},
                                 {pre, [], [
                                     {code, [], [
-                                        ~"git clone https://github.com/widgrensit/asobi-arena\ncd asobi-arena\ndocker compose up -d\nrebar3 shell"
+                                        ~"git clone https://github.com/widgrensit/asobi_arena\ncd asobi_arena\ndocker compose up -d\nrebar3 shell"
                                     ]}
                                 ]}
                             ]}
