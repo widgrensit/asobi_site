@@ -9,7 +9,7 @@ mount(Bindings) ->
 
 -spec render(map()) -> term().
 render(Bindings) ->
-    DepSnippet = ~"{asobi, {git, \"https://github.com/widgrensit/asobi.git\", {branch, \"main\"}}}",
+    DepSnippet = ~"{asobi, \"~> 0.1\"}",
     ?html(
         {'div', [{id, ?get(id)}], [
             %% Nav
