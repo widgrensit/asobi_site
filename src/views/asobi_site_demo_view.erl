@@ -18,6 +18,14 @@ render(Bindings) ->
                         {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
                         {span, [{class, ~"brand-text"}], [~"asobi"]}
                     ]},
+                    {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
+                    {label,
+                        [{for, ~"nav-toggle"}, {class, ~"nav-hamburger"}, {'aria-label', ~"Menu"}],
+                        [
+                            {span, [], []},
+                            {span, [], []},
+                            {span, [], []}
+                        ]},
                     {'div', [{class, ~"nav-links"}], [
                         {a, [{href, ~"/#features"}], [~"Features"]},
                         {a, [{href, ~"/#sdks"}], [~"SDKs"]},

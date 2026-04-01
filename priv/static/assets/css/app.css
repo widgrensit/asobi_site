@@ -109,6 +109,29 @@ code {
     color: var(--accent) !important;
 }
 
+/* Hamburger menu (hidden on desktop) */
+.nav-toggle { display: none; }
+
+.nav-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: center;
+    gap: 5px;
+    cursor: pointer;
+    width: 28px;
+    height: 28px;
+    z-index: 110;
+}
+
+.nav-hamburger span {
+    display: block;
+    width: 100%;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+    transition: transform 0.3s, opacity 0.3s;
+}
+
 /* ---- Hero ---- */
 
 .hero {
@@ -831,7 +854,40 @@ code {
 /* ---- Responsive ---- */
 
 @media (max-width: 768px) {
-    .nav-links { gap: 20px; }
+    .nav-hamburger { display: flex; }
+
+    .nav-links {
+        position: fixed;
+        top: 64px;
+        left: 0;
+        right: 0;
+        flex-direction: column;
+        background: rgba(10, 14, 23, 0.95);
+        backdrop-filter: blur(12px);
+        padding: 24px;
+        gap: 16px;
+        border-bottom: 1px solid var(--border);
+        transform: translateY(-120%);
+        transition: transform 0.3s ease;
+    }
+
+    .nav-links a { font-size: 1rem; }
+
+    .nav-toggle:checked ~ .nav-links {
+        transform: translateY(0);
+    }
+
+    /* Animate hamburger to X */
+    .nav-toggle:checked ~ .nav-hamburger span:nth-child(1) {
+        transform: translateY(7px) rotate(45deg);
+    }
+    .nav-toggle:checked ~ .nav-hamburger span:nth-child(2) {
+        opacity: 0;
+    }
+    .nav-toggle:checked ~ .nav-hamburger span:nth-child(3) {
+        transform: translateY(-7px) rotate(-45deg);
+    }
+
     .hero { padding: 120px 20px 72px; }
     .section { padding: 64px 20px; }
     .beam-grid { grid-template-columns: 1fr; }
@@ -842,7 +898,6 @@ code {
 
 @media (max-width: 480px) {
     .feature-grid { grid-template-columns: 1fr; }
-    .nav-links a:not(.nav-github) { display: none; }
     .comparison-table { font-size: 0.8rem; }
     .comparison-table th,
     .comparison-table td { padding: 10px 12px; }
