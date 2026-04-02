@@ -32,6 +32,9 @@ render(Bindings) ->
                         {a, [{href, ~"#features"}], [~"Features"]},
                         {a, [{href, ~"#sdks"}], [~"SDKs"]},
                         {a, [{href, ~"/demo"}], [~"Demo"]},
+                        {a, [{href, ~"https://crowdcrawl.asobi.dev"}, {class, ~"nav-link-play"}], [
+                            <<16#1F3AE/utf8>>, ~" Play"
+                        ]},
                         {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
                             ~"Discord"
                         ]},
@@ -322,6 +325,10 @@ render(Bindings) ->
                                         ~"Unity",
                                         {span, [{class, ~"sdk-chip-lang"}], [~"C#"]}
                                     ]},
+                                    {a, [{href, ~"/unreal"}, {class, ~"sdk-chip"}], [
+                                        ~"Unreal",
+                                        {span, [{class, ~"sdk-chip-lang"}], [~"C++"]}
+                                    ]},
                                     {a, [{href, ~"/godot"}, {class, ~"sdk-chip"}], [
                                         ~"Godot",
                                         {span, [{class, ~"sdk-chip-lang"}], [~"GDScript"]}
@@ -333,6 +340,10 @@ render(Bindings) ->
                                     {a, [{href, ~"/dart"}, {class, ~"sdk-chip"}], [
                                         ~"Dart / Flutter",
                                         {span, [{class, ~"sdk-chip-lang"}], [~"Dart"]}
+                                    ]},
+                                    {a, [{href, ~"/js"}, {class, ~"sdk-chip"}], [
+                                        ~"JavaScript",
+                                        {span, [{class, ~"sdk-chip-lang"}], [~"JS/TS"]}
                                     ]}
                                 ]}
                             ]},
@@ -344,8 +355,54 @@ render(Bindings) ->
                 ]}
             ]},
 
+            %% Showcase: Crowd Crawl
+            {section, [{id, ~"showcase"}, {class, ~"section"}], [
+                {'div', [{class, ~"section-inner"}], [
+                    {h2, [{class, ~"section-title section-title-center"}], [
+                        ~"See it in action"
+                    ]},
+                    {p, [{class, ~"section-subtitle section-subtitle-center"}], [
+                        ~"Crowd Crawl is a roguelike dungeon crawler built entirely on Asobi. ",
+                        ~"Procedural dungeons, turn-based combat, tarot card voting, boss fights ",
+                        ~"\x{2014} all running on the BEAM."
+                    ]},
+                    {'div', [{class, ~"cta-card"}], [
+                        {'div', [{class, ~"steps"}], [
+                            {'div', [{class, ~"step"}], [
+                                {'div', [{class, ~"step-number"}], [<<16#1F3AE/utf8>>]},
+                                {'div', [{class, ~"step-content"}], [
+                                    {h3, [], [~"Play in your browser"]},
+                                    {p, [], [
+                                        ~"No download needed. Opens instantly."
+                                    ]},
+                                    {a, [{href, ~"https://crowdcrawl.asobi.dev"}, {class, ~"btn btn-primary"}], [
+                                        ~"Play Crowd Crawl"
+                                    ]}
+                                ]}
+                            ]},
+                            {'div', [{class, ~"step"}], [
+                                {'div', [{class, ~"step-number"}], [<<16#1F4BB/utf8>>]},
+                                {'div', [{class, ~"step-content"}], [
+                                    {h3, [], [~"Run it yourself"]},
+                                    {p, [], [{code, [], [~"git clone https://github.com/widgrensit/crowd_crawl"]}]},
+                                    {p, [], [{code, [], [~"docker compose up -d && rebar3 shell"]}]}
+                                ]}
+                            ]},
+                            {'div', [{class, ~"step"}], [
+                                {'div', [{class, ~"step-number"}], [<<16#1F4F1/utf8>>]},
+                                {'div', [{class, ~"step-content"}], [
+                                    {h3, [], [~"Flutter / Desktop client"]},
+                                    {p, [], [{code, [], [~"git clone https://github.com/widgrensit/crowd_crawl_client"]}]},
+                                    {p, [], [{code, [], [~"flutter run -d linux"]}]}
+                                ]}
+                            ]}
+                        ]}
+                    ]}
+                ]}
+            ]},
+
             %% Comparison
-            {section, [{class, ~"section"}], [
+            {section, [{class, ~"section section-alt"}], [
                 {'div', [{class, ~"section-inner"}], [
                     {h2, [{class, ~"section-title section-title-center"}], [~"The honest comparison"]},
                     {p, [{class, ~"section-subtitle section-subtitle-center"}], [
@@ -502,16 +559,19 @@ render(Bindings) ->
                         {'div', [{class, ~"footer-col"}], [
                             {h4, [], [~"SDKs"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi-unity"}], [~"Unity"]},
+                            {a, [{href, ~"https://github.com/widgrensit/asobi-unreal"}], [~"Unreal"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi-godot"}], [~"Godot"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi-defold"}], [
-                                ~"Defold"
-                            ]},
+                            {a, [{href, ~"https://github.com/widgrensit/asobi-defold"}], [~"Defold"]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi-dart"}], [
                                 ~"Flutter / Dart / Flame"
-                            ]}
+                            ]},
+                            {a, [{href, ~"https://github.com/widgrensit/asobi-js"}], [~"JavaScript"]}
                         ]},
                         {'div', [{class, ~"footer-col"}], [
                             {h4, [], [~"Ecosystem"]},
+                            {a, [{href, ~"https://crowdcrawl.asobi.dev"}], [
+                                ~"Crowd Crawl (playable demo)"
+                            ]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi_admin"}], [
                                 ~"Admin Dashboard"
                             ]},
