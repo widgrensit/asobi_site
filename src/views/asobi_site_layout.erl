@@ -20,6 +20,24 @@ render(Bindings) ->
                         {content, ~"Open-source multiplayer game backend built on Erlang/OTP."}
                     ],
                     []},
+                {link,
+                    [
+                        {rel, ~"preload"},
+                        {href, ~"/assets/fonts/SpaceGrotesk-Variable.woff2"},
+                        {as, ~"font"},
+                        {type, ~"font/woff2"},
+                        {crossorigin, ~""}
+                    ],
+                    []},
+                {link,
+                    [
+                        {rel, ~"preload"},
+                        {href, ~"/assets/fonts/Inter-Variable.woff2"},
+                        {as, ~"font"},
+                        {type, ~"font/woff2"},
+                        {crossorigin, ~""}
+                    ],
+                    []},
                 {link, [{rel, ~"stylesheet"}, {href, ~"/assets/css/app.css"}], []},
                 {link, [{rel, ~"icon"}, {href, ~"/assets/favicon.ico"}], []}
             ]},
