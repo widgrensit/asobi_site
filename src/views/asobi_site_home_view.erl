@@ -32,7 +32,7 @@ render(Bindings) ->
                         {a, [{href, ~"#features"}], [~"Features"]},
                         {a, [{href, ~"#sdks"}], [~"SDKs"]},
                         {a, [{href, ~"/demo"}], [~"Demo"]},
-                        {a, [{href, ~"https://crowdcrawl.asobi.dev"}, {class, ~"nav-link-play"}], [
+                        {a, [{href, ~"https://play.asobi.dev"}, {class, ~"nav-link-play"}], [
                             <<16#1F3AE/utf8>>, ~" Play"
                         ]},
                         {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
@@ -355,48 +355,68 @@ render(Bindings) ->
                 ]}
             ]},
 
-            %% Showcase: Crowd Crawl
+            %% Showcase: Try the game
             {section, [{id, ~"showcase"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
                     {h2, [{class, ~"section-title section-title-center"}], [
                         ~"See it in action"
                     ]},
                     {p, [{class, ~"section-subtitle section-subtitle-center"}], [
-                        ~"Crowd Crawl is a roguelike dungeon crawler built entirely on Asobi. ",
-                        ~"Procedural dungeons, turn-based combat, tarot card voting, boss fights ",
-                        ~"\x{2014} all running on the BEAM."
+                        ~"Don't take our word for it. Play a live multiplayer game ",
+                        ~"running on Asobi right now \x{2014} no download, no sign-up."
                     ]},
-                    {'div', [{class, ~"cta-card"}], [
-                        {'div', [{class, ~"steps"}], [
-                            {'div', [{class, ~"step"}], [
-                                {'div', [{class, ~"step-number"}], [<<16#1F3AE/utf8>>]},
-                                {'div', [{class, ~"step-content"}], [
-                                    {h3, [], [~"Play in your browser"]},
-                                    {p, [], [
-                                        ~"No download needed. Opens instantly."
-                                    ]},
-                                    {a, [{href, ~"https://crowdcrawl.asobi.dev"}, {class, ~"btn btn-primary"}], [
-                                        ~"Play Crowd Crawl"
-                                    ]}
+                    {'div', [{class, ~"cta-card cta-card-play"}], [
+                        {'div', [{class, ~"play-cta-inner"}], [
+                            {'div', [{class, ~"play-cta-text"}], [
+                                {span, [{class, ~"hero-badge"}], [~"Live"]},
+                                {h3, [], [~"Asobi Arena"]},
+                                {p, [], [
+                                    ~"Top-down arena shooter with character progression and voting. ",
+                                    ~"WASD to move, mouse to aim, click to shoot. ",
+                                    ~"Built with three Erlang modules and ~500 lines of game logic."
+                                ]},
+                                {'div', [{class, ~"hero-actions"}], [
+                                    {a,
+                                        [
+                                            {href, ~"https://play.asobi.dev"},
+                                            {class, ~"btn btn-primary btn-lg"},
+                                            {target, ~"_blank"}
+                                        ],
+                                        [<<16#1F3AE/utf8>>, ~" Play Now"]},
+                                    {a,
+                                        [{href, ~"/demo"}, {class, ~"btn btn-secondary"}],
+                                        [~"How it works"]}
                                 ]}
                             ]},
-                            {'div', [{class, ~"step"}], [
-                                {'div', [{class, ~"step-number"}], [<<16#1F4BB/utf8>>]},
-                                {'div', [{class, ~"step-content"}], [
-                                    {h3, [], [~"Run it yourself"]},
-                                    {p, [], [{code, [], [~"git clone https://github.com/widgrensit/crowd_crawl"]}]},
-                                    {p, [], [{code, [], [~"docker compose up -d && rebar3 shell"]}]}
-                                ]}
-                            ]},
-                            {'div', [{class, ~"step"}], [
-                                {'div', [{class, ~"step-number"}], [<<16#1F4F1/utf8>>]},
-                                {'div', [{class, ~"step-content"}], [
-                                    {h3, [], [~"Flutter / Desktop client"]},
-                                    {p, [], [{code, [], [~"git clone https://github.com/widgrensit/crowd_crawl_client"]}]},
-                                    {p, [], [{code, [], [~"flutter run -d linux"]}]}
+                            {'div', [{class, ~"play-cta-details"}], [
+                                {'div', [{class, ~"play-detail"}], [
+                                    {span, [{class, ~"play-detail-icon"}], [<<16#1F310/utf8>>]},
+                                    {span, [], [~"Runs in your browser"]}
+                                ]},
+                                {'div', [{class, ~"play-detail"}], [
+                                    {span, [{class, ~"play-detail-icon"}], [<<16#26A1/utf8>>]},
+                                    {span, [], [~"Real-time WebSocket"]}
+                                ]},
+                                {'div', [{class, ~"play-detail"}], [
+                                    {span, [{class, ~"play-detail-icon"}], [<<16#1F1EA/utf8, 16#1F1FA/utf8>>]},
+                                    {span, [], [~"Hosted in EU (Stockholm)"]}
                                 ]}
                             ]}
                         ]}
+                    ]},
+                    {'div', [{class, ~"showcase-more"}], [
+                        {a,
+                            [
+                                {href, ~"https://github.com/widgrensit/asobi_arena"},
+                                {class, ~"showcase-demo-card"}
+                            ],
+                            [
+                                {span, [{class, ~"showcase-demo-icon"}], [<<16#1F4BB/utf8>>]},
+                                {'div', [], [
+                                    {strong, [], [~"View the source"]},
+                                    {p, [], [~"Three Erlang modules. ~500 lines. Full multiplayer arena."]}
+                                ]}
+                            ]}
                     ]}
                 ]}
             ]},
@@ -569,14 +589,14 @@ render(Bindings) ->
                         ]},
                         {'div', [{class, ~"footer-col"}], [
                             {h4, [], [~"Ecosystem"]},
-                            {a, [{href, ~"https://crowdcrawl.asobi.dev"}], [
-                                ~"Crowd Crawl (playable demo)"
+                            {a, [{href, ~"https://play.asobi.dev"}], [
+                                ~"Arena (live demo)"
                             ]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi_admin"}], [
                                 ~"Admin Dashboard"
                             ]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi_arena"}], [
-                                ~"Example: Arena"
+                                ~"Arena Source"
                             ]},
                             {a, [{href, ~"https://github.com/widgrensit/asobi-unity-demo"}], [
                                 ~"Unity Demo"

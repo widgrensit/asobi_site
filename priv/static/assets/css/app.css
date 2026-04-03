@@ -1182,6 +1182,111 @@ code {
     padding-bottom: 4px;
 }
 
+/* ---- Play CTA ---- */
+
+.cta-card-play {
+    max-width: 900px;
+    text-align: left;
+}
+
+.play-cta-inner {
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+}
+
+.play-cta-text h3 {
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 1.6rem;
+    font-weight: 700;
+    color: var(--on-surface);
+    margin: 12px 0 8px;
+}
+
+.play-cta-text p {
+    color: var(--on-surface-variant);
+    font-size: 0.95rem;
+    line-height: 1.7;
+    max-width: 560px;
+}
+
+.play-cta-details {
+    display: flex;
+    gap: 24px;
+    flex-wrap: wrap;
+}
+
+.play-detail {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    color: var(--text-muted);
+    font-size: 0.88rem;
+}
+
+.play-detail-icon {
+    font-size: 1.1rem;
+}
+
+.showcase-more {
+    margin-top: 32px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+}
+
+.showcase-more-label {
+    font-size: 0.85rem;
+    color: var(--text-muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+}
+
+.showcase-demos {
+    display: flex;
+    gap: 16px;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
+.showcase-demo-card {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    background: var(--surface-container);
+    border-radius: var(--radius-lg);
+    outline: 1px solid var(--ghost-border);
+    text-decoration: none;
+    color: inherit;
+    transition: outline-color 0.2s, background 0.2s;
+}
+
+.showcase-demo-card:hover {
+    color: inherit;
+    outline-color: var(--ghost-border-hover);
+    background: var(--surface-highest);
+}
+
+.showcase-demo-icon {
+    font-size: 1.5rem;
+}
+
+.showcase-demo-card strong {
+    display: block;
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    color: var(--on-surface);
+}
+
+.showcase-demo-card p {
+    color: var(--on-surface-variant);
+    font-size: 0.85rem;
+    margin: 2px 0 0;
+}
+
 /* ---- Responsive ---- */
 
 @media (max-width: 1024px) {
@@ -1239,6 +1344,8 @@ code {
     .footer-links { gap: 32px; }
     .footer-bottom { flex-direction: column; gap: 12px; }
     .cta-card { padding: 40px 24px; }
+    .play-cta-details { flex-direction: column; gap: 12px; }
+    .showcase-demos { flex-direction: column; }
     .section-header-split { flex-direction: column; align-items: flex-start; }
 }
 
