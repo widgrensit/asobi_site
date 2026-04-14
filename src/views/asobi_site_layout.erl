@@ -21,7 +21,16 @@ render(Bindings) ->
                     ],
                     []},
                 {link, [{rel, ~"stylesheet"}, {href, ~"/assets/css/app.css"}], []},
-                {link, [{rel, ~"icon"}, {href, ~"/assets/favicon.ico"}], []}
+                {link, [{rel, ~"icon"}, {href, ~"/assets/favicon.ico"}], []},
+                %% Plausible Analytics (Estonia-based, data hosted in EU, no cookies).
+                %% `data-domain` must match the domain Plausible is configured for.
+                {script,
+                    [
+                        {defer, ~""},
+                        {'data-domain', ~"asobi.dev"},
+                        {src, ~"https://plausible.io/js/script.js"}
+                    ],
+                    []}
             ]},
             {body, [], [
                 ?inner_content,
