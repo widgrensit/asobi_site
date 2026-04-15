@@ -17,7 +17,15 @@ render(Active) ->
         {nav, [{class, ~"site-nav"}], [
             {'div', [{class, ~"nav-inner"}], [
                 {a, [{href, ~"/"}, {class, ~"nav-brand"}], [
-                    {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
+                    {img,
+                        [
+                            {src, ~"/assets/img/tanuki.png"},
+                            {alt, ~"asobi"},
+                            {class, ~"brand-logo"},
+                            {width, ~"36"},
+                            {height, ~"36"}
+                        ],
+                        []},
                     {span, [{class, ~"brand-text"}], [~"asobi"]}
                 ]},
                 {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
