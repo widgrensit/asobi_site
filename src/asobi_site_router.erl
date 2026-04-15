@@ -18,6 +18,19 @@ routes(_Environment) ->
                 arizona_nova_live:route(~"/defold", asobi_site_defold_view, #{layout => Layout}),
                 arizona_nova_live:route(~"/dart", asobi_site_dart_view, #{layout => Layout}),
                 arizona_nova_live:route(~"/demo", asobi_site_demo_view, #{layout => Layout}),
+                arizona_nova_live:route(~"/docs", asobi_site_docs_view, #{layout => Layout}),
+                arizona_nova_live:route(
+                    ~"/docs/quickstart", asobi_site_docs_quickstart_view, #{layout => Layout}
+                ),
+                arizona_nova_live:route(
+                    ~"/docs/concepts", asobi_site_docs_concepts_view, #{layout => Layout}
+                ),
+                arizona_nova_live:route(
+                    ~"/docs/self-host", asobi_site_docs_selfhost_view, #{layout => Layout}
+                ),
+                arizona_nova_live:route(
+                    ~"/docs/lua/api", asobi_site_docs_lua_api_view, #{layout => Layout}
+                ),
                 {~"/ws", arizona_nova_ws, #{protocol => ws}},
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
