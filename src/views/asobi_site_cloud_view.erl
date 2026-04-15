@@ -62,10 +62,16 @@ render(Bindings) ->
             {section, [{class, ~"hero"}], [
                 {'div', [{class, ~"hero-inner"}], [
                     {span, [{class, ~"hero-badge"}], [~"Closed beta \x{2014} Q3 2026"]},
+                    {p, [{class, ~"hero-eyebrow"}], [
+                        {span, [{class, ~"marker"}], [~"\x{00A7} Cloud"]},
+                        ~" \x{2002}EU-sovereign managed Asobi"
+                    ]},
                     {h1, [{class, ~"hero-title"}], [
                         ~"A game backend ",
                         {br, [], []},
-                        ~"that won\x{2019}t rug-pull you."
+                        ~"that won\x{2019}t ",
+                        {em, [], [~"rug-pull"]},
+                        ~" you."
                     ]},
                     {p, [{class, ~"hero-subtitle"}], [
                         ~"Managed Asobi, hosted in the EU. ",
@@ -73,12 +79,14 @@ render(Bindings) ->
                         ~"From \x{20AC}9/month."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
-                        ~"Hathora shut down on 5 May 2026. Stormgate, Splitgate 2 and Predecessor ",
-                        ~"lost their servers. If your backend vanishes tomorrow, what is your plan B?"
+                        ~"Hathora shut down on 5 May 2026. Stormgate, Splitgate 2 and ",
+                        ~"Predecessor lost their servers. ",
+                        ~"If your backend vanishes tomorrow, what is your plan B?"
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
                         {a, [{href, ~"https://tally.so/r/0QJ44Z"}, {class, ~"btn btn-primary"}], [
-                            ~"Request beta access"
+                            ~"Request beta access",
+                            {span, [{class, ~"arrow"}], [~" \x{2192}"]}
                         ]},
                         {a,
                             [
@@ -93,7 +101,11 @@ render(Bindings) ->
             %% Why us
             {section, [{id, ~"why-cloud"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"EU-hosted. Not EU-washed."]},
+                    {p, [{class, ~"section-marker"}], [~"01 / Sovereignty"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"EU-hosted. Not ",
+                        {em, [], [~"EU-washed."]}
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Everything you run on Asobi Cloud stays on French-sovereign ",
                         ~"infrastructure. No US sub-processors. No CLOUD Act exposure. ",
@@ -143,32 +155,47 @@ render(Bindings) ->
                 ]}
             ]},
 
-            %% Proof
+            %% Proof — benchmark scoreboard
             {section, [{id, ~"proof"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
+                    {p, [{class, ~"section-marker"}], [~"02 / Proof"]},
                     {h2, [{class, ~"section-title"}], [
-                        ~"Numbers we\x{2019}ve actually measured."
+                        ~"Numbers we\x{2019}ve ",
+                        {em, [], [~"actually"]},
+                        ~" measured"
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Real WebSocket load against a single 8-core BEAM node. ",
                         ~"Benchmark scripts are in the repo so you can reproduce them."
                     ]},
-                    {'div', [{class, ~"feature-grid"}], [
-                        {'div', [{class, ~"feature-card"}], [
-                            {h3, [], [~"49 000 msg/sec"]},
-                            {p, [], [
-                                ~"WebSocket throughput, zero message drops, 10.7 ms p50 round-trip."
+                    {'div', [{class, ~"bench"}], [
+                        {'div', [{class, ~"bench-cell"}], [
+                            {p, [{class, ~"bench-cell-label"}], [~"Throughput"]},
+                            {p, [{class, ~"bench-cell-value"}], [
+                                ~"49,000",
+                                {span, [{class, ~"unit"}], [~"msg/sec"]}
+                            ]},
+                            {p, [{class, ~"bench-cell-note"}], [
+                                ~"Zero drops. 10.7 ms p50 round-trip. Single 8-core node."
                             ]}
                         ]},
-                        {'div', [{class, ~"feature-card"}], [
-                            {h3, [], [~"4 613 WS connections"]},
-                            {p, [], [
-                                ~"Single node, zero failures, \x{2248} 15 KB RAM per connection."
+                        {'div', [{class, ~"bench-cell"}], [
+                            {p, [{class, ~"bench-cell-label"}], [~"Concurrency"]},
+                            {p, [{class, ~"bench-cell-value"}], [
+                                ~"4,613",
+                                {span, [{class, ~"unit"}], [~"ws conns"]}
+                            ]},
+                            {p, [{class, ~"bench-cell-note"}], [
+                                ~"Zero failures. ~15 KB RAM per connection. Room for 100K+."
                             ]}
                         ]},
-                        {'div', [{class, ~"feature-card"}], [
-                            {h3, [], [~"2 000 \x{00D7} 2 000 zones"]},
-                            {p, [], [
+                        {'div', [{class, ~"bench-cell"}], [
+                            {p, [{class, ~"bench-cell-label"}], [~"World scale"]},
+                            {p, [{class, ~"bench-cell-value"}], [
+                                ~"2,000\x{00D7}2,000",
+                                {span, [{class, ~"unit"}], [~"zone grid"]}
+                            ]},
+                            {p, [{class, ~"bench-cell-note"}], [
                                 ~"MMO-scale spatial grid, 500 players, 208 MB RAM, zero errors."
                             ]}
                         ]}
@@ -179,7 +206,12 @@ render(Bindings) ->
             %% Beta signup
             {section, [{id, ~"beta"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"Want to try it?"]},
+                    {p, [{class, ~"section-marker"}], [~"03 / Access"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Want to ",
+                        {em, [], [~"try it"]},
+                        ~"?"
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"We\x{2019}re onboarding our first studios in Q3 2026. ",
                         ~"Leave your email and tell us which engine you use. ",
