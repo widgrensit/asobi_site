@@ -9,7 +9,13 @@ render() ->
         {footer, [{class, ~"site-footer"}], [
             {'div', [{class, ~"footer-inner"}], [
                 {'div', [{class, ~"footer-brand"}], [
-                    {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
+                    {img, [
+                        {src, ~"/assets/img/tanuki.png"},
+                        {alt, ~"asobi"},
+                        {class, ~"brand-logo brand-logo-lg"},
+                        {width, ~"56"},
+                        {height, ~"56"}
+                    ], []},
                     {span, [{class, ~"brand-text"}], [~"asobi"]},
                     {p, [{class, ~"footer-tagline"}], [
                         ~"Open-source game backend on Erlang/OTP."
