@@ -2,7 +2,7 @@
 
 The site is a Nova + Arizona Erlang release packaged as a Docker image.
 
-We build the image in GitHub Actions (7 GB RAM, no OOM risk) and push to GHCR. Clever Cloud pulls the prebuilt image instead of building from source — this avoids the OOM kills we hit on Clever's builder during the `erlfmt` compile step.
+We build the image in GitHub Actions (7 GB RAM, no OOM risk) from `Dockerfile.build` and push to GHCR. Clever Cloud then builds a 1-line passthrough `Dockerfile` (`FROM ghcr.io/widgrensit/asobi_site:latest`) — which is effectively just a registry pull, no compilation. This avoids the OOM kills we hit on Clever's builder during the `erlfmt` compile step.
 
 ## Image publishing
 
@@ -23,11 +23,11 @@ No extra secrets needed; the workflow uses the default `GITHUB_TOKEN` with `pack
    - Instance size: `XS` (per-second billing, ~€7-10/mo)
    - Name: `asobi-site`
 
-2. Configure **Docker image source** (not GitHub build):
-   - In the Clever app settings, pick **Deploy via Docker image** mode.
-   - Image: `ghcr.io/widgrensit/asobi_site:latest`
-   - No registry auth needed — the image is public.
-   - Leave the GitHub repo link empty; we don't want Clever to rebuild from source anymore.
+2. Leave the app as a normal Docker app linked to the GitHub repo. The `Dockerfile` at the repo root is a 1-line passthrough that pulls the prebuilt image — Clever treats it as a Docker build, but the "build" is just a registry pull and takes ~20 seconds.
+
+3. **(Recommended) Turn off Clever's GitHub auto-deploy** and trigger via webhook from GHCR instead, so Clever only pulls after the image is actually published:
+   - Clever Console → your app → **Information** → **Automatic deployment** → toggle off.
+   - Then set up the webhook described below under "Auto-redeploy on image push".
 
 3. Environment variables (Console → Environment variables):
    - `CC_RUN_COMMAND` — leave unset; the Dockerfile's `CMD` is used.
