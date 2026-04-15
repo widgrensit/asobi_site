@@ -18,6 +18,11 @@ routes(_Environment) ->
                 arizona_nova_live:route(~"/defold", asobi_site_defold_view, #{layout => Layout}),
                 arizona_nova_live:route(~"/dart", asobi_site_dart_view, #{layout => Layout}),
                 arizona_nova_live:route(~"/demo", asobi_site_demo_view, #{layout => Layout}),
+                arizona_nova_live:route(~"/blog", asobi_site_blog_view, #{layout => Layout}),
+                {~"/blog/rss.xml", fun asobi_site_controller:blog_rss/1, #{methods => [get]}},
+                arizona_nova_live:route(
+                    ~"/blog/:slug", asobi_site_blog_post_view, #{layout => Layout}
+                ),
                 arizona_nova_live:route(~"/docs", asobi_site_docs_view, #{layout => Layout}),
                 arizona_nova_live:route(
                     ~"/docs/quickstart", asobi_site_docs_quickstart_view, #{layout => Layout}
