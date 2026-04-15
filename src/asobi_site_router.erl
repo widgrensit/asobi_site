@@ -35,6 +35,24 @@ routes(_Environment) ->
                     ~"/docs/erlang/api", asobi_site_docs_erlang_api_view, #{layout => Layout}
                 ),
                 arizona_nova_live:route(
+                    ~"/docs/lua/callbacks",
+                    asobi_site_docs_lua_callbacks_view,
+                    #{layout => Layout}
+                ),
+                arizona_nova_live:route(
+                    ~"/docs/lua/cookbook",
+                    asobi_site_docs_lua_cookbook_view,
+                    #{layout => Layout}
+                ),
+                arizona_nova_live:route(
+                    ~"/docs/tutorials/tic-tac-toe",
+                    asobi_site_docs_tictactoe_view,
+                    #{layout => Layout}
+                ),
+                arizona_nova_live:route(
+                    ~"/docs/cloud", asobi_site_docs_cloud_view, #{layout => Layout}
+                ),
+                arizona_nova_live:route(
                     ~"/privacy", asobi_site_privacy_view, #{layout => Layout}
                 ),
                 arizona_nova_live:route(~"/terms", asobi_site_terms_view, #{layout => Layout}),
