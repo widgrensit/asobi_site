@@ -902,3 +902,77 @@ code {
     .comparison-table th,
     .comparison-table td { padding: 10px 12px; }
 }
+
+/* ================================================================
+   Beta CTA block on /cloud
+   ================================================================ */
+.beta-cta {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 48px 24px;
+    text-align: center;
+}
+.btn-large {
+    font-size: 1.1rem;
+    padding: 16px 32px;
+}
+.beta-cta-note {
+    color: var(--text-muted, #938ea0);
+    font-size: 0.95rem;
+    max-width: 460px;
+    margin: 0;
+}
+
+/* ================================================================
+   Success banner (shown after Tally redirects back with ?submitted=1)
+   ================================================================ */
+.success-banner {
+    background: color-mix(in oklab, var(--accent, #059669) 18%, var(--surface));
+    border-bottom: 1px solid color-mix(in oklab, var(--accent, #059669) 40%, transparent);
+    color: var(--on-surface);
+}
+.success-banner-inner {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 14px 24px;
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+.success-banner-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: var(--accent, #059669);
+    color: #fff;
+    font-weight: 700;
+    flex-shrink: 0;
+}
+.success-banner-text { flex: 1; font-size: 0.95rem; line-height: 1.5; }
+.success-banner-text strong { margin-right: 4px; }
+.success-banner-text a {
+    color: var(--accent, #059669);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+.success-banner-close {
+    background: transparent;
+    border: 0;
+    color: var(--text-muted, #938ea0);
+    font-size: 1.5rem;
+    line-height: 1;
+    cursor: pointer;
+    padding: 4px 8px;
+    flex-shrink: 0;
+}
+.success-banner-close:hover { color: var(--on-surface); }
+
+@media (max-width: 600px) {
+    .success-banner-inner { padding: 12px 16px; gap: 12px; }
+    .success-banner-text { font-size: 0.9rem; }
+}

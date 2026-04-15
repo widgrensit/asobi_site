@@ -31,6 +31,7 @@ render(Bindings) ->
                         {a, [{href, ~"#features"}], [~"Features"]},
                         {a, [{href, ~"#sdks"}], [~"SDKs"]},
                         {a, [{href, ~"/demo"}], [~"Demo"]},
+                        {a, [{href, ~"/cloud"}], [~"Cloud"]},
                         {a, [{href, ~"#get-started"}], [~"Get Started"]},
                         {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
                             ~"Discord"
