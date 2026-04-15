@@ -1,30 +1,12 @@
-FROM erlang:28 AS builder
-
-WORKDIR /app
-
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
-
-COPY rebar.config rebar.lock ./
-RUN rebar3 compile --deps_only
-
-COPY config ./config
-COPY src ./src
-COPY priv ./priv
-
-RUN rebar3 as prod release
-
-FROM debian:trixie-slim
-
-RUN apt-get update && \
-    apt-get install -y --no-install-recommends \
-    libssl3 libncurses6 libstdc++6 && \
-    rm -rf /var/lib/apt/lists/*
-
-WORKDIR /app
-
-COPY --from=builder /app/_build/prod/rel/asobi_site ./
-
-ENV PORT=8080
-EXPOSE 8080
-
-CMD ["bin/asobi_site", "foreground"]
+#
+# Passthrough Dockerfile for Clever Cloud.
+#
+# The real image is built in GitHub Actions (see
+# .github/workflows/docker-publish.yml) and published to GHCR. Clever's
+# builder OOM-kills during rebar3 / erlfmt compilation on low-RAM nodes,
+# so we have it pull the prebuilt image instead of rebuilding from source.
+#
+# Everything (Erlang release, CMD, EXPOSE, PORT) comes baked in via the
+# source Dockerfile preserved at Dockerfile.build in this repo.
+#
+FROM ghcr.io/widgrensit/asobi_site:latest
