@@ -3,7 +3,7 @@
 
 -export([render/1]).
 
--type active() :: home | features | sdks | demo | docs | cloud | none.
+-type active() :: home | features | sdks | demo | docs | blog | cloud | none.
 
 -spec render(active()) -> arizona_template:template().
 render(Active) ->
@@ -12,20 +12,13 @@ render(Active) ->
     Sdks = Link(~"/#sdks", ~"SDKs", sdks),
     Demo = Link(~"/demo", ~"Demo", demo),
     Docs = Link(~"/docs", ~"Docs", docs),
+    Blog = Link(~"/blog", ~"Blog", blog),
     Cloud = Link(~"/cloud", ~"Cloud", cloud),
     ?html(
         {nav, [{class, ~"site-nav"}], [
             {'div', [{class, ~"nav-inner"}], [
                 {a, [{href, ~"/"}, {class, ~"nav-brand"}], [
-                    {img,
-                        [
-                            {src, ~"/assets/img/tanuki.png"},
-                            {alt, ~"asobi"},
-                            {class, ~"brand-logo"},
-                            {width, ~"36"},
-                            {height, ~"36"}
-                        ],
-                        []},
+                    {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
                     {span, [{class, ~"brand-text"}], [~"asobi"]}
                 ]},
                 {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
@@ -36,6 +29,7 @@ render(Active) ->
                     Sdks,
                     Demo,
                     Docs,
+                    Blog,
                     Cloud,
                     {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
                         ~"Discord"

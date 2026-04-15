@@ -333,28 +333,21 @@ code {
 }
 
 .hero::after {
-    content: "";
+    content: "\904A";  /* 遊 */
     position: absolute;
     top: 50%;
-    right: clamp(-3vw, 2vw, 4vw);
+    right: -4vw;
     transform: translateY(-50%);
-    width: clamp(260px, 38vw, 540px);
-    height: clamp(260px, 38vw, 540px);
-    background: url("/assets/img/tanuki-hero.png") no-repeat center / contain;
+    font-family: var(--font-display);
+    font-weight: 200;
+    font-size: clamp(360px, 60vw, 780px);
+    line-height: 0.85;
+    color: var(--indigo);
+    opacity: 0.08;
     pointer-events: none;
     z-index: 0;
     user-select: none;
-    filter: drop-shadow(0 14px 36px rgba(26, 18, 8, 0.14));
-    animation: mascot-float 6s ease-in-out infinite;
-}
-
-@keyframes mascot-float {
-    0%, 100% { transform: translateY(calc(-50% - 4px)); }
-    50%      { transform: translateY(calc(-50% + 4px)); }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    .hero::after { animation: none; }
+    letter-spacing: -0.05em;
 }
 
 .hero::before {
@@ -1500,18 +1493,7 @@ code {
     .section { padding: clamp(56px, 8vw, 96px) var(--gutter); }
     .section-subtitle { margin-bottom: var(--sp-8); }
     .hero { padding: clamp(96px, 12vw, 140px) var(--gutter) clamp(72px, 9vw, 100px); }
-    /* Mascot moves to bottom-right corner as a playful peek-out,
-       well below the hero copy on the left. */
-    .hero::after {
-        top: auto;
-        bottom: -2vw;
-        right: -6vw;
-        transform: none;
-        width: clamp(200px, 46vw, 340px);
-        height: clamp(200px, 46vw, 340px);
-        opacity: 0.85;
-        animation: none;
-    }
+    .hero::after { right: -30vw; font-size: clamp(320px, 90vw, 560px); }
     .hero-title { max-width: 100%; }
     .hero-subtitle { max-width: 100%; }
     .hero-notice { max-width: 100%; }
@@ -1540,12 +1522,160 @@ code {
     .hero-actions .btn { width: 100%; justify-content: center; }
     .beam-grid, .feature-grid { grid-template-columns: 1fr; }
     .bench { grid-template-columns: 1fr; }
-    /* Ease the hero copy vs mascot balance on narrow phones. */
-    .hero::after {
-        width: clamp(180px, 50vw, 260px);
-        height: clamp(180px, 50vw, 260px);
-        opacity: 0.7;
-    }
     .hero-title { font-size: clamp(2.25rem, 9vw, 3rem); line-height: 1.04; }
     .section-title { font-size: clamp(1.75rem, 7vw, 2.25rem); }
 }
+
+/* =========================================================================
+   Blog
+   ========================================================================= */
+.blog-index .guide-header { margin-bottom: var(--sp-8); }
+
+.blog-list {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-7);
+}
+
+.blog-card {
+    padding: var(--sp-6) 0;
+    border-bottom: 1px solid var(--line);
+}
+.blog-card:last-child { border-bottom: 0; }
+
+.blog-card-meta {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    margin-bottom: var(--sp-3);
+}
+.blog-card-sep { opacity: 0.5; }
+
+.blog-card-title {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-variation-settings: 'opsz' 100;
+    font-size: var(--fs-2xl);
+    letter-spacing: -0.02em;
+    margin-bottom: var(--sp-3);
+    line-height: 1.15;
+}
+.blog-card-title a { color: var(--text); text-decoration: none; }
+.blog-card-title a:hover { color: var(--indigo); }
+
+.blog-card-lede {
+    color: var(--text-2);
+    font-size: var(--fs-base);
+    line-height: 1.65;
+    margin-bottom: var(--sp-4);
+    max-width: 64ch;
+}
+
+.blog-card-tags {
+    display: flex;
+    gap: var(--sp-2);
+    flex-wrap: wrap;
+    margin-bottom: var(--sp-4);
+}
+.blog-tag {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    text-transform: lowercase;
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+    border: 1px solid var(--line);
+    padding: 2px 8px;
+    border-radius: var(--r-1);
+}
+
+.blog-card-link {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    text-decoration: none;
+}
+.blog-card-link:hover { color: var(--indigo-deep); }
+
+/* Single post */
+.blog-post { max-width: 720px; }
+.blog-post-header { margin-bottom: var(--sp-8); }
+.blog-breadcrumb {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-3);
+    margin-bottom: var(--sp-4);
+    letter-spacing: 0.04em;
+}
+.blog-breadcrumb a { color: var(--text-2); text-decoration: none; }
+.blog-breadcrumb a:hover { color: var(--indigo); }
+
+.blog-lede {
+    color: var(--text-2);
+    font-size: var(--fs-lg);
+    line-height: 1.6;
+    max-width: 56ch;
+    margin-bottom: var(--sp-5);
+}
+
+.blog-post-meta {
+    display: flex;
+    gap: var(--sp-2);
+    align-items: center;
+    flex-wrap: wrap;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-3);
+    letter-spacing: 0.04em;
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--line);
+}
+.blog-post-meta .blog-card-tags { margin-bottom: 0; }
+
+.blog-body {
+    font-size: var(--fs-base);
+    line-height: 1.75;
+}
+.blog-body h2 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-variation-settings: 'opsz' 100;
+    font-size: var(--fs-2xl);
+    letter-spacing: -0.015em;
+    color: var(--text);
+    margin: var(--sp-8) 0 var(--sp-4);
+}
+.blog-body h3 {
+    font-family: var(--font-display);
+    font-weight: 400;
+    font-size: var(--fs-xl);
+    color: var(--text);
+    margin: var(--sp-6) 0 var(--sp-3);
+    letter-spacing: -0.01em;
+}
+.blog-body p { color: var(--text-2); margin-bottom: var(--sp-4); }
+.blog-body a { color: var(--indigo); }
+.blog-body a:hover { color: var(--indigo-deep); }
+.blog-body code {
+    font-family: var(--font-mono);
+    font-size: 0.9em;
+    background: var(--ink-1);
+    border: 1px solid var(--line);
+    border-radius: var(--r-1);
+    padding: 1px 6px;
+}
+
+.blog-footer-cta {
+    margin-top: var(--sp-9);
+    padding-top: var(--sp-6);
+    border-top: 1px solid var(--line);
+    color: var(--text-3);
+    font-size: var(--fs-sm);
+}
+.blog-footer-cta p { margin-bottom: var(--sp-3); }
+.blog-footer-cta a { color: var(--indigo); }
