@@ -3,7 +3,7 @@
 
 -export([render/1]).
 
--spec render(map()) -> term().
+-spec render(map()) -> arizona_template:template().
 render(Bindings) ->
     Prefix = arizona_nova:prefix(),
     ?html([
@@ -39,11 +39,11 @@ render(Bindings) ->
             {body, [], [
                 ?inner_content,
                 {script, [{type, ~"module"}], [
-                    <<"import { connect } from '">>,
+                    ~"import { connect } from '",
                     Prefix,
-                    <<"/assets/js/arizona.min.js'; connect('">>,
+                    ~"/assets/js/arizona.min.js'; connect('",
                     Prefix,
-                    <<"/ws');">>
+                    ~"/ws');"
                 ]}
             ]}
         ]}

@@ -7,7 +7,7 @@
 mount(Bindings) ->
     {maps:merge(#{id => ~"docs-selfhost", title => ~"Self-host — Asobi docs"}, Bindings), #{}}.
 
--spec render(map()) -> term().
+-spec render(map()) -> arizona_template:template().
 render(_Bindings) ->
     Content = ?html(
         {'div', [], [
