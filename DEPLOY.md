@@ -1,8 +1,21 @@
 # Deploying asobi_site to Clever Cloud
 
-The site is a Nova + Arizona Erlang release packaged as a Docker image. Clever Cloud's Docker runtime is the target.
+The site is a Nova + Arizona Erlang release packaged as a Docker image.
 
-## One-time setup
+We build the image in GitHub Actions (7 GB RAM, no OOM risk) and push to GHCR. Clever Cloud pulls the prebuilt image instead of building from source — this avoids the OOM kills we hit on Clever's builder during the `erlfmt` compile step.
+
+## Image publishing
+
+The `.github/workflows/docker-publish.yml` workflow builds and pushes to `ghcr.io/widgrensit/asobi_site` on every push to `main` and every `v*.*.*` tag. Tags produced:
+
+- `latest` — head of `main`
+- `main` — same, by branch name
+- `sha-<full-sha>` — reproducible pin
+- `1.2.3`, `1.2` — for version tags
+
+No extra secrets needed; the workflow uses the default `GITHUB_TOKEN` with `packages: write`.
+
+## One-time Clever setup
 
 1. Create a **Docker** application on Clever Cloud:
    - **Create → an application → Docker**
@@ -10,7 +23,11 @@ The site is a Nova + Arizona Erlang release packaged as a Docker image. Clever C
    - Instance size: `XS` (per-second billing, ~€7-10/mo)
    - Name: `asobi-site`
 
-2. Link the GitHub repo `widgrensit/asobi_site` when prompted. Pick the `main` branch for auto-deploy.
+2. Configure **Docker image source** (not GitHub build):
+   - In the Clever app settings, pick **Deploy via Docker image** mode.
+   - Image: `ghcr.io/widgrensit/asobi_site:latest`
+   - No registry auth needed — the image is public.
+   - Leave the GitHub repo link empty; we don't want Clever to rebuild from source anymore.
 
 3. Environment variables (Console → Environment variables):
    - `CC_RUN_COMMAND` — leave unset; the Dockerfile's `CMD` is used.
@@ -33,19 +50,23 @@ The site is a Nova + Arizona Erlang release packaged as a Docker image. Clever C
 
 ## Deploying
 
-Any push to `main` auto-builds and deploys:
+1. Push to `main`. GitHub Actions builds + pushes the image (~3-5 min first build, ~1-2 min with cache).
+2. In Clever Console → Activity, click **Redeploy** — or schedule auto-pulls via a deploy hook (see below).
+
+To deploy from CLI instead:
 
 ```bash
-git push origin main
+clever restart --force   # re-pulls :latest
 ```
 
-Clever watches the GitHub repo and rebuilds. First build takes 3-5 min (Erlang compile), subsequent builds ~1-2 min with layer cache.
+### Auto-redeploy on image push (optional)
 
-To deploy from CLI instead, install `clever-tools` and run:
+To make Clever redeploy as soon as the image lands on GHCR, add a deploy webhook:
 
-```bash
-clever deploy
-```
+1. Clever Console → your app → **Information** → copy the **Deploy URL**.
+2. GitHub repo → **Settings → Webhooks → Add** → paste the Deploy URL, content type `application/json`, events: `Packages`.
+
+Now every successful `docker-publish` run triggers a redeploy.
 
 ## Verifying the sovereign story after deploy
 
