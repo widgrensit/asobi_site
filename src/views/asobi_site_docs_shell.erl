@@ -12,15 +12,15 @@ render(ActivePath, Content) ->
     %% Compute link classes outside the template (Arizona parse transform
     %% cannot spread a variable list inside a literal tree).
     L = fun(Href, Label) -> sidebar_link(Href, Label, ActivePath) end,
-    Overview       = L(~"/docs",                       ~"Overview"),
-    Quickstart     = L(~"/docs/quickstart",            ~"Quick start"),
-    Concepts       = L(~"/docs/concepts",              ~"Core concepts"),
-    TicTacToe      = L(~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe (Lua)"),
-    LuaApi         = L(~"/docs/lua/api",               ~"game.* API"),
-    LuaCallbacks   = L(~"/docs/lua/callbacks",         ~"Game module callbacks"),
-    LuaCookbook    = L(~"/docs/lua/cookbook",          ~"Cookbook"),
-    SelfHost       = L(~"/docs/self-host",             ~"Self-host"),
-    Cloud          = L(~"/docs/cloud",                 ~"Cloud (coming soon)"),
+    Overview = L(~"/docs", ~"Overview"),
+    Quickstart = L(~"/docs/quickstart", ~"Quick start"),
+    Concepts = L(~"/docs/concepts", ~"Core concepts"),
+    TicTacToe = L(~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe (Lua)"),
+    LuaApi = L(~"/docs/lua/api", ~"game.* API"),
+    LuaCallbacks = L(~"/docs/lua/callbacks", ~"Game module callbacks"),
+    LuaCookbook = L(~"/docs/lua/cookbook", ~"Cookbook"),
+    SelfHost = L(~"/docs/self-host", ~"Self-host"),
+    Cloud = L(~"/docs/cloud", ~"Cloud (coming soon)"),
     ?html(
         {'div', [{class, ~"docs-root"}], [
             {nav, [{class, ~"site-nav"}], [
@@ -31,20 +31,27 @@ render(ActivePath, Content) ->
                     ]},
                     {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
                     {label,
-                        [{for, ~"nav-toggle"}, {class, ~"nav-hamburger"},
-                         {'aria-label', ~"Menu"}],
+                        [
+                            {for, ~"nav-toggle"},
+                            {class, ~"nav-hamburger"},
+                            {'aria-label', ~"Menu"}
+                        ],
                         [{span, [], []}, {span, [], []}, {span, [], []}]},
                     {'div', [{class, ~"nav-links"}], [
                         {a, [{href, ~"/"}], [~"Home"]},
                         {a, [{href, ~"/docs"}, {class, ~"active"}], [~"Docs"]},
                         {a, [{href, ~"/cloud"}], [~"Cloud"]},
                         {a,
-                            [{href, ~"https://discord.gg/vYSfYYyXpu"},
-                             {class, ~"nav-link-btn"}],
+                            [
+                                {href, ~"https://discord.gg/vYSfYYyXpu"},
+                                {class, ~"nav-link-btn"}
+                            ],
                             [~"Discord"]},
                         {a,
-                            [{href, ~"https://github.com/widgrensit/asobi"},
-                             {class, ~"nav-github"}],
+                            [
+                                {href, ~"https://github.com/widgrensit/asobi"},
+                                {class, ~"nav-github"}
+                            ],
                             [~"GitHub"]}
                     ]}
                 ]}
@@ -54,7 +61,9 @@ render(ActivePath, Content) ->
                     {nav, [{class, ~"docs-nav"}], [
                         {'div', [{class, ~"docs-nav-section"}], [
                             {h3, [], [~"Get started"]},
-                            Overview, Quickstart, Concepts
+                            Overview,
+                            Quickstart,
+                            Concepts
                         ]},
                         {'div', [{class, ~"docs-nav-section"}], [
                             {h3, [], [~"Tutorials"]},
@@ -62,11 +71,14 @@ render(ActivePath, Content) ->
                         ]},
                         {'div', [{class, ~"docs-nav-section"}], [
                             {h3, [], [~"Lua reference"]},
-                            LuaApi, LuaCallbacks, LuaCookbook
+                            LuaApi,
+                            LuaCallbacks,
+                            LuaCookbook
                         ]},
                         {'div', [{class, ~"docs-nav-section"}], [
                             {h3, [], [~"Deploy"]},
-                            SelfHost, Cloud
+                            SelfHost,
+                            Cloud
                         ]}
                     ]}
                 ]},
@@ -78,8 +90,9 @@ render(ActivePath, Content) ->
     ).
 
 sidebar_link(Href, Label, Active) ->
-    Class = case Href of
-        Active -> ~"docs-nav-link active";
-        _ -> ~"docs-nav-link"
-    end,
+    Class =
+        case Href of
+            Active -> ~"docs-nav-link active";
+            _ -> ~"docs-nav-link"
+        end,
     ?html({a, [{href, Href}, {class, Class}], [Label]}).

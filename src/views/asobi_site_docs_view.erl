@@ -9,66 +9,112 @@ mount(Bindings) ->
 
 -spec render(map()) -> term().
 render(_Bindings) ->
-    Content = ?html({'div', [], [
-        {h1, [], [~"Build multiplayer games with Asobi"]},
-        {p, [{class, ~"docs-lede"}], [
-            ~"Asobi is an open-source game backend built on Erlang/OTP. ",
-            ~"Write your game logic in Lua. Hot-reload it without kicking players. ",
-            ~"Self-host it or \x{2014} soon \x{2014} let us host it for you."
-        ]},
-
-        {'div', [{class, ~"docs-cta-row"}], [
-            {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}], [~"Quick start \x{2192}"]},
-            {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, {class, ~"btn btn-secondary"}], [~"Tic-tac-toe tutorial"]},
-            {a, [{href, ~"https://github.com/widgrensit/asobi"}, {class, ~"btn btn-ghost"}], [~"GitHub"]}
-        ]},
-
-        {h2, [], [~"Start here"]},
-        {'div', [{class, ~"docs-grid"}], [
-            card(~"/docs/quickstart", ~"Quick start", ~"Install Asobi, spin up the engine, deploy a Lua game \x{2014} all in 15 minutes."),
-            card(~"/docs/concepts", ~"Core concepts", ~"Matches, worlds, zones, voting, phases. The primitives Asobi gives you."),
-            card(~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe", ~"Your first Asobi game. Two players, one match, authoritative Lua."),
-            card(~"/docs/lua/api", ~"Lua API", ~"Full reference for the game.* API available in your Lua scripts."),
-            card(~"/docs/lua/cookbook", ~"Cookbook", ~"Copy-pasteable recipes for common patterns."),
-            card(~"/docs/self-host", ~"Self-host", ~"Run Asobi on your own infrastructure. Docker, bare metal, or k8s.")
-        ]},
-
-        {h2, [], [~"Why Lua on Erlang?"]},
-        {'div', [{class, ~"docs-callout"}], [
-            {p, [], [
-                ~"You write game logic in Lua \x{2014} the language game developers already know. ",
-                ~"Asobi runs it on the BEAM (the Erlang virtual machine), giving you: "
+    Content = ?html(
+        {'div', [], [
+            {h1, [], [~"Build multiplayer games with Asobi"]},
+            {p, [{class, ~"docs-lede"}], [
+                ~"Asobi is an open-source game backend built on Erlang/OTP. ",
+                ~"Write your game logic in Lua. Hot-reload it without kicking players. ",
+                ~"Self-host it or \x{2014} soon \x{2014} let us host it for you."
             ]},
-            {ul, [], [
-                {li, [], [{strong, [], [~"Restart-free hot reload. "]}, ~"Deploy new Lua without disconnecting players. Nobody else on the market does this."]},
-                {li, [], [{strong, [], [~"Fault tolerance. "]}, ~"Crash one match, others keep running. OTP supervision trees isolate failures."]},
-                {li, [], [{strong, [], [~"Concurrency. "]}, ~"One process per match, one process per zone. Scales to hundreds of thousands on one node."]},
-                {li, [], [{strong, [], [~"Full-stack Lua. "]}, ~"Defold on the client, Asobi on the server. Same language end to end."]}
+
+            {'div', [{class, ~"docs-cta-row"}], [
+                {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}], [
+                    ~"Quick start \x{2192}"
+                ]},
+                {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, {class, ~"btn btn-secondary"}], [
+                    ~"Tic-tac-toe tutorial"
+                ]},
+                {a, [{href, ~"https://github.com/widgrensit/asobi"}, {class, ~"btn btn-ghost"}], [
+                    ~"GitHub"
+                ]}
+            ]},
+
+            {h2, [], [~"Start here"]},
+            {'div', [{class, ~"docs-grid"}], [
+                card(
+                    ~"/docs/quickstart",
+                    ~"Quick start",
+                    ~"Install Asobi, spin up the engine, deploy a Lua game \x{2014} all in 15 minutes."
+                ),
+                card(
+                    ~"/docs/concepts",
+                    ~"Core concepts",
+                    ~"Matches, worlds, zones, voting, phases. The primitives Asobi gives you."
+                ),
+                card(
+                    ~"/docs/tutorials/tic-tac-toe",
+                    ~"Tic-tac-toe",
+                    ~"Your first Asobi game. Two players, one match, authoritative Lua."
+                ),
+                card(
+                    ~"/docs/lua/api",
+                    ~"Lua API",
+                    ~"Full reference for the game.* API available in your Lua scripts."
+                ),
+                card(
+                    ~"/docs/lua/cookbook",
+                    ~"Cookbook",
+                    ~"Copy-pasteable recipes for common patterns."
+                ),
+                card(
+                    ~"/docs/self-host",
+                    ~"Self-host",
+                    ~"Run Asobi on your own infrastructure. Docker, bare metal, or k8s."
+                )
+            ]},
+
+            {h2, [], [~"Why Lua on Erlang?"]},
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    ~"You write game logic in Lua \x{2014} the language game developers already know. ",
+                    ~"Asobi runs it on the BEAM (the Erlang virtual machine), giving you: "
+                ]},
+                {ul, [], [
+                    {li, [], [
+                        {strong, [], [~"Restart-free hot reload. "]},
+                        ~"Deploy new Lua without disconnecting players. Nobody else on the market does this."
+                    ]},
+                    {li, [], [
+                        {strong, [], [~"Fault tolerance. "]},
+                        ~"Crash one match, others keep running. OTP supervision trees isolate failures."
+                    ]},
+                    {li, [], [
+                        {strong, [], [~"Concurrency. "]},
+                        ~"One process per match, one process per zone. Scales to hundreds of thousands on one node."
+                    ]},
+                    {li, [], [
+                        {strong, [], [~"Full-stack Lua. "]},
+                        ~"Defold on the client, Asobi on the server. Same language end to end."
+                    ]}
+                ]}
+            ]},
+
+            {h2, [], [~"Hosting"]},
+            {p, [], [
+                ~"Asobi is fully self-hostable today \x{2014} see ",
+                {a, [{href, ~"/docs/self-host"}], [~"the self-host guide"]},
+                ~". If you'd rather we run it for you, managed cloud hosting is coming at ",
+                {a, [{href, ~"/cloud"}], [~"asobi.dev/cloud"]},
+                ~" \x{2014} join the waitlist there."
+            ]},
+
+            {h2, [], [~"Want something that isn't here?"]},
+            {p, [], [
+                ~"These docs are new and growing. If a page is missing, shallow, or wrong: ",
+                {a, [{href, ~"https://github.com/widgrensit/asobi/issues/new"}], [~"open an issue"]},
+                ~" or drop into ",
+                {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"the Discord"]},
+                ~"."
             ]}
-        ]},
-
-        {h2, [], [~"Hosting"]},
-        {p, [], [
-            ~"Asobi is fully self-hostable today \x{2014} see ",
-            {a, [{href, ~"/docs/self-host"}], [~"the self-host guide"]},
-            ~". If you'd rather we run it for you, managed cloud hosting is coming at ",
-            {a, [{href, ~"/cloud"}], [~"asobi.dev/cloud"]},
-            ~" \x{2014} join the waitlist there."
-        ]},
-
-        {h2, [], [~"Want something that isn't here?"]},
-        {p, [], [
-            ~"These docs are new and growing. If a page is missing, shallow, or wrong: ",
-            {a, [{href, ~"https://github.com/widgrensit/asobi/issues/new"}], [~"open an issue"]},
-            ~" or drop into ",
-            {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"the Discord"]},
-            ~"."
         ]}
-    ]}),
+    ),
     asobi_site_docs_shell:render(~"/docs", Content).
 
 card(Href, Title, Desc) ->
-    ?html({a, [{href, Href}, {class, ~"docs-card"}], [
-        {h3, [], [Title]},
-        {p, [], [Desc]}
-    ]}).
+    ?html(
+        {a, [{href, Href}, {class, ~"docs-card"}], [
+            {h3, [], [Title]},
+            {p, [], [Desc]}
+        ]}
+    ).
