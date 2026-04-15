@@ -320,21 +320,28 @@ code {
 }
 
 .hero::after {
-    content: "\904A";  /* 遊 */
+    content: "";
     position: absolute;
     top: 50%;
-    right: -4vw;
+    right: clamp(-3vw, 2vw, 4vw);
     transform: translateY(-50%);
-    font-family: var(--font-display);
-    font-weight: 200;
-    font-size: clamp(360px, 60vw, 780px);
-    line-height: 0.85;
-    color: var(--indigo);
-    opacity: 0.08;
+    width: clamp(260px, 38vw, 540px);
+    height: clamp(260px, 38vw, 540px);
+    background: url("/assets/img/tanuki-hero.png") no-repeat center / contain;
     pointer-events: none;
     z-index: 0;
     user-select: none;
-    letter-spacing: -0.05em;
+    filter: drop-shadow(0 14px 36px rgba(26, 18, 8, 0.14));
+    animation: mascot-float 6s ease-in-out infinite;
+}
+
+@keyframes mascot-float {
+    0%, 100% { transform: translateY(calc(-50% - 4px)); }
+    50%      { transform: translateY(calc(-50% + 4px)); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero::after { animation: none; }
 }
 
 .hero::before {
@@ -1478,7 +1485,7 @@ code {
 @media (max-width: 900px) {
     :root { --gutter: 24px; }
     .section-subtitle { margin-bottom: var(--sp-8); }
-    .hero::after { right: -30vw; font-size: clamp(320px, 90vw, 560px); }
+    .hero::after { right: -14vw; opacity: 0.55; width: clamp(280px, 70vw, 480px); height: clamp(280px, 70vw, 480px); }
 }
 @media (max-width: 520px) {
     :root { --gutter: 20px; }
