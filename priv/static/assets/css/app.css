@@ -10,26 +10,27 @@
    Tokens
    ========================================================================= */
 :root {
-    /* Palette — indigo/emerald family kept for logo compatibility.
-       Ink ramp is slightly warmer and deeper than the old navy grey. */
-    --ink-0:        #060912;   /* stage — deepest, off-stage black w/ blue cast */
-    --ink-1:        #0c1022;   /* page */
-    --ink-2:        #141833;   /* card surface */
-    --ink-3:        #1c2143;   /* hover / raised */
-    --line:         #1e2442;   /* hairline border */
-    --line-strong:  #2a3060;   /* border on hover / focus */
+    /* Palette — matches the previous site's ink ramp for logo compatibility.
+       Slightly brighter and bluer than a "moody" dark; keeps the indigo
+       and emerald from before so the logo sits comfortably. */
+    --ink-0:        #0a0e17;   /* page */
+    --ink-1:        #111827;   /* raised surface band */
+    --ink-2:        #1a2332;   /* card */
+    --ink-3:        #232e44;   /* hover */
+    --line:         #1e293b;   /* hairline */
+    --line-strong:  #334155;   /* hover border */
 
-    --text:         #e8eaf0;   /* warm off-white, not pure */
-    --text-2:       #9ba3b8;   /* muted */
-    --text-3:       #5d6480;   /* tertiary, labels */
+    --text:         #e2e8f0;   /* primary */
+    --text-2:       #94a3b8;   /* muted */
+    --text-3:       #64748b;   /* tertiary */
 
-    --indigo:       #6366f1;   /* primary accent — matches logo family */
+    --indigo:       #6366f1;   /* primary accent */
     --indigo-hi:    #818cf8;
-    --indigo-deep:  #4338ca;
-    --glow:         rgba(99, 102, 241, 0.14);
-    --glow-strong:  rgba(99, 102, 241, 0.32);
+    --indigo-deep:  #4f46e5;
+    --glow:         rgba(99, 102, 241, 0.15);
+    --glow-strong:  rgba(99, 102, 241, 0.30);
 
-    --emerald:      #2dd4bf;   /* secondary — cooler teal */
+    --emerald:      #34d399;   /* secondary — same emerald as before */
     --ember:        #f59e0b;   /* sparingly — badges, highlights */
     --crimson:      #ef4444;   /* crash / shutdown callouts on /cloud */
 
