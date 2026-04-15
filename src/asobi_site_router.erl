@@ -32,6 +32,9 @@ routes(_Environment) ->
                     ~"/docs/lua/api", asobi_site_docs_lua_api_view, #{layout => Layout}
                 ),
                 arizona_nova_live:route(
+                    ~"/docs/erlang/api", asobi_site_docs_erlang_api_view, #{layout => Layout}
+                ),
+                arizona_nova_live:route(
                     ~"/privacy", asobi_site_privacy_view, #{layout => Layout}
                 ),
                 arizona_nova_live:route(~"/terms", asobi_site_terms_view, #{layout => Layout}),

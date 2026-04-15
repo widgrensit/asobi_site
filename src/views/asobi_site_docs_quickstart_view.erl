@@ -17,10 +17,20 @@ render(_Bindings) ->
             ]},
             {h1, [], [~"Quick start"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Install Asobi, run the engine, deploy a tiny Lua game, and connect a test client. ",
-                ~"About 15 minutes."
+                ~"Install Asobi, run the engine, ship a tiny game, and connect a test client. ",
+                ~"About 15 minutes. Each step is shown in ",
+                {strong, [], [~"both Lua and Erlang"]},
+                ~" \x{2014} pick whichever your team writes."
             ]},
 
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Which should I use? "]},
+                    ~"Lua is the fastest path to shipping (hot reload, no rebar3, smaller mental model). ",
+                    ~"Erlang gives you full behaviour-level control and better performance on CPU-heavy loops. ",
+                    ~"You can mix: a mostly-Lua game can drop into Erlang for one hot module."
+                ]}
+            ]},
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Prerequisites: "]},
@@ -30,7 +40,7 @@ render(_Bindings) ->
 
             {h2, [], [~"1. Run the engine"]},
             {p, [], [
-                ~"The fastest way to run Asobi is the pre-built Docker image. It starts a local Postgres and the engine in one command:"
+                ~"Start Postgres, then the Asobi engine. Same one-liner regardless of which language you write your game in \x{2014} the engine loads both."
             ]},
             code(
                 ~"bash",
@@ -47,14 +57,22 @@ docker run --rm -it --name asobi \
 """
             ),
             {p, [], [
-                ~"You should see the engine come up with a ",
+                ~"You should see a ",
                 {code, [], [~"Nova application started"]},
                 ~" log line. Port 8080 is the WebSocket endpoint for clients; the HTTP API lives on the same port."
             ]},
 
-            {h2, [], [~"2. Write a Lua game"]},
+            {h2, [], [~"2. Write the game"]},
             {p, [], [
-                ~"Asobi games are Lua modules that implement a small set of callbacks. ",
+                ~"We'll build a ",
+                {em, [], [~"click counter"]},
+                ~": every player who sends a ",
+                {code, [], [~"click"]},
+                ~" input increments a shared counter, broadcast to everyone."
+            ]},
+
+            {h3, [], [~"Option A \x{2014} Lua"]},
+            {p, [], [
                 ~"Create ",
                 {code, [], [~"game/hello.lua"]},
                 ~":"
@@ -90,47 +108,95 @@ function game.get_state(_player_id, state) return { hits = state.hits } end
 return game
 """
             ),
+
+            {h3, [], [~"Option B \x{2014} Erlang"]},
             {p, [], [
-                ~"Every public Lua function corresponds to a callback Asobi calls. ",
-                ~"The ",
-                {code, [], [~"game"]},
-                ~" global gives you the runtime API: ",
-                {code, [], [~"game.broadcast"]},
-                ~", ",
-                {code, [], [~"game.send"]},
-                ~", and much more \x{2014} see the ",
-                {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
-                ~"."
+                ~"Create ",
+                {code, [], [~"src/hello_game.erl"]},
+                ~" in a rebar3 project that depends on ",
+                {code, [], [~"asobi"]},
+                ~":"
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+-module(hello_game).
+-behaviour(asobi_match).
+
+-export([init/1, join/2, leave/2, handle_input/3, tick/1, get_state/2]).
+
+init(_Config) ->
+    {ok, #{hits => 0}}.
+
+join(PlayerId, State) ->
+    asobi_match:send(PlayerId, #{kind => <<"welcome">>, msg => <<"hi ", PlayerId/binary>>}),
+    {ok, State}.
+
+leave(_PlayerId, State) ->
+    {ok, State}.
+
+handle_input(_PlayerId, #{action := <<"click">>}, #{hits := H} = State) ->
+    NewState = State#{hits := H + 1},
+    asobi_match:broadcast(<<"update">>, #{hits => H + 1}),
+    {ok, NewState};
+handle_input(_PlayerId, _Input, State) ->
+    {ok, State}.
+
+tick(State) -> {ok, State}.
+
+get_state(_PlayerId, #{hits := H}) -> #{hits => H}.
+"""
+            ),
+            {p, [], [
+                ~"Both versions implement the same ",
+                {code, [], [~"asobi_match"]},
+                ~" contract. The Lua runtime translates each callback into the Erlang equivalent at the edge \x{2014} there's no semantic difference."
             ]},
 
             {h2, [], [~"3. Deploy the game"]},
+
+            {h3, [], [~"Option A \x{2014} Lua"]},
             {p, [], [
                 ~"Install the ",
                 {code, [], [~"asobi"]},
-                ~" CLI and deploy your Lua bundle:"
+                ~" CLI once, then push the bundle to the engine:"
             ]},
             code(
                 ~"bash",
                 ~"""
-# Install the CLI (one-time)
 go install github.com/widgrensit/asobi-cli/cmd/asobi@latest
 
-# Deploy the bundle to the local engine
 asobi config set url http://localhost:8080
 asobi config set api_key dev
 asobi deploy ./game
 """
             ),
             {p, [], [
-                ~"The CLI uploads your Lua files; the engine hot-loads them. ",
-                ~"No restart, no dropped connections. You'll see ",
+                ~"The engine hot-loads your Lua. No restart, no dropped connections. You'll see ",
                 {code, [], [~"\"Deployed 1 script successfully\""]},
-                ~" when it's done."
+                ~"."
             ]},
 
-            {h2, [], [~"4. Connect from a client"]},
+            {h3, [], [~"Option B \x{2014} Erlang"]},
             {p, [], [
-                ~"You can use any WebSocket client. Here's a quick test with ",
+                ~"Erlang game modules are hot-reloaded by ",
+                {code, [], [~"nova"]},
+                ~"/ rebar3. From your project root:"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+rebar3 compile
+rebar3 nova reload  # pushes new beam files to the running node
+"""
+            ),
+            {p, [], [
+                ~"In-flight matches finish on the old module version; new matches bind the new one. Same guarantee as the Lua path."
+            ]},
+
+            {h2, [], [~"4. Connect a client"]},
+            {p, [], [
+                ~"Any WebSocket client works. Quick test with ",
                 {code, [], [~"wscat"]},
                 ~":"
             ]},
@@ -145,14 +211,12 @@ wscat -c ws://localhost:8080/ws
 """
             ),
             {p, [], [
-                ~"You should see the engine respond with match state \x{2014} ",
+                ~"You'll see ",
                 {code, [], [~"{\"type\":\"match.state\",\"payload\":{\"hits\":1}}"]},
-                ~". Every ",
-                {code, [], [~"click"]},
-                ~" increments the counter."
+                ~" \x{2014} every click increments the counter."
             ]},
             {p, [], [
-                ~"For a real client, grab one of the SDKs: ",
+                ~"For a real client, use an SDK: ",
                 {a, [{href, ~"/defold"}], [~"Defold"]},
                 ~", ",
                 {a, [{href, ~"/unity"}], [~"Unity"]},
@@ -165,33 +229,32 @@ wscat -c ws://localhost:8080/ws
 
             {h2, [], [~"5. Iterate with hot reload"]},
             {p, [], [
-                ~"Change ",
-                {code, [], [~"game/hello.lua"]},
-                ~" (e.g. log the player ID on click) and re-run ",
-                {code, [], [~"asobi deploy ./game"]},
-                ~". The engine swaps the Lua module atomically \x{2014} any in-flight match finishes with the old code; new matches get the new code. Players stay connected."
+                ~"Edit the game file, re-deploy, watch changes take effect without disconnecting anyone. ",
+                ~"This is the BEAM's killer feature and Asobi's biggest differentiator \x{2014} any non-BEAM backend will drop connections on deploy."
             ]},
 
             {'div', [{class, ~"docs-callout docs-callout-success"}], [
                 {p, [], [
                     {strong, [], [~"That's it. "]},
-                    ~"You have a live Asobi server running a Lua game with hot-reload deploys."
+                    ~"You have a live Asobi server running a bilingual-capable game with hot-reload deploys."
                 ]}
             ]},
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}], [~"Tic-tac-toe tutorial"]},
-                    ~" \x{2014} build a real two-player game from scratch."
-                ]},
-                {li, [], [
                     {a, [{href, ~"/docs/concepts"}], [~"Core concepts"]},
-                    ~" \x{2014} matches, worlds, zones, voting, phases."
+                    ~" \x{2014} matches, worlds, zones, voting, phases \x{2014} each with Lua + Erlang snippets."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"game.* API reference"]},
-                    ~" \x{2014} every Lua function Asobi exposes."
+                    {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
+                    ~" \x{2014} every ",
+                    {code, [], [~"game.*"]},
+                    ~" function."
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/erlang/api"}], [~"Erlang API reference"]},
+                    ~" \x{2014} the behaviours and modules that power it all."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/self-host"}], [~"Self-host"]},
