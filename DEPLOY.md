@@ -78,8 +78,8 @@ curl -v https://asobi.dev 2>&1 | grep -E 'issuer|Server:'
 dig asobi.dev +short
 
 # No US CDN/font leaks on the rendered page
-curl -s https://asobi.dev | grep -Ei 'googleapis|gstatic|cloudflare|fly.dev'
-# ^ should return nothing
+curl -s https://asobi.dev | grep -Ei 'googleapis|gstatic|cloudflare|fly\.dev|fontawesome|jsdelivr|unpkg|cloudfront'
+# ^ should return nothing. Fonts are self-hosted under /assets/fonts/.
 
 # Plausible script loads from plausible.io (EU-hosted)
 curl -s https://asobi.dev | grep plausible.io

@@ -18,29 +18,75 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Terms of Service"]},
                     {p, [], [
-                        ~"Full terms will be published before Asobi Cloud exits closed beta. ",
-                        ~"This page is a placeholder."
+                        ~"Last updated: 15 April 2026. These terms cover the use of the ",
+                        {code, [], [~"asobi.dev"]},
+                        ~" website. The open-source Asobi library and (future) hosted service are covered separately."
                     ]}
                 ]},
+
                 {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Open-source core"]},
+                    {h2, [], [~"Provider"]},
                     {p, [], [
-                        ~"The Asobi library itself is released under the Apache 2.0 license ",
-                        ~"and governed by that license, not by these terms. See the ",
-                        {a, [{href, ~"https://github.com/widgrensit/asobi/blob/main/LICENSE"}], [
-                            ~"LICENSE file"
-                        ]},
-                        ~" in the repository."
-                    ]},
-                    {h2, [], [~"Hosted service"]},
+                        ~"The site is operated by Widgrensit AB, Sweden. Contact: ",
+                        {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
+                        ~"."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Open-source library"]},
                     {p, [], [
-                        ~"Asobi Cloud is in closed beta. Beta participants are covered by a ",
-                        ~"separate beta agreement communicated at onboarding."
-                    ]},
-                    {h2, [], [~"Contact"]},
+                        ~"The Asobi library, runtime, and client SDKs are released under the ",
+                        {a,
+                            [
+                                {href, ~"https://github.com/widgrensit/asobi/blob/main/LICENSE"}
+                            ],
+                            [~"Apache 2.0 license"]},
+                        ~" and governed by it. Nothing on this website modifies or overrides the Apache 2.0 license. If you distribute or use the library, the Apache 2.0 terms are what apply."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Website use"]},
                     {p, [], [
-                        ~"Questions? ",
-                        {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]}
+                        ~"You may read, link to, and share pages on ",
+                        {code, [], [~"asobi.dev"]},
+                        ~" freely. Don't attempt to break the site, probe it for vulnerabilities without a coordinated disclosure arrangement, or use it to attack third parties. Automated scraping is fine in moderation; please don't DDoS us."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Asobi Cloud beta"]},
+                    {p, [], [
+                        ~"Asobi Cloud is in closed beta. Signing up via the /cloud form puts you on a waitlist; it does not create a contract. Beta participants are covered by a separate beta agreement communicated at onboarding, which will supersede these general terms for the beta relationship."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"No warranty"]},
+                    {p, [], [
+                        ~"The site is provided \x{201C}as is\x{201D}, without warranty of availability, fitness for any particular purpose, or accuracy of content. We try hard to keep it up and accurate, but we make no legal guarantees."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Liability"]},
+                    {p, [], [
+                        ~"To the extent permitted by law, Widgrensit AB is not liable for indirect, incidental, consequential, or punitive damages arising from use of the site. Our total liability for direct damages, if any, is limited to 100 EUR."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Governing law"]},
+                    {p, [], [
+                        ~"Swedish law applies. Disputes that cannot be resolved by email go to the competent Swedish courts."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Changes"]},
+                    {p, [], [
+                        ~"We may update these terms as the project evolves. Changes take effect the moment they're published on this page; the \x{201C}last updated\x{201D} date at the top tells you when."
                     ]}
                 ]}
             ]},
