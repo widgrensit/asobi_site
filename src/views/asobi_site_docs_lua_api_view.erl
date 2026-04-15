@@ -252,28 +252,40 @@ local close = game.spatial.query_radius(entities, 0, 0, 100, {
                 ~"game.spatial.query_rect(x1, y1, x2, y2)",
                 ~"Zone-based rectangular query.",
                 ~"lua",
-                ~""
+                ~"""
+local in_box = game.spatial.query_rect(0, 0, 200, 200)
+"""
             ),
 
             api(
                 ~"game.spatial.nearest(entities, x, y, n, opts?)",
                 ~"Return the N nearest entities, sorted by distance.",
                 ~"lua",
-                ~""
+                ~"""
+local top3 = game.spatial.nearest(enemies, player.x, player.y, 3, {
+  type = "minion"
+})
+"""
             ),
 
             api(
                 ~"game.spatial.distance(entity_a, entity_b)",
                 ~"Euclidean distance between two entities.",
                 ~"lua",
-                ~""
+                ~"""
+local d = game.spatial.distance(player, target)
+"""
             ),
 
             api(
                 ~"game.spatial.in_range(entity_a, entity_b, range)",
                 ~"Boolean: whether two entities are within `range` units of each other.",
                 ~"lua",
-                ~""
+                ~"""
+if game.spatial.in_range(player, enemy, 32) then
+  deal_damage(enemy, 10)
+end
+"""
             ),
 
             %% ---- Zone ----
@@ -292,7 +304,9 @@ local goblin = game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
                 ~"game.zone.despawn(entity_id)",
                 ~"Remove an entity from the zone.",
                 ~"lua",
-                ~""
+                ~"""
+game.zone.despawn(goblin.id)
+"""
             ),
 
             %% ---- Terrain ----
@@ -302,14 +316,18 @@ local goblin = game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
                 ~"game.terrain.get_chunk(cx, cy)",
                 ~"Fetch compressed chunk bytes for the given chunk coordinates. Chunks are served automatically on zone entry \x{2014} use this only if you need the data server-side.",
                 ~"lua",
-                ~""
+                ~"""
+local bytes = game.terrain.get_chunk(4, 7)
+"""
             ),
 
             api(
                 ~"game.terrain.preload(coords_list)",
                 ~"Async preload chunks into the terrain cache. Useful ahead of a known player destination.",
                 ~"lua",
-                ~""
+                ~"""
+game.terrain.preload({ {5, 7}, {5, 8}, {6, 7}, {6, 8} })
+"""
             ),
 
             {h2, [], [~"Where next?"]},

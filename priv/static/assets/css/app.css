@@ -1412,6 +1412,43 @@ code {
 }
 
 /* =========================================================================
+   Language pair blocks — Lua | Erlang side-by-side
+   ========================================================================= */
+.docs-lang-pair {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--sp-4);
+    margin: var(--sp-4) 0 var(--sp-6);
+}
+.docs-lang-block { min-width: 0; display: flex; flex-direction: column; }
+.docs-lang-label {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    font-weight: 500;
+    color: var(--text-3);
+    margin-bottom: var(--sp-2);
+    display: inline-flex;
+    align-items: center;
+    gap: var(--sp-2);
+}
+.docs-lang-label::before {
+    content: "";
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 50%;
+    background: var(--indigo);
+    box-shadow: 0 0 6px color-mix(in oklab, var(--indigo) 50%, transparent);
+}
+.docs-lang-block:nth-child(2) .docs-lang-label::before { background: var(--emerald); box-shadow: 0 0 6px color-mix(in oklab, var(--emerald) 50%, transparent); }
+.docs-lang-block pre { margin: 0; flex: 1; }
+
+@media (max-width: 820px) {
+    .docs-lang-pair { grid-template-columns: 1fr; }
+}
+
+/* =========================================================================
    Motion
    ========================================================================= */
 @keyframes fade-up {

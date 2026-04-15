@@ -19,6 +19,7 @@ render(ActivePath, Content) ->
     LuaApi = L(~"/docs/lua/api", ~"game.* API"),
     LuaCallbacks = L(~"/docs/lua/callbacks", ~"Game module callbacks"),
     LuaCookbook = L(~"/docs/lua/cookbook", ~"Cookbook"),
+    ErlangApi = L(~"/docs/erlang/api", ~"Erlang API"),
     SelfHost = L(~"/docs/self-host", ~"Self-host"),
     Cloud = L(~"/docs/cloud", ~"Cloud (coming soon)"),
     Nav = asobi_site_nav:render(docs),
@@ -43,6 +44,10 @@ render(ActivePath, Content) ->
                             LuaApi,
                             LuaCallbacks,
                             LuaCookbook
+                        ]},
+                        {'div', [{class, ~"docs-nav-section"}], [
+                            {h3, [], [~"Erlang reference"]},
+                            ErlangApi
                         ]},
                         {'div', [{class, ~"docs-nav-section"}], [
                             {h3, [], [~"Deploy"]},

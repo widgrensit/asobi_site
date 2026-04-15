@@ -14,7 +14,9 @@ render(_Bindings) ->
             {h1, [], [~"Build multiplayer games with Asobi"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Asobi is an open-source game backend built on Erlang/OTP. ",
-                ~"Write your game logic in Lua. Hot-reload it without kicking players. ",
+                ~"Write your game logic in ",
+                {strong, [], [~"Lua or Erlang"]},
+                ~" \x{2014} both are first-class. Hot-reload it without kicking players. ",
                 ~"Self-host it or \x{2014} soon \x{2014} let us host it for you."
             ]},
 
@@ -53,6 +55,11 @@ render(_Bindings) ->
                     ~"Full reference for the game.* API available in your Lua scripts."
                 ),
                 card(
+                    ~"/docs/erlang/api",
+                    ~"Erlang API",
+                    ~"Behaviours, modules, and specs for writing games directly in Erlang."
+                ),
+                card(
                     ~"/docs/lua/cookbook",
                     ~"Cookbook",
                     ~"Copy-pasteable recipes for common patterns."
@@ -64,16 +71,19 @@ render(_Bindings) ->
                 )
             ]},
 
-            {h2, [], [~"Why Lua on Erlang?"]},
+            {h2, [], [~"Why Asobi?"]},
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
-                    ~"You write game logic in Lua \x{2014} the language game developers already know. ",
-                    ~"Asobi runs it on the BEAM (the Erlang virtual machine), giving you: "
+                    ~"Write game logic in ",
+                    {strong, [], [~"Lua"]},
+                    ~" (fast iteration, what game devs already know) or ",
+                    {strong, [], [~"Erlang"]},
+                    ~" (behaviour-level control, maximum perf). Both run on the BEAM, giving you:"
                 ]},
                 {ul, [], [
                     {li, [], [
                         {strong, [], [~"Restart-free hot reload. "]},
-                        ~"Deploy new Lua without disconnecting players. Nobody else on the market does this."
+                        ~"Deploy new code without disconnecting players. Works for both Lua bundles and Erlang beams. Nobody else on the market does this."
                     ]},
                     {li, [], [
                         {strong, [], [~"Fault tolerance. "]},
@@ -84,8 +94,10 @@ render(_Bindings) ->
                         ~"One process per match, one process per zone. Scales to hundreds of thousands on one node."
                     ]},
                     {li, [], [
-                        {strong, [], [~"Full-stack Lua. "]},
-                        ~"Defold on the client, Asobi on the server. Same language end to end."
+                        {strong, [], [~"Mix-and-match. "]},
+                        ~"A mostly-Lua game can drop into Erlang for a hot loop. Both call the same ",
+                        {code, [], [~"asobi_match"]},
+                        ~" behaviour underneath."
                     ]}
                 ]}
             ]},
