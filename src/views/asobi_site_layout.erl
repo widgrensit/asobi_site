@@ -20,6 +20,22 @@ render(Bindings) ->
                         {content, ~"Open-source multiplayer game backend built on Erlang/OTP."}
                     ],
                     []},
+                %% Fonts — preconnect then stylesheet for fastest paint.
+                {link, [{rel, ~"preconnect"}, {href, ~"https://fonts.googleapis.com"}], []},
+                {link,
+                    [
+                        {rel, ~"preconnect"},
+                        {href, ~"https://fonts.gstatic.com"},
+                        {crossorigin, ~""}
+                    ],
+                    []},
+                {link,
+                    [
+                        {rel, ~"stylesheet"},
+                        {href,
+                            ~"https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght,SOFT@0,9..144,300..900,0..100;1,9..144,300..900,0..100&family=Instrument+Sans:ital,wght@0,400..700;1,400..700&family=JetBrains+Mono:ital,wght@0,400..700;1,400..700&display=swap"}
+                    ],
+                    []},
                 {link, [{rel, ~"stylesheet"}, {href, ~"/assets/css/app.css"}], []},
                 {link, [{rel, ~"icon"}, {href, ~"/assets/favicon.ico"}], []},
                 %% Plausible Analytics (Estonia-based, data hosted in EU, no cookies).
