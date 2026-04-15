@@ -19,20 +19,31 @@ render(Bindings) ->
             %% Hero
             {section, [{class, ~"hero"}], [
                 {'div', [{class, ~"hero-inner"}], [
-                    {span, [{class, ~"hero-badge"}], [~"Preview"]},
-                    {p, [{class, ~"hero-eyebrow"}], [~"Open Source Game Backend"]},
-                    {h1, [{class, ~"hero-title"}], [~"Your game never goes down."]},
+                    {span, [{class, ~"hero-badge"}], [~"Preview \x{2014} v0.1"]},
+                    {p, [{class, ~"hero-eyebrow"}], [
+                        {span, [{class, ~"marker"}], [~"\x{00A7} 01"]},
+                        ~" \x{2002}Open-source game backend on the BEAM"
+                    ]},
+                    {h1, [{class, ~"hero-title"}], [
+                        ~"Your game ",
+                        {br, [], []},
+                        ~"never goes ",
+                        {em, [], [~"down."]}
+                    ]},
                     {p, [{class, ~"hero-subtitle"}], [
-                        ~"Asobi is a multiplayer game backend built on Erlang/OTP. ",
+                        ~"A multiplayer game backend built on Erlang/OTP. ",
                         ~"Fault-tolerant by design. Zero-downtime deploys. ",
                         ~"100K+ concurrent connections per node."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
-                        ~"Asobi is early but fully open-source and ready to play with. Spin it up, prototype your next game, and help shape the future of game backends on the BEAM."
+                        ~"Asobi is early but fully open-source and ready to play with. ",
+                        ~"Spin it up, prototype your next game, ",
+                        ~"and help shape the future of game backends on the BEAM."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
                         {a, [{href, ~"#get-started"}, {class, ~"btn btn-primary"}], [
-                            ~"Get Started"
+                            ~"Get started",
+                            {span, [{class, ~"arrow"}], [~" \x{2192}"]}
                         ]},
                         {a,
                             [
@@ -47,11 +58,89 @@ render(Bindings) ->
             %% Why BEAM
             {section, [{id, ~"why-beam"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"Built on the BEAM"]},
+                    {p, [{class, ~"section-marker"}], [~"02 / Runtime"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Built on the ",
+                        {em, [], [~"BEAM"]}
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"The same virtual machine that powers WhatsApp, Discord, and RabbitMQ. ",
                         ~"Designed for millions of concurrent connections with predictable latency."
                     ]},
+
+                    %% Process-isolation metaphor — 20x4 dot grid. Two dots
+                    %% cycle through a crash/restart loop; the rest stay up.
+                    {'div', [{class, ~"process-dots"}, {'aria-hidden', ~"true"}], [
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot fault-1"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot fault-2"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []},
+                        {'div', [{class, ~"process-dot"}], []}
+                    ]},
+                    {p, [{class, ~"process-caption"}], [
+                        {span, [{class, ~"ok"}], [~"\x{25A0} 58 processes up"]},
+                        ~"\x{2003}\x{00B7}\x{2003}",
+                        {span, [{class, ~"fail"}], [~"\x{25A0} 2 supervised restart"]},
+                        ~"\x{2003}\x{00B7}\x{2003}",
+                        ~"zero impact to neighbours"
+                    ]},
+
                     {'div', [{class, ~"beam-grid"}], [
                         {'div', [{class, ~"beam-card"}], [
                             {'div', [{class, ~"beam-card-icon"}], [<<16#2699/utf8>>]},
@@ -102,7 +191,11 @@ render(Bindings) ->
             %% Features
             {section, [{id, ~"features"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"Everything you need"]},
+                    {p, [{class, ~"section-marker"}], [~"03 / Kit"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Everything you ",
+                        {em, [], [~"need"]}
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"A complete backend for multiplayer games. One release, no external dependencies."
                     ]},
@@ -154,7 +247,12 @@ render(Bindings) ->
             %% SDKs
             {section, [{id, ~"sdks"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"SDKs for every engine"]},
+                    {p, [{class, ~"section-marker"}], [~"04 / Clients"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"SDKs for ",
+                        {em, [], [~"every"]},
+                        ~" engine"
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Official client libraries with full API coverage. Pick your engine and start building."
                     ]},
@@ -201,7 +299,11 @@ render(Bindings) ->
             %% Code example
             {section, [{class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"Define your game logic"]},
+                    {p, [{class, ~"section-marker"}], [~"05 / Contract"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Define your ",
+                        {em, [], [~"game logic"]}
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Implement the ",
                         {code, [], [~"asobi_match"]},
@@ -216,7 +318,14 @@ render(Bindings) ->
             %% Comparison
             {section, [{class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"How Asobi compares"]},
+                    {p, [{class, ~"section-marker"}], [~"06 / Position"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"How Asobi ",
+                        {em, [], [~"compares"]}
+                    ]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Honest accounting against the engines you\x{2019}d otherwise pick."
+                    ]},
                     {'div', [{class, ~"comparison-table-wrap"}], [
                         {table, [{class, ~"comparison-table"}], [
                             {thead, [], [
@@ -287,7 +396,14 @@ render(Bindings) ->
             %% Getting started
             {section, [{id, ~"get-started"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {h2, [{class, ~"section-title"}], [~"Get started in minutes"]},
+                    {p, [{class, ~"section-marker"}], [~"07 / Start"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Get started in ",
+                        {em, [], [~"minutes"]}
+                    ]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Four commands between you and a running multiplayer game."
+                    ]},
                     {'div', [{class, ~"steps"}], [
                         {'div', [{class, ~"step"}], [
                             {'div', [{class, ~"step-number"}], [~"1"]},
@@ -336,7 +452,11 @@ render(Bindings) ->
             %% Community
             {section, [{id, ~"community"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner community-section"}], [
-                    {h2, [{class, ~"section-title"}], [~"Join the community"]},
+                    {p, [{class, ~"section-marker"}], [~"08 / People"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Join the ",
+                        {em, [], [~"community"]}
+                    ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Ask questions, share what you're building, and help shape Asobi."
                     ]},
