@@ -29,14 +29,20 @@ render(Bindings) ->
                     {'div', [{class, ~"hero-actions"}], [
                         {a,
                             [
-                                {href, ~"https://github.com/widgrensit/asobi_arena"},
+                                {href, ~"https://play.asobi.dev/"},
                                 {class, ~"btn btn-primary"}
+                            ],
+                            [~"Play now \x{2192}"]},
+                        {a,
+                            [
+                                {href, ~"https://github.com/widgrensit/asobi_arena"},
+                                {class, ~"btn btn-secondary"}
                             ],
                             [~"View Source"]},
                         {a,
                             [
                                 {href, ~"/#get-started"},
-                                {class, ~"btn btn-secondary"}
+                                {class, ~"btn btn-ghost"}
                             ],
                             [~"Build Your Own"]}
                     ]}
