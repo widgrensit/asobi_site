@@ -15,8 +15,11 @@ jobs:
     with:
       version-file: '.tool-versions'
       enable-audit: true
-      enable-sbom: true
-      enable-sbom-scan: true
+      # SBOM temporarily disabled: rebar3_sbom fork crashes with
+      # unicode:characters_to_binary badarg on this dep graph.
+      # Follow-up: fix upstream in Taure/rebar3_sbom, then re-enable.
+      enable-sbom: false
+      enable-sbom-scan: false
       enable-dependency-submission: true
       enable-summary: true
       enable-elp-lint: true
