@@ -7,46 +7,14 @@
 mount(Bindings) ->
     {maps:merge(#{id => ~"home"}, Bindings), #{}}.
 
--spec render(map()) -> term().
+-spec render(map()) -> arizona_template:template().
 render(Bindings) ->
     DepSnippet = ~"{asobi, \"~> 0.1\"}",
+    Nav = asobi_site_nav:render(home),
+    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            %% Nav
-            {nav, [{class, ~"site-nav"}], [
-                {'div', [{class, ~"nav-inner"}], [
-                    {a, [{href, ~"/"}, {class, ~"nav-brand"}], [
-                        {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
-                        {span, [{class, ~"brand-text"}], [~"asobi"]}
-                    ]},
-                    {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
-                    {label,
-                        [{for, ~"nav-toggle"}, {class, ~"nav-hamburger"}, {'aria-label', ~"Menu"}],
-                        [
-                            {span, [], []},
-                            {span, [], []},
-                            {span, [], []}
-                        ]},
-                    {'div', [{class, ~"nav-links"}], [
-                        {a, [{href, ~"#features"}], [~"Features"]},
-                        {a, [{href, ~"#sdks"}], [~"SDKs"]},
-                        {a, [{href, ~"/demo"}], [~"Demo"]},
-                        {a, [{href, ~"/cloud"}], [~"Cloud"]},
-                        {a, [{href, ~"#get-started"}], [~"Get Started"]},
-                        {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
-                            ~"Discord"
-                        ]},
-                        {a,
-                            [
-                                {href, ~"https://github.com/widgrensit/asobi"},
-                                {class, ~"nav-github"}
-                            ],
-                            [
-                                ~"GitHub"
-                            ]}
-                    ]}
-                ]}
-            ]},
+            Nav,
 
             %% Hero
             {section, [{class, ~"hero"}], [
@@ -383,64 +351,7 @@ render(Bindings) ->
                 ]}
             ]},
 
-            %% Footer
-            {footer, [{class, ~"site-footer"}], [
-                {'div', [{class, ~"footer-inner"}], [
-                    {'div', [{class, ~"footer-brand"}], [
-                        {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
-                        ~" asobi",
-                        {p, [{class, ~"footer-tagline"}], [
-                            ~"Open-source game backend for the BEAM"
-                        ]}
-                    ]},
-                    {'div', [{class, ~"footer-links"}], [
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"Project"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"GitHub"]},
-                            {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi/issues"}], [
-                                ~"Issues"
-                            ]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi/blob/main/LICENSE"}],
-                                [~"License"]}
-                        ]},
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"SDKs"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi-unity"}], [~"Unity"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi-godot"}], [~"Godot"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi-defold"}], [
-                                ~"Defold"
-                            ]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi-dart"}], [
-                                ~"Flutter / Dart / Flame"
-                            ]}
-                        ]},
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"Ecosystem"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi_admin"}], [
-                                ~"Admin Dashboard"
-                            ]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi_arena"}], [
-                                ~"Example: Arena"
-                            ]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi-unity-demo"}], [
-                                ~"Unity Demo"
-                            ]}
-                        ]},
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"Built With"]},
-                            {a, [{href, ~"https://github.com/novaframework/nova"}], [~"Nova"]},
-                            {a, [{href, ~"https://github.com/arizona-framework/arizona"}], [
-                                ~"Arizona"
-                            ]},
-                            {a, [{href, ~"https://github.com/Taure/kura"}], [~"Kura"]}
-                        ]}
-                    ]}
-                ]},
-                {'div', [{class, ~"footer-bottom"}], [
-                    {p, [], [~"Apache 2.0 \x{2014} widgrensit"]}
-                ]}
-            ]}
+            Footer
         ]}
     ).
 

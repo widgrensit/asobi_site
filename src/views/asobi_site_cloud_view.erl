@@ -7,38 +7,13 @@
 mount(Bindings) ->
     {maps:merge(#{id => ~"cloud"}, Bindings), #{}}.
 
--spec render(map()) -> term().
+-spec render(map()) -> arizona_template:template().
 render(Bindings) ->
+    Nav = asobi_site_nav:render(cloud),
+    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            %% Nav (same shape as home)
-            {nav, [{class, ~"site-nav"}], [
-                {'div', [{class, ~"nav-inner"}], [
-                    {a, [{href, ~"/"}, {class, ~"nav-brand"}], [
-                        {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
-                        {span, [{class, ~"brand-text"}], [~"asobi"]}
-                    ]},
-                    {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
-                    {label,
-                        [{for, ~"nav-toggle"}, {class, ~"nav-hamburger"}, {'aria-label', ~"Menu"}],
-                        [
-                            {span, [], []},
-                            {span, [], []},
-                            {span, [], []}
-                        ]},
-                    {'div', [{class, ~"nav-links"}], [
-                        {a, [{href, ~"/"}], [~"Home"]},
-                        {a, [{href, ~"/demo"}], [~"Demo"]},
-                        {a, [{href, ~"/cloud"}, {class, ~"nav-link-btn"}], [~"Cloud"]},
-                        {a,
-                            [
-                                {href, ~"https://github.com/widgrensit/asobi"},
-                                {class, ~"nav-github"}
-                            ],
-                            [~"GitHub"]}
-                    ]}
-                ]}
-            ]},
+            Nav,
 
             %% Post-submit success banner (toggled by JS below when ?submitted=1).
             {'div',
@@ -85,8 +60,6 @@ render(Bindings) ->
 
             %% Hero
             {section, [{class, ~"hero"}], [
-                {'div', [{class, ~"hero-blob-left"}], []},
-                {'div', [{class, ~"hero-blob-right"}], []},
                 {'div', [{class, ~"hero-inner"}], [
                     {span, [{class, ~"hero-badge"}], [~"Closed beta \x{2014} Q3 2026"]},
                     {h1, [{class, ~"hero-title"}], [
@@ -117,22 +90,17 @@ render(Bindings) ->
                 ]}
             ]},
 
-            %% Why us — bento
-            {section, [{id, ~"why-cloud"}, {class, ~"section section-alt"}], [
+            %% Why us
+            {section, [{id, ~"why-cloud"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {'div', [{class, ~"section-header-split"}], [
-                        {'div', [], [
-                            {p, [{class, ~"section-eyebrow"}], [~"Sovereignty"]},
-                            {h2, [{class, ~"section-title"}], [~"EU-hosted. Not EU-washed."]}
-                        ]},
-                        {p, [{class, ~"section-subtitle"}], [
-                            ~"Everything you run on Asobi Cloud stays on French-sovereign ",
-                            ~"infrastructure. No US sub-processors. No CLOUD Act exposure. ",
-                            ~"DPA ready from day one."
-                        ]}
+                    {h2, [{class, ~"section-title"}], [~"EU-hosted. Not EU-washed."]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Everything you run on Asobi Cloud stays on French-sovereign ",
+                        ~"infrastructure. No US sub-processors. No CLOUD Act exposure. ",
+                        ~"DPA ready from day one."
                     ]},
-                    {'div', [{class, ~"bento-grid"}], [
-                        {'div', [{class, ~"bento-card bento-card-wide"}], [
+                    {'div', [{class, ~"feature-grid"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"Your backend cannot get acqui-hired"]},
                             {p, [], [
                                 ~"The core engine is Apache-2 and lives on GitHub. ",
@@ -140,14 +108,14 @@ render(Bindings) ->
                                 ~"your own server, and keep running. No lock-in. No cliff."
                             ]}
                         ]},
-                        {'div', [{class, ~"bento-card"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"French-sovereign by default"]},
                             {p, [], [
                                 ~"Hosted on Clever Cloud (Nantes, France). ",
                                 ~"SecNumCloud partner. Explicit CLOUD Act protection in contract."
                             ]}
                         ]},
-                        {'div', [{class, ~"bento-card"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"GDPR out of the box"]},
                             {p, [], [
                                 ~"Data export and deletion endpoints per player. ",
@@ -155,7 +123,7 @@ render(Bindings) ->
                                 ~"DPA based on EU Standard Contractual Clauses."
                             ]}
                         ]},
-                        {'div', [{class, ~"bento-card"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"Built for indies, priced for indies"]},
                             {p, [], [
                                 ~"From \x{20AC}9/month for Indie (10k MAU, 200 CCU). ",
@@ -163,7 +131,7 @@ render(Bindings) ->
                                 ~"No per-seat surprises."
                             ]}
                         ]},
-                        {'div', [{class, ~"bento-card bento-card-wide"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"Hot-reload Lua. Ship during the playtest."]},
                             {p, [], [
                                 ~"Your match logic is a Lua file running inside the BEAM. ",
@@ -178,32 +146,27 @@ render(Bindings) ->
             %% Proof
             {section, [{id, ~"proof"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {'div', [{class, ~"section-header-split"}], [
-                        {'div', [], [
-                            {p, [{class, ~"section-eyebrow"}], [~"Proof, not promises"]},
-                            {h2, [{class, ~"section-title"}], [
-                                ~"Numbers we\x{2019}ve actually measured."
-                            ]}
-                        ]},
-                        {p, [{class, ~"section-subtitle"}], [
-                            ~"Real WebSocket load against a single 8-core BEAM node. ",
-                            ~"Benchmark scripts are in the repo so you can reproduce them."
-                        ]}
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Numbers we\x{2019}ve actually measured."
                     ]},
-                    {'div', [{class, ~"bento-grid"}], [
-                        {'div', [{class, ~"bento-card"}], [
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Real WebSocket load against a single 8-core BEAM node. ",
+                        ~"Benchmark scripts are in the repo so you can reproduce them."
+                    ]},
+                    {'div', [{class, ~"feature-grid"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"49 000 msg/sec"]},
                             {p, [], [
                                 ~"WebSocket throughput, zero message drops, 10.7 ms p50 round-trip."
                             ]}
                         ]},
-                        {'div', [{class, ~"bento-card"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"4 613 WS connections"]},
                             {p, [], [
                                 ~"Single node, zero failures, \x{2248} 15 KB RAM per connection."
                             ]}
                         ]},
-                        {'div', [{class, ~"bento-card"}], [
+                        {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"2 000 \x{00D7} 2 000 zones"]},
                             {p, [], [
                                 ~"MMO-scale spatial grid, 500 players, 208 MB RAM, zero errors."
@@ -214,24 +177,19 @@ render(Bindings) ->
             ]},
 
             %% Beta signup
-            {section, [{id, ~"beta"}, {class, ~"section section-alt"}], [
+            {section, [{id, ~"beta"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {'div', [{class, ~"section-header-split"}], [
-                        {'div', [], [
-                            {p, [{class, ~"section-eyebrow"}], [~"Closed beta"]},
-                            {h2, [{class, ~"section-title"}], [~"Want to try it?"]}
-                        ]},
-                        {p, [{class, ~"section-subtitle"}], [
-                            ~"We\x{2019}re onboarding our first studios in Q3 2026. ",
-                            ~"Leave your email and tell us which engine you use. ",
-                            ~"We reply personally within a day."
-                        ]}
+                    {h2, [{class, ~"section-title"}], [~"Want to try it?"]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"We\x{2019}re onboarding our first studios in Q3 2026. ",
+                        ~"Leave your email and tell us which engine you use. ",
+                        ~"We reply personally within a day."
                     ]},
                     {'div', [{class, ~"beta-cta"}], [
                         {a,
                             [
                                 {href, ~"https://tally.so/r/0QJ44Z"},
-                                {class, ~"btn btn-primary btn-large"}
+                                {class, ~"btn btn-primary btn-lg"}
                             ],
                             [~"Request beta access \x{2192}"]},
                         {p, [{class, ~"beta-cta-note"}], [
@@ -242,40 +200,6 @@ render(Bindings) ->
                 ]}
             ]},
 
-            %% Footer (compact — reuses home classes)
-            {footer, [{class, ~"site-footer"}], [
-                {'div', [{class, ~"footer-inner"}], [
-                    {'div', [{class, ~"footer-brand"}], [
-                        {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
-                        {span, [{class, ~"brand-text"}], [~"asobi"]}
-                    ]},
-                    {'div', [{class, ~"footer-links"}], [
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"Product"]},
-                            {a, [{href, ~"/"}], [~"Home"]},
-                            {a, [{href, ~"/cloud"}], [~"Cloud"]},
-                            {a, [{href, ~"/demo"}], [~"Demo"]},
-                            {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"GitHub"]}
-                        ]},
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"Legal"]},
-                            {a, [{href, ~"/terms"}], [~"Terms"]},
-                            {a, [{href, ~"/privacy"}], [~"Privacy"]},
-                            {a, [{href, ~"/dpa"}], [~"DPA"]}
-                        ]},
-                        {'div', [{class, ~"footer-col"}], [
-                            {h4, [], [~"Company"]},
-                            {p, [{class, ~"footer-note"}], [
-                                ~"Widgrensit AB",
-                                {br, [], []},
-                                ~"Sweden"
-                            ]}
-                        ]}
-                    ]}
-                ]},
-                {'div', [{class, ~"footer-bottom"}], [
-                    {p, [], [~"Apache 2.0 \x{2014} widgrensit"]}
-                ]}
-            ]}
+            Footer
         ]}
     ).
