@@ -3,7 +3,7 @@
 
 -export([render/1]).
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
     Prefix = arizona_nova:prefix(),
     ?html([

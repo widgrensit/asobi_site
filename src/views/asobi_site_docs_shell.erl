@@ -7,7 +7,7 @@
 
 -export([render/3]).
 
--spec render(binary(), binary(), arizona_template:template()) -> arizona_template:template().
+-spec render(binary(), binary(), az:template()) -> az:template().
 render(Id, ActivePath, Content) ->
     L = fun(Href, Label) -> sidebar_link(Href, Label, ActivePath) end,
 
