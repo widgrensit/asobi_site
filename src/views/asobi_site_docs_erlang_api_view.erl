@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -342,7 +342,7 @@ lists:foreach(fun({_Id, _E, _Dist}) -> notify(_E) end, Nearby).
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/erlang/api", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/erlang/api", Content).
 
 api(Signature, Desc, Lang, Example) ->
     ?html(

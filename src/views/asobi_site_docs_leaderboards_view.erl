@@ -17,7 +17,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -141,7 +141,7 @@ POST /api/v1/tournaments/:id/join      Join a tournament
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/leaderboards", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/leaderboards", Content).
 
 pair(LuaBody, ErlBody) ->
     ?html(

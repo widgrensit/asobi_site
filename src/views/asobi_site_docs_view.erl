@@ -8,7 +8,7 @@ mount(Bindings) ->
     {maps:merge(#{id => ~"docs", title => ~"Asobi docs"}, Bindings), #{}}.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {h1, [], [~"Build multiplayer games with Asobi"]},
@@ -121,7 +121,7 @@ render(_Bindings) ->
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs", Content).
 
 card(Href, Title, Desc) ->
     ?html(

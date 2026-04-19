@@ -8,7 +8,7 @@ mount(Bindings) ->
     {maps:merge(#{id => ~"docs-lua-api", title => ~"Lua API — Asobi docs"}, Bindings), #{}}.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -349,7 +349,7 @@ game.terrain.preload({ {5, 7}, {5, 8}, {6, 7}, {6, 8} })
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/lua/api", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/api", Content).
 
 api(Signature, Desc, Lang, Example) ->
     ?html(

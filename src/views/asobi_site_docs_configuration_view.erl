@@ -14,7 +14,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -243,7 +243,7 @@ render(_Bindings) ->
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/configuration", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/configuration", Content).
 
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

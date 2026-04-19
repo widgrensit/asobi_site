@@ -5,10 +5,10 @@
 %% + a content container. Each doc view calls `render/2` with its active
 %% path and content template.
 
--export([render/2]).
+-export([render/3]).
 
--spec render(binary(), arizona_template:template()) -> arizona_template:template().
-render(ActivePath, Content) ->
+-spec render(binary(), binary(), arizona_template:template()) -> arizona_template:template().
+render(Id, ActivePath, Content) ->
     L = fun(Href, Label) -> sidebar_link(Href, Label, ActivePath) end,
 
     %% Get started
@@ -51,7 +51,7 @@ render(ActivePath, Content) ->
 
     Nav = asobi_site_nav:render(docs),
     ?html(
-        {'div', [{class, ~"docs-root"}], [
+        {'div', [{id, Id}, {class, ~"docs-root"}], [
             Nav,
             {'div', [{class, ~"docs-shell"}], [
                 {aside, [{class, ~"docs-sidebar"}], [

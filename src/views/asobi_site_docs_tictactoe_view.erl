@@ -14,7 +14,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -409,7 +409,7 @@ wscat -c ws://localhost:8080/ws
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/tutorials/tic-tac-toe", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/tutorials/tic-tac-toe", Content).
 
 pair(LuaBody, ErlangBody) ->
     ?html(

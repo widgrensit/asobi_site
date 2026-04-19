@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -275,7 +275,7 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/voting", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/voting", Content).
 
 pair(LuaBody, ErlBody) ->
     ?html(

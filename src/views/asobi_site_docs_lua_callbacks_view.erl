@@ -14,7 +14,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -366,7 +366,7 @@ vote_resolved(_Template, #{winner := W}, State) ->
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/lua/callbacks", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/callbacks", Content).
 
 callback_pair(LuaBody, ErlangBody) ->
     ?html(

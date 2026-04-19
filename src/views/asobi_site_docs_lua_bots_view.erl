@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -168,7 +168,7 @@ end
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/lua/bots", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/bots", Content).
 
 pair(LuaBody, ErlBody) ->
     ?html(

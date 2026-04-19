@@ -8,7 +8,7 @@ mount(Bindings) ->
     {maps:merge(#{id => ~"docs-concepts", title => ~"Core concepts — Asobi docs"}, Bindings), #{}}.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -251,7 +251,7 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/concepts", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/concepts", Content).
 
 pair(LuaBody, ErlangBody) ->
     ?html(

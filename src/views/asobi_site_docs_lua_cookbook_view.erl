@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -245,7 +245,7 @@ game.notify_many(winners, "tournament_win", "You won the bracket!", {
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/lua/cookbook", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/cookbook", Content).
 
 recipe(Title, Body) ->
     ?html(

@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -201,7 +201,7 @@ match(Tickets, Config) ->
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/matchmaking", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/matchmaking", Content).
 
 pair(WsBody, ErlBody) ->
     ?html(

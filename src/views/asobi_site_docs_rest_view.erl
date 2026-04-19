@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -184,7 +184,7 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/protocols/rest", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/protocols/rest", Content).
 
 section(Title, Body) ->
     ?html(

@@ -8,7 +8,7 @@ mount(Bindings) ->
     {maps:merge(#{id => ~"docs-quickstart", title => ~"Quick start — Asobi docs"}, Bindings), #{}}.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -266,7 +266,7 @@ wscat -c ws://localhost:8080/ws
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/quickstart", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/quickstart", Content).
 
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

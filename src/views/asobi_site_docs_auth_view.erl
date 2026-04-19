@@ -11,7 +11,7 @@ mount(Bindings) ->
     }.
 
 -spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
+render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
@@ -198,7 +198,7 @@ var response = await asobi.Auth.OAuth("google", idToken);
             ]}
         ]}
     ),
-    asobi_site_docs_shell:render(~"/docs/authentication", Content).
+    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/authentication", Content).
 
 pair(LangALabel, LangBLabel) ->
     ?html(
