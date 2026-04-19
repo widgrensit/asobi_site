@@ -9,8 +9,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Self-host"
@@ -275,8 +275,6 @@ spec:
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/self-host", Content).
-
+    ).
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

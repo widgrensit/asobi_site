@@ -9,8 +9,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Core concepts"
@@ -250,9 +250,7 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/concepts", Content).
-
+    ).
 pair(LuaBody, ErlangBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

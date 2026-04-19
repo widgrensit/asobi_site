@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Matchmaking"
@@ -200,9 +200,7 @@ match(Tickets, Config) ->
                 {li, [], [{a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API: asobi_matchmaker"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/matchmaking", Content).
-
+    ).
 pair(WsBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Authentication"
@@ -197,9 +197,7 @@ var response = await asobi.Auth.OAuth("google", idToken);
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/authentication", Content).
-
+    ).
 pair(LangALabel, LangBLabel) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

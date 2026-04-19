@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Protocols / REST"
@@ -183,9 +183,7 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
                 {li, [], [{a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/protocols/rest", Content).
-
+    ).
 section(Title, Body) ->
     ?html(
         {'div', [], [

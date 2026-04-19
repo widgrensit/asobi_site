@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Clustering"
@@ -157,8 +157,6 @@ nodes().          %% ['asobi@10.0.0.1']
                 {li, [], [{a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration reference"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/clustering", Content).
-
+    ).
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

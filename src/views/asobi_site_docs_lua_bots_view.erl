@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Bots"
@@ -167,9 +167,7 @@ end
                 {li, [], [{a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance & benchmarks"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/bots", Content).
-
+    ).
 pair(LuaBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

@@ -9,8 +9,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {h1, [], [~"Build multiplayer games with Asobi"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Asobi is an open-source game backend built on Erlang/OTP. ",
@@ -120,9 +120,7 @@ render(Bindings) ->
                 ~"."
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs", Content).
-
+    ).
 card(Href, Title, Desc) ->
     ?html(
         {a, [{href, Href}, {class, ~"docs-card"}, az_navigate], [

@@ -15,8 +15,12 @@ render(Bindings) ->
             ?stateless(asobi_site_nav, render, #{active => ?get(active)}),
             ?stateful(?get(view), #{
                 id => ?get(view_id),
-                %% This is a workaround that should be improved in Arizona itself
-                slug => ?get(slug, ~"")
+                %% Route extras forwarded to the child view (workaround for
+                %% arizona not supporting arbitrary route-binding passthrough).
+                slug => ?get(slug, ~""),
+                doc_view => ?get(doc_view, undefined),
+                doc_view_id => ?get(doc_view_id, ~""),
+                active_path => ?get(active_path, ~"")
             })
         ]}
     ).

@@ -9,8 +9,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / ",
@@ -348,9 +348,7 @@ game.terrain.preload({ {5, 7}, {5, 8}, {6, 7}, {6, 8} })
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/api", Content).
-
+    ).
 api(Signature, Desc, Lang, Example) ->
     ?html(
         {'div', [{class, ~"docs-api"}], [

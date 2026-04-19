@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Erlang / API"
@@ -341,9 +341,7 @@ lists:foreach(fun({_Id, _E, _Dist}) -> notify(_E) end, Nearby).
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/erlang/api", Content).
-
+    ).
 api(Signature, Desc, Lang, Example) ->
     ?html(
         {'div', [{class, ~"docs-api"}], [

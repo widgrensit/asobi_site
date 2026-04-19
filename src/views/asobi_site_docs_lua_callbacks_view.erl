@@ -15,8 +15,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Callbacks"
@@ -365,9 +365,7 @@ vote_resolved(_Template, #{winner := W}, State) ->
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/callbacks", Content).
-
+    ).
 callback_pair(LuaBody, ErlangBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

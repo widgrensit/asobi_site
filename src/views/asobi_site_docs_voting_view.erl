@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Voting"
@@ -274,9 +274,7 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/voting", Content).
-
+    ).
 pair(LuaBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

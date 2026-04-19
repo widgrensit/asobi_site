@@ -12,8 +12,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Content = ?html(
-        {'div', [], [
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Cookbook"
@@ -244,9 +244,7 @@ game.notify_many(winners, "tournament_win", "You won the bracket!", {
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(maps:get(id, Bindings), ~"/docs/lua/cookbook", Content).
-
+    ).
 recipe(Title, Body) ->
     ?html(
         {'div', [{class, ~"docs-api"}], [
