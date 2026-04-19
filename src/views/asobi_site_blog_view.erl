@@ -3,13 +3,12 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
-    {maps:merge(#{id => ~"blog", title => ~"Blog \x{2014} Asobi"}, Bindings), #{}}.
+    {Bindings, #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Posts = asobi_site_blog_posts:all(),
     ?html(
         {'div', [{id, ?get(id)}], [
             {'div', [{class, ~"guide-page blog-index"}], [
@@ -25,7 +24,7 @@ render(Bindings) ->
                     ]}
                 ]},
                 {'div', [{class, ~"blog-list"}], [
-                    ?each(fun post_card/1, Posts)
+                    ?each(fun post_card/1, asobi_site_blog_posts:all())
                 ]}
             ]}
         ]}
@@ -39,7 +38,7 @@ post_card(#{
     reading_time := ReadingTime,
     tags := Tags
 }) ->
-    Href = iolist_to_binary([~"/blog/", Slug]),
+    Href = [~"/blog/", Slug],
     ?html(
         {article, [{class, ~"blog-card"}], [
             {'div', [{class, ~"blog-card-meta"}], [
@@ -48,12 +47,12 @@ post_card(#{
                 {span, [{class, ~"blog-reading-time"}], [ReadingTime]}
             ]},
             {h2, [{class, ~"blog-card-title"}], [
-                {a, [{href, Href}], [Title]}
+                {a, [{href, Href}, az_navigate], [Title]}
             ]},
             {p, [{class, ~"blog-card-lede"}], [Lede]},
             {'div', [{class, ~"blog-card-tags"}], [
                 ?each(fun(T) -> {span, [{class, ~"blog-tag"}], [T]} end, Tags)
             ]},
-            {a, [{href, Href}, {class, ~"blog-card-link"}], [~"Read \x{2192}"]}
+            {a, [{href, Href}, {class, ~"blog-card-link"}, az_navigate], [~"Read \x{2192}"]}
         ]}
     ).

@@ -14,7 +14,7 @@
     date := binary(),
     tags := [binary()],
     reading_time := binary(),
-    body := fun(() -> arizona_template:template())
+    body := fun((az:bindings()) -> az:template())
 }.
 
 -export_type([post/0]).
@@ -32,24 +32,24 @@ all() ->
             date => ~"2026-04-15",
             tags => [~"engineering", ~"manifesto"],
             reading_time => ~"6 min",
-            body => fun post_why_erlang/0
+            body => fun post_why_erlang/1
         }
     ],
     lists:sort(fun(#{date := A}, #{date := B}) -> A >= B end, Posts).
 
 -spec by_slug(binary()) -> {ok, post()} | not_found.
 by_slug(Slug) ->
-    case [P || #{slug := S} = P <- all(), S =:= Slug] of
-        [Post | _] -> {ok, Post};
-        [] -> not_found
+    case lists:search(fun(#{slug := S}) -> S =:= Slug end, all()) of
+        {value, Post} -> {ok, Post};
+        false -> not_found
     end.
 
 %%----------------------------------------------------------------------
 %% Post bodies
 %%----------------------------------------------------------------------
 
--spec post_why_erlang() -> arizona_template:template().
-post_why_erlang() ->
+-spec post_why_erlang(az:bindings()) -> az:template().
+post_why_erlang(_Bindings) ->
     ?html(
         {'div', [], [
             {p, [], [
