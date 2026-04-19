@@ -67,7 +67,9 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     ~"Split heavy per-entity work across frames (round-robin): see the ",
-                    {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"cookbook AI-stepping recipe"]},
+                    {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [
+                        ~"cookbook AI-stepping recipe"
+                    ]},
                     ~"."
                 ]},
                 {li, [], [
@@ -150,7 +152,9 @@ render(Bindings) ->
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [{a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]}]},
-                {li, [], [{a, [{href, ~"/docs/world-server"}, az_navigate], [~"World server deep dive"]}]},
+                {li, [], [
+                    {a, [{href, ~"/docs/world-server"}, az_navigate], [~"World server deep dive"]}
+                ]},
                 {li, [], [{a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration"]}]}
             ]}
         ]}

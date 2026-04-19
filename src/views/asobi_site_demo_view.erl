@@ -11,7 +11,6 @@ mount(Bindings) ->
 render(Bindings) ->
     ?html(
         {'div', [{id, ?get(id)}, {class, ~"demo-page"}], [
-
             %% Hero
             {section, [{class, ~"demo-hero"}], [
                 {'div', [{class, ~"demo-hero-inner"}], [

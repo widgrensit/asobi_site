@@ -239,7 +239,9 @@ render(Bindings) ->
             {ul, [], [
                 {li, [], [{a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]}]},
                 {li, [], [{a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}
+                ]}
             ]}
         ]}
     ).

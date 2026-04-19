@@ -137,7 +137,9 @@ POST /api/v1/tournaments/:id/join      Join a tournament
                     {a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]},
                     ~" \x{2014} prize distribution currencies."
                 ]},
-                {li, [], [{a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.leaderboard.*"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.leaderboard.*"]}
+                ]}
             ]}
         ]}
     ).

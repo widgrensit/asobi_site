@@ -11,7 +11,6 @@ mount(Bindings) ->
 render(Bindings) ->
     ?html(
         {'div', [{id, ?get(id)}], [
-
             %% Post-submit success banner (toggled by JS below when ?submitted=1).
             {'div',
                 [

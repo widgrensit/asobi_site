@@ -197,7 +197,11 @@ match(Tickets, Config) ->
                         ~"WebSocket: matchmaker.* messages"
                     ]}
                 ]},
-                {li, [], [{a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API: asobi_matchmaker"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [
+                        ~"Erlang API: asobi_matchmaker"
+                    ]}
+                ]}
             ]}
         ]}
     ).

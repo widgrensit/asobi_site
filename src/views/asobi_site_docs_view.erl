@@ -24,9 +24,15 @@ render(Bindings) ->
                 {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}, az_navigate], [
                     ~"Quick start \x{2192}"
                 ]},
-                {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, {class, ~"btn btn-secondary"}, az_navigate], [
-                    ~"Tic-tac-toe tutorial"
-                ]},
+                {a,
+                    [
+                        {href, ~"/docs/tutorials/tic-tac-toe"},
+                        {class, ~"btn btn-secondary"},
+                        az_navigate
+                    ],
+                    [
+                        ~"Tic-tac-toe tutorial"
+                    ]},
                 {a, [{href, ~"https://github.com/widgrensit/asobi"}, {class, ~"btn btn-ghost"}], [
                     ~"GitHub"
                 ]}

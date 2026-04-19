@@ -350,7 +350,9 @@ vote_resolved(_Template, #{winner := W}, State) ->
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [~"Tic-tac-toe tutorial"]},
+                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
+                        ~"Tic-tac-toe tutorial"
+                    ]},
                     ~" \x{2014} all the callbacks in context."
                 ]},
                 {li, [], [

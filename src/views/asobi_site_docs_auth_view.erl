@@ -188,7 +188,9 @@ var response = await asobi.Auth.OAuth("google", idToken);
                     ~" \x{2014} every endpoint, including the auth routes."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [~"WebSocket protocol"]},
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
+                        ~"WebSocket protocol"
+                    ]},
                     ~" \x{2014} message shapes for real-time flows."
                 ]},
                 {li, [], [

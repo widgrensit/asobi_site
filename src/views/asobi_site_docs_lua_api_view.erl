@@ -343,7 +343,9 @@ game.terrain.preload({ {5, 7}, {5, 8}, {6, 7}, {6, 8} })
                     ~" \x{2014} short patterns for common tasks."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [~"Tic-tac-toe tutorial"]},
+                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
+                        ~"Tic-tac-toe tutorial"
+                    ]},
                     ~" \x{2014} see the API in context."
                 ]}
             ]}

@@ -163,8 +163,12 @@ end
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [{a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]}]},
-                {li, [], [{a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance & benchmarks"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance & benchmarks"]}
+                ]}
             ]}
         ]}
     ).

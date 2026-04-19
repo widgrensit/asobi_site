@@ -239,7 +239,9 @@ game.notify_many(winners, "tournament_win", "You won the bracket!", {
                     ~" implement."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [~"Tic-tac-toe tutorial"]},
+                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
+                        ~"Tic-tac-toe tutorial"
+                    ]},
                     ~" \x{2014} everything applied to a concrete game."
                 ]}
             ]}

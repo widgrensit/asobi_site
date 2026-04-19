@@ -53,29 +53,29 @@ render(Bindings) ->
                 {'data-scroll-key', ~"docs-sidebar"}
             ],
             [
-            {nav, [{class, ~"docs-nav"}], [
-                ?each(
-                    fun({Title, Links}) ->
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [Title]},
-                            ?each(
-                                fun({Href, Label}) ->
-                                    {a,
-                                        [
-                                            {href, Href},
-                                            {class, link_class(Href, ?get(active_path))},
-                                            az_navigate
-                                        ],
-                                        [Label]}
-                                end,
-                                Links
-                            )
-                        ]}
-                    end,
-                    Sections
-                )
+                {nav, [{class, ~"docs-nav"}], [
+                    ?each(
+                        fun({Title, Links}) ->
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [Title]},
+                                ?each(
+                                    fun({Href, Label}) ->
+                                        {a,
+                                            [
+                                                {href, Href},
+                                                {class, link_class(Href, ?get(active_path))},
+                                                az_navigate
+                                            ],
+                                            [Label]}
+                                    end,
+                                    Links
+                                )
+                            ]}
+                        end,
+                        Sections
+                    )
+                ]}
             ]}
-        ]}
     ).
 
 link_class(Href, Href) -> ~"docs-nav-link active";

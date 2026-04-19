@@ -153,8 +153,12 @@ nodes().          %% ['asobi@10.0.0.1']
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [{a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}]},
-                {li, [], [{a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration reference"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration reference"]}
+                ]}
             ]}
         ]}
     ).

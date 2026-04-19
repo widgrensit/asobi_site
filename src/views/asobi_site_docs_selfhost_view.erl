@@ -25,7 +25,9 @@ render(Bindings) ->
                 {p, [], [
                     {strong, [], [~"Prefer managed? "]},
                     ~"Asobi Cloud is coming \x{2014} fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
-                    {a, [{href, ~"/cloud"}, az_navigate], [~"Join the waitlist at asobi.dev/cloud."]}
+                    {a, [{href, ~"/cloud"}, az_navigate], [
+                        ~"Join the waitlist at asobi.dev/cloud."
+                    ]}
                 ]}
             ]},
 

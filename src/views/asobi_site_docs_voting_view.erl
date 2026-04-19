@@ -249,7 +249,9 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
             {h2, [], [~"WS + REST"]},
             {p, [], [
                 ~"See the ",
-                {a, [{href, ~"/docs/protocols/websocket#voting"}, az_navigate], [~"WebSocket voting messages"]},
+                {a, [{href, ~"/docs/protocols/websocket#voting"}, az_navigate], [
+                    ~"WebSocket voting messages"
+                ]},
                 ~" for ",
                 {code, [], [~"vote.cast"]},
                 ~", ",

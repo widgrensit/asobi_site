@@ -195,8 +195,14 @@ end.
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/leaderboards"}, az_navigate], [~"Leaderboards & tournaments"]}]},
-                {li, [], [{a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.economy.*"]}]},
+                {li, [], [
+                    {a, [{href, ~"/docs/leaderboards"}, az_navigate], [
+                        ~"Leaderboards & tournaments"
+                    ]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.economy.*"]}
+                ]},
                 {li, [], [{a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API"]}]}
             ]}
         ]}
