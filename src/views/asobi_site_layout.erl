@@ -77,6 +77,17 @@ render(Bindings) ->
                     Prefix,
                     ~"""
                     /assets/js/arizona.min.js';
+                    hooks.PreserveScroll = {
+                        mounted() {
+                            const key = 'az-scroll:' + (this.el.dataset.scrollKey || this.el.id || 'default');
+                            const saved = sessionStorage.getItem(key);
+                            if (saved !== null) this.el.scrollTop = parseInt(saved, 10) || 0;
+                            this._key = key;
+                        },
+                        destroyed() {
+                            if (this._key) sessionStorage.setItem(this._key, this.el.scrollTop.toString());
+                        },
+                    };
                     hooks.Scrollspy = {
                         mounted() {
                             const nav = this.el;

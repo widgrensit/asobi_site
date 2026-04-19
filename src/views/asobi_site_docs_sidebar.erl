@@ -46,7 +46,13 @@ render(Bindings) ->
         ]}
     ],
     ?html(
-        {aside, [{class, ~"docs-sidebar"}], [
+        {aside,
+            [
+                {class, ~"docs-sidebar"},
+                {az_hook, ~"PreserveScroll"},
+                {'data-scroll-key', ~"docs-sidebar"}
+            ],
+            [
             {nav, [{class, ~"docs-nav"}], [
                 ?each(
                     fun({Title, Links}) ->
