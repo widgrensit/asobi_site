@@ -71,6 +71,7 @@ render(Bindings) ->
             ]},
             {body, [], [
                 ?inner_content,
+                ?stateless(asobi_site_footer, render, #{}),
                 {script, [{type, ~"module"}], [
                     ~"import { connect } from '",
                     Prefix,

@@ -9,11 +9,8 @@ mount(Bindings) ->
 
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(cloud),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
 
             %% Post-submit success banner (toggled by JS below when ?submitted=1).
             {'div',
@@ -230,8 +227,6 @@ render(Bindings) ->
                         ]}
                     ]}
                 ]}
-            ]},
-
-            Footer
+            ]}
         ]}
     ).

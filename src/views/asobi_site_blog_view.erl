@@ -9,12 +9,9 @@ mount(Bindings) ->
 
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(blog),
-    Footer = asobi_site_footer:render(),
     Posts = asobi_site_blog_posts:all(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
             {'div', [{class, ~"guide-page blog-index"}], [
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Blog"]},
@@ -30,8 +27,7 @@ render(Bindings) ->
                 {'div', [{class, ~"blog-list"}], [
                     ?each(fun post_card/1, Posts)
                 ]}
-            ]},
-            Footer
+            ]}
         ]}
     ).
 

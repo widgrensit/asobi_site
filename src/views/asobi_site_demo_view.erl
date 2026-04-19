@@ -9,11 +9,8 @@ mount(Bindings) ->
 
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(demo),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}, {class, ~"demo-page"}], [
-            Nav,
 
             %% Hero
             {section, [{class, ~"demo-hero"}], [
@@ -273,9 +270,7 @@ render(Bindings) ->
                         ~"The backend runs on port 8084 by default. Check each demo's README for engine-specific setup."
                     ]}
                 ]}
-            ]},
-
-            Footer
+            ]}
         ]}
     ).
 

@@ -49,10 +49,8 @@ render(Id, ActivePath, Content) ->
     Performance = L(~"/docs/performance", ~"Performance"),
     Cloud = L(~"/docs/cloud", ~"Cloud (coming soon)"),
 
-    Nav = asobi_site_nav:render(docs),
     ?html(
         {'div', [{id, Id}, {class, ~"docs-root"}], [
-            Nav,
             {'div', [{class, ~"docs-shell"}], [
                 {aside, [{class, ~"docs-sidebar"}], [
                     {nav, [{class, ~"docs-nav"}], [

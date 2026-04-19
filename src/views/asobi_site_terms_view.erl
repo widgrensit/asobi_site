@@ -9,11 +9,8 @@ mount(Bindings) ->
 
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(none),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
             {'div', [{class, ~"guide-page"}], [
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Terms of Service"]},
@@ -89,7 +86,6 @@ render(Bindings) ->
                         ~"We may update these terms as the project evolves. Changes take effect the moment they're published on this page; the \x{201C}last updated\x{201D} date at the top tells you when."
                     ]}
                 ]}
-            ]},
-            Footer
+            ]}
         ]}
     ).

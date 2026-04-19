@@ -9,11 +9,8 @@ mount(Bindings) ->
 
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(sdks),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
             {'div', [{class, ~"guide-page"}], [
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Defold SDK"]},
@@ -185,7 +182,6 @@ render(Bindings) ->
                         ]}
                     ]}
                 ]}
-            ]},
-            Footer
+            ]}
         ]}
     ).

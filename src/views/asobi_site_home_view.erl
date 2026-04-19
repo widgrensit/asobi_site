@@ -10,12 +10,8 @@ mount(Bindings) ->
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
     DepSnippet = ~"{asobi, \"~> 0.1\"}",
-    Nav = asobi_site_nav:render(home),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
-
             %% Hero
             {section, [{class, ~"hero"}], [
                 {figure, [{class, ~"hero-mascot"}], [
@@ -482,9 +478,7 @@ render(Bindings) ->
                             ~"Join us on Discord"
                         ]}
                 ]}
-            ]},
-
-            Footer
+            ]}
         ]}
     ).
 

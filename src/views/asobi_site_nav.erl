@@ -4,18 +4,19 @@
 -export([render/1]).
 
 -type active() :: home | features | sdks | demo | docs | blog | cloud | none.
+-type bindings() :: #{active := active()}.
 
--spec render(active()) -> arizona_template:template().
-render(Active) ->
+-spec render(bindings()) -> az:template().
+render(Bindings) ->
     Links = [
-        {~"/#features", ~"Features", active_class(features, Active), false},
-        {~"/#sdks", ~"SDKs", active_class(sdks, Active), false},
-        {~"/demo", ~"Demo", active_class(demo, Active), true},
-        {~"/docs", ~"Docs", active_class(docs, Active), true},
-        {~"/blog", ~"Blog", active_class(blog, Active), true},
-        {~"/cloud", ~"Cloud", active_class(cloud, Active), true},
-        {~"https://discord.gg/vYSfYYyXpu", ~"Discord", ~"nav-link-btn", false},
-        {~"https://github.com/widgrensit/asobi", ~"GitHub", ~"nav-github", false}
+        {~"/#features", ~"Features", {active, features}, false},
+        {~"/#sdks", ~"SDKs", {active, sdks}, false},
+        {~"/demo", ~"Demo", {active, demo}, true},
+        {~"/docs", ~"Docs", {active, docs}, true},
+        {~"/blog", ~"Blog", {active, blog}, true},
+        {~"/cloud", ~"Cloud", {active, cloud}, true},
+        {~"https://discord.gg/vYSfYYyXpu", ~"Discord", {fixed, ~"nav-link-btn"}, false},
+        {~"https://github.com/widgrensit/asobi", ~"GitHub", {fixed, ~"nav-github"}, false}
     ],
     ?html(
         {nav, [{class, ~"site-nav"}], [
@@ -39,8 +40,14 @@ render(Active) ->
                     [{span, [], []}, {span, [], []}, {span, [], []}]},
                 {'div', [{class, ~"nav-links"}], [
                     ?each(
-                        fun({Href, Label, Class, Nav}) ->
-                            {a, [{href, Href}, {class, Class}, {az_navigate, Nav}], [Label]}
+                        fun({Href, Label, ClassSpec, Nav}) ->
+                            {a,
+                                [
+                                    {href, Href},
+                                    {class, link_class(ClassSpec, ?get(active))},
+                                    {az_navigate, Nav}
+                                ],
+                                [Label]}
                         end,
                         Links
                     )
@@ -49,5 +56,6 @@ render(Active) ->
         ]}
     ).
 
-active_class(Key, Key) -> ~"nav-active";
-active_class(_, _) -> ~"".
+link_class({active, Key}, Key) -> ~"nav-active";
+link_class({active, _}, _) -> ~"";
+link_class({fixed, Class}, _) -> Class.

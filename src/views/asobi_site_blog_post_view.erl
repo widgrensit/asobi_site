@@ -15,8 +15,6 @@ mount(Bindings) ->
 
 -spec render(map()) -> arizona_template:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(blog),
-    Footer = asobi_site_footer:render(),
     Slug = maps:get(slug, Bindings, ~""),
     Body =
         case asobi_site_blog_posts:by_slug(Slug) of
@@ -25,9 +23,7 @@ render(Bindings) ->
         end,
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
-            {'div', [{class, ~"guide-page blog-post"}], [Body]},
-            Footer
+            {'div', [{class, ~"guide-page blog-post"}], [Body]}
         ]}
     ).
 

@@ -1,10 +1,10 @@
 -module(asobi_site_footer).
 -include_lib("arizona/include/arizona_stateless.hrl").
 
--export([render/0]).
+-export([render/1]).
 
--spec render() -> arizona_template:template().
-render() ->
+-spec render(az:bindings()) -> az:template().
+render(_Bindings) ->
     ?html(
         {footer, [{class, ~"site-footer"}], [
             {'div', [{class, ~"footer-inner"}], [
