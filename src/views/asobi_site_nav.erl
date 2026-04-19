@@ -7,17 +7,27 @@
 
 -spec render(active()) -> arizona_template:template().
 render(Active) ->
-    Link = fun(Href, Label, Key) -> link_item(Href, Label, Key, Active) end,
-    Features = Link(~"/#features", ~"Features", features),
-    Sdks = Link(~"/#sdks", ~"SDKs", sdks),
-    Demo = Link(~"/demo", ~"Demo", demo),
-    Docs = Link(~"/docs", ~"Docs", docs),
-    Blog = Link(~"/blog", ~"Blog", blog),
-    Cloud = Link(~"/cloud", ~"Cloud", cloud),
+    Links = [
+        {~"/#features", ~"Features", active_class(features, Active), false},
+        {~"/#sdks", ~"SDKs", active_class(sdks, Active), false},
+        {~"/demo", ~"Demo", active_class(demo, Active), true},
+        {~"/docs", ~"Docs", active_class(docs, Active), true},
+        {~"/blog", ~"Blog", active_class(blog, Active), true},
+        {~"/cloud", ~"Cloud", active_class(cloud, Active), true},
+        {~"https://discord.gg/vYSfYYyXpu", ~"Discord", ~"nav-link-btn", false},
+        {~"https://github.com/widgrensit/asobi", ~"GitHub", ~"nav-github", false}
+    ],
     ?html(
         {nav, [{class, ~"site-nav"}], [
             {'div', [{class, ~"nav-inner"}], [
-                {a, [{href, ~"/"}, {class, ~"nav-brand"}, {'aria-label', ~"Asobi \x{2014} home"}], [
+                {a,
+                    [
+                        {href, ~"/"},
+                        {class, ~"nav-brand"},
+                        {'aria-label', ~"Asobi \x{2014} home"},
+                        az_navigate
+                    ],
+                    [
                         {img, [
                             {src, ~"/assets/img/logo-full.png"},
                             {alt, ~"Asobi"},
@@ -28,27 +38,16 @@ render(Active) ->
                 {label, [{for, ~"nav-toggle"}, {class, ~"nav-hamburger"}, {'aria-label', ~"Menu"}],
                     [{span, [], []}, {span, [], []}, {span, [], []}]},
                 {'div', [{class, ~"nav-links"}], [
-                    Features,
-                    Sdks,
-                    Demo,
-                    Docs,
-                    Blog,
-                    Cloud,
-                    {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}, {class, ~"nav-link-btn"}], [
-                        ~"Discord"
-                    ]},
-                    {a, [{href, ~"https://github.com/widgrensit/asobi"}, {class, ~"nav-github"}], [
-                        ~"GitHub"
-                    ]}
+                    ?each(
+                        fun({Href, Label, Class, Nav}) ->
+                            {a, [{href, Href}, {class, Class}, {az_navigate, Nav}], [Label]}
+                        end,
+                        Links
+                    )
                 ]}
             ]}
         ]}
     ).
 
-link_item(Href, Label, Key, Active) ->
-    Class =
-        case Key of
-            Active -> ~"nav-active";
-            _ -> ~""
-        end,
-    ?html({a, [{href, Href}, {class, Class}], [Label]}).
+active_class(Key, Key) -> ~"nav-active";
+active_class(_, _) -> ~"".
