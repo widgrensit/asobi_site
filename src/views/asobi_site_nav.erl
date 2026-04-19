@@ -19,7 +19,7 @@ render(Bindings) ->
         {~"https://github.com/widgrensit/asobi", ~"GitHub", {fixed, ~"nav-github"}, false}
     ],
     ?html(
-        {nav, [{class, ~"site-nav"}], [
+        {nav, [{class, ~"site-nav"}, {az_hook, ~"Scrollspy"}], [
             {'div', [{class, ~"nav-inner"}], [
                 {a,
                     [

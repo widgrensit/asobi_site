@@ -73,9 +73,50 @@ render(Bindings) ->
                 ?inner_content,
                 ?stateless(asobi_site_footer, render, #{}),
                 {script, [{type, ~"module"}], [
-                    ~"import { connect } from '",
+                    ~"import { hooks, connect } from '",
                     Prefix,
-                    ~"/assets/js/arizona.min.js'; connect('",
+                    ~"""
+                    /assets/js/arizona.min.js';
+                    hooks.Scrollspy = {
+                        mounted() {
+                            const nav = this.el;
+                            const links = new Map();
+                            nav.querySelectorAll('a[href^="/#"]').forEach(a => {
+                                const id = a.getAttribute('href').slice(2);
+                                if (id) links.set(id, a);
+                            });
+                            if (links.size === 0) return;
+                            this._active = null;
+                            const setActive = id => {
+                                if (this._active === id) return;
+                                if (this._active) links.get(this._active)?.classList.remove('nav-active');
+                                this._active = id;
+                                if (id) links.get(id)?.classList.add('nav-active');
+                            };
+                            const visible = new Map();
+                            this._observer = new IntersectionObserver(entries => {
+                                for (const e of entries) {
+                                    const id = e.target.id;
+                                    if (e.isIntersecting) visible.set(id, e.intersectionRatio);
+                                    else visible.delete(id);
+                                }
+                                let best = null, bestRatio = 0;
+                                for (const [id, ratio] of visible) {
+                                    if (ratio > bestRatio) { best = id; bestRatio = ratio; }
+                                }
+                                setActive(best);
+                            }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
+                            for (const id of links.keys()) {
+                                const section = document.getElementById(id);
+                                if (section) this._observer.observe(section);
+                            }
+                        },
+                        destroyed() {
+                            this._observer?.disconnect();
+                        },
+                    };
+                    connect('
+                    """,
                     Prefix,
                     ~"/ws');"
                 ]}
