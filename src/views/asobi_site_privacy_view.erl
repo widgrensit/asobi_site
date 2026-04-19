@@ -135,7 +135,7 @@ render(Bindings) ->
                         ~"When Asobi Cloud exits closed beta, a separate privacy policy will cover player data processed ",
                         {em, [], [~"by game developers using the hosted service"]},
                         ~". Our role there will be a processor under a ",
-                        {a, [{href, ~"/dpa"}], [~"Data Processing Agreement"]},
+                        {a, [{href, ~"/dpa"}, az_navigate], [~"Data Processing Agreement"]},
                         ~"; this page only covers the marketing site you're reading now."
                     ]}
                 ]}

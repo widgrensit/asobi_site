@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Cookbook"
             ]},
             {h1, [], [~"Lua cookbook"]},
@@ -229,17 +229,17 @@ game.notify_many(winners, "tournament_win", "You won the bracket!", {
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"game.* API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* API reference"]},
                     ~" \x{2014} the full surface these recipes call into."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/callbacks"}], [~"Game module callbacks"]},
+                    {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]},
                     ~" \x{2014} what ",
                     {em, [], [~"you"]},
                     ~" implement."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}], [~"Tic-tac-toe tutorial"]},
+                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [~"Tic-tac-toe tutorial"]},
                     ~" \x{2014} everything applied to a concrete game."
                 ]}
             ]}

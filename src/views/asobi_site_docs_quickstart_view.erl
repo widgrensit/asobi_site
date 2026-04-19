@@ -12,7 +12,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Quick start"
             ]},
             {h1, [], [~"Quick start"]},
@@ -220,13 +220,13 @@ wscat -c ws://localhost:8080/ws
             ]},
             {p, [], [
                 ~"For a real client, use an SDK: ",
-                {a, [{href, ~"/defold"}], [~"Defold"]},
+                {a, [{href, ~"/defold"}, az_navigate], [~"Defold"]},
                 ~", ",
-                {a, [{href, ~"/unity"}], [~"Unity"]},
+                {a, [{href, ~"/unity"}, az_navigate], [~"Unity"]},
                 ~", ",
-                {a, [{href, ~"/godot"}], [~"Godot"]},
+                {a, [{href, ~"/godot"}, az_navigate], [~"Godot"]},
                 ~", ",
-                {a, [{href, ~"/dart"}], [~"Dart/Flutter"]},
+                {a, [{href, ~"/dart"}, az_navigate], [~"Dart/Flutter"]},
                 ~"."
             ]},
 
@@ -246,21 +246,21 @@ wscat -c ws://localhost:8080/ws
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/concepts"}], [~"Core concepts"]},
+                    {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
                     ~" \x{2014} matches, worlds, zones, voting, phases \x{2014} each with Lua + Erlang snippets."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
                     ~" \x{2014} every ",
                     {code, [], [~"game.*"]},
                     ~" function."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/erlang/api"}], [~"Erlang API reference"]},
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
                     ~" \x{2014} the behaviours and modules that power it all."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/self-host"}], [~"Self-host"]},
+                    {a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]},
                     ~" \x{2014} deploy Asobi to your own infrastructure."
                 ]}
             ]}

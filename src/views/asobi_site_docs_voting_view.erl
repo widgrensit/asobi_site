@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Voting"
             ]},
             {h1, [], [~"Voting"]},
@@ -249,7 +249,7 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
             {h2, [], [~"WS + REST"]},
             {p, [], [
                 ~"See the ",
-                {a, [{href, ~"/docs/protocols/websocket#voting"}], [~"WebSocket voting messages"]},
+                {a, [{href, ~"/docs/protocols/websocket#voting"}, az_navigate], [~"WebSocket voting messages"]},
                 ~" for ",
                 {code, [], [~"vote.cast"]},
                 ~", ",

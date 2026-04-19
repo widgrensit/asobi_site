@@ -12,7 +12,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Self-host"
             ]},
             {h1, [], [~"Self-host Asobi"]},
@@ -25,7 +25,7 @@ render(Bindings) ->
                 {p, [], [
                     {strong, [], [~"Prefer managed? "]},
                     ~"Asobi Cloud is coming \x{2014} fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
-                    {a, [{href, ~"/cloud"}], [~"Join the waitlist at asobi.dev/cloud."]}
+                    {a, [{href, ~"/cloud"}, az_navigate], [~"Join the waitlist at asobi.dev/cloud."]}
                 ]}
             ]},
 
@@ -262,7 +262,7 @@ spec:
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/concepts"}], [~"Core concepts"]},
+                    {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
                     ~" \x{2014} understand what the engine runs."
                 ]},
                 {li, [], [
@@ -270,7 +270,7 @@ spec:
                     ~" \x{2014} reference Helm stack for managed k8s."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/cloud"}], [~"Asobi Cloud"]},
+                    {a, [{href, ~"/cloud"}, az_navigate], [~"Asobi Cloud"]},
                     ~" \x{2014} managed hosting, coming soon."
                 ]}
             ]}

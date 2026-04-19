@@ -18,7 +18,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Callbacks"
             ]},
             {h1, [], [~"Game module callbacks"]},
@@ -350,17 +350,17 @@ vote_resolved(_Template, #{winner := W}, State) ->
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}], [~"Tic-tac-toe tutorial"]},
+                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [~"Tic-tac-toe tutorial"]},
                     ~" \x{2014} all the callbacks in context."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"game.* API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* API reference"]},
                     ~" \x{2014} what you call ",
                     {em, [], [~"from"]},
                     ~" these callbacks."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/cookbook"}], [~"Cookbook"]},
+                    {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"Cookbook"]},
                     ~" \x{2014} recipes for common patterns."
                 ]}
             ]}

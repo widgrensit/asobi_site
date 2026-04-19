@@ -21,10 +21,10 @@ render(Bindings) ->
             ]},
 
             {'div', [{class, ~"docs-cta-row"}], [
-                {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}], [
+                {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}, az_navigate], [
                     ~"Quick start \x{2192}"
                 ]},
-                {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, {class, ~"btn btn-secondary"}], [
+                {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, {class, ~"btn btn-secondary"}, az_navigate], [
                     ~"Tic-tac-toe tutorial"
                 ]},
                 {a, [{href, ~"https://github.com/widgrensit/asobi"}, {class, ~"btn btn-ghost"}], [
@@ -105,9 +105,9 @@ render(Bindings) ->
             {h2, [], [~"Hosting"]},
             {p, [], [
                 ~"Asobi is fully self-hostable today \x{2014} see ",
-                {a, [{href, ~"/docs/self-host"}], [~"the self-host guide"]},
+                {a, [{href, ~"/docs/self-host"}, az_navigate], [~"the self-host guide"]},
                 ~". If you'd rather we run it for you, managed cloud hosting is coming at ",
-                {a, [{href, ~"/cloud"}], [~"asobi.dev/cloud"]},
+                {a, [{href, ~"/cloud"}, az_navigate], [~"asobi.dev/cloud"]},
                 ~" \x{2014} join the waitlist there."
             ]},
 
@@ -125,7 +125,7 @@ render(Bindings) ->
 
 card(Href, Title, Desc) ->
     ?html(
-        {a, [{href, Href}, {class, ~"docs-card"}], [
+        {a, [{href, Href}, {class, ~"docs-card"}, az_navigate], [
             {h3, [], [Title]},
             {p, [], [Desc]}
         ]}

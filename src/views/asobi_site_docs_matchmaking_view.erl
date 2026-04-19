@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Matchmaking"
             ]},
             {h1, [], [~"Matchmaking"]},
@@ -193,11 +193,11 @@ match(Tickets, Config) ->
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/protocols/websocket"}], [
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
                         ~"WebSocket: matchmaker.* messages"
                     ]}
                 ]},
-                {li, [], [{a, [{href, ~"/docs/erlang/api"}], [~"Erlang API: asobi_matchmaker"]}]}
+                {li, [], [{a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API: asobi_matchmaker"]}]}
             ]}
         ]}
     ),

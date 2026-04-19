@@ -18,7 +18,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Tutorials / Tic-tac-toe"
             ]},
             {h1, [], [~"Tic-tac-toe tutorial"]},
@@ -33,7 +33,7 @@ render(Bindings) ->
                 {p, [], [
                     {strong, [], [~"Prerequisites: "]},
                     ~"finish the ",
-                    {a, [{href, ~"/docs/quickstart"}], [~"quick start"]},
+                    {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"quick start"]},
                     ~" first (engine running, CLI installed)."
                 ]}
             ]},
@@ -393,17 +393,17 @@ wscat -c ws://localhost:8080/ws
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/callbacks"}], [~"Game module callbacks"]},
+                    {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]},
                     ~" \x{2014} the full shape of what you can hook into."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
                     ~" / ",
-                    {a, [{href, ~"/docs/erlang/api"}], [~"Erlang API reference"]},
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
                     ~" \x{2014} everything the runtime exposes."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/cookbook"}], [~"Cookbook"]},
+                    {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"Cookbook"]},
                     ~" \x{2014} recipes for more ambitious games."
                 ]}
             ]}

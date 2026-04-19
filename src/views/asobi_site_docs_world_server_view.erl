@@ -18,7 +18,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / World server"
             ]},
             {h1, [], [~"World server"]},
@@ -234,16 +234,16 @@ end
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/erlang/api"}], [
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [
                         ~"Erlang API: asobi_zone, asobi_world_server, asobi_spatial"
                     ]}
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/performance"}], [~"Performance tuning"]},
+                    {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]},
                     ~" \x{2014} tick budgets, zone sizing."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/clustering"}], [~"Clustering"]},
+                    {a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]},
                     ~" \x{2014} what's cross-node safe."
                 ]}
             ]}

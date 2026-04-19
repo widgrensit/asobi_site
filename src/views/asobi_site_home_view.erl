@@ -266,7 +266,7 @@ render(Bindings) ->
                         ~"Official client libraries with full API coverage. Pick your engine and start building."
                     ]},
                     {'div', [{class, ~"sdk-grid"}], [
-                        {a, [{href, ~"/unity"}, {class, ~"sdk-card-link"}], [
+                        {a, [{href, ~"/unity"}, {class, ~"sdk-card-link"}, az_navigate], [
                             {'div', [{class, ~"sdk-card"}], [
                                 {h3, [], [~"Unity"]},
                                 {span, [{class, ~"sdk-lang"}], [~"C#"]},
@@ -274,7 +274,7 @@ render(Bindings) ->
                                 {span, [{class, ~"sdk-link"}], [~"View guide"]}
                             ]}
                         ]},
-                        {a, [{href, ~"/godot"}, {class, ~"sdk-card-link"}], [
+                        {a, [{href, ~"/godot"}, {class, ~"sdk-card-link"}, az_navigate], [
                             {'div', [{class, ~"sdk-card"}], [
                                 {h3, [], [~"Godot"]},
                                 {span, [{class, ~"sdk-lang"}], [~"GDScript"]},
@@ -282,7 +282,7 @@ render(Bindings) ->
                                 {span, [{class, ~"sdk-link"}], [~"View guide"]}
                             ]}
                         ]},
-                        {a, [{href, ~"/defold"}, {class, ~"sdk-card-link"}], [
+                        {a, [{href, ~"/defold"}, {class, ~"sdk-card-link"}, az_navigate], [
                             {'div', [{class, ~"sdk-card"}], [
                                 {h3, [], [~"Defold"]},
                                 {span, [{class, ~"sdk-lang"}], [~"Lua"]},
@@ -290,7 +290,7 @@ render(Bindings) ->
                                 {span, [{class, ~"sdk-link"}], [~"View guide"]}
                             ]}
                         ]},
-                        {a, [{href, ~"/dart"}, {class, ~"sdk-card-link"}], [
+                        {a, [{href, ~"/dart"}, {class, ~"sdk-card-link"}, az_navigate], [
                             {'div', [{class, ~"sdk-card"}], [
                                 {h3, [], [~"Flutter / Dart"]},
                                 {span, [{class, ~"sdk-lang"}], [~"Dart"]},

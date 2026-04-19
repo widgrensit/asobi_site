@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Authentication"
             ]},
             {h1, [], [~"Authentication"]},
@@ -184,15 +184,15 @@ var response = await asobi.Auth.OAuth("google", idToken);
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/protocols/rest"}], [~"REST API reference"]},
+                    {a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API reference"]},
                     ~" \x{2014} every endpoint, including the auth routes."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/protocols/websocket"}], [~"WebSocket protocol"]},
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [~"WebSocket protocol"]},
                     ~" \x{2014} message shapes for real-time flows."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/economy"}], [~"Economy & IAP"]},
+                    {a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]},
                     ~" \x{2014} receipt validation for Apple and Google."
                 ]}
             ]}

@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Protocols / REST"
             ]},
             {h1, [], [~"REST API"]},
@@ -171,16 +171,16 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
                 {p, [], [
                     {strong, [], [~"Real-time flows go over WebSocket. "]},
                     ~"Matchmaking notifications, chat, votes, presence, and live state updates are on the ",
-                    {a, [{href, ~"/docs/protocols/websocket"}], [~"WebSocket protocol"]},
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [~"WebSocket protocol"]},
                     ~". Use REST for request/response; use WS for push + low-latency interactions."
                 ]}
             ]},
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/protocols/websocket"}], [~"WebSocket protocol"]}]},
-                {li, [], [{a, [{href, ~"/docs/authentication"}], [~"Authentication"]}]},
-                {li, [], [{a, [{href, ~"/docs/economy"}], [~"Economy & IAP"]}]}
+                {li, [], [{a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [~"WebSocket protocol"]}]},
+                {li, [], [{a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]}]},
+                {li, [], [{a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]}]}
             ]}
         ]}
     ),

@@ -18,7 +18,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Configuration"
             ]},
             {h1, [], [~"Configuration reference"]},
@@ -237,9 +237,9 @@ render(Bindings) ->
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/self-host"}], [~"Self-host"]}]},
-                {li, [], [{a, [{href, ~"/docs/clustering"}], [~"Clustering"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}], [~"Performance tuning"]}]}
+                {li, [], [{a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]}]},
+                {li, [], [{a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]}]},
+                {li, [], [{a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}]}
             ]}
         ]}
     ),

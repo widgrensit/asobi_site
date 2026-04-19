@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Erlang / API"
             ]},
             {h1, [], [~"Erlang API reference"]},
@@ -324,11 +324,11 @@ lists:foreach(fun({_Id, _E, _Dist}) -> notify(_E) end, Nearby).
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
                     ~" \x{2014} the same surface, for scripted games."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/concepts"}], [~"Core concepts"]},
+                    {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
                     ~" \x{2014} matches, zones, presence, phases, seasons."
                 ]},
                 {li, [], [

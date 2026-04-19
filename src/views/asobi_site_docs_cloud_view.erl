@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Cloud"
             ]},
             {h1, [], [~"Cloud hosting"]},
@@ -31,10 +31,10 @@ render(Bindings) ->
             ]},
 
             {'div', [{class, ~"docs-cta-row"}], [
-                {a, [{href, ~"/cloud"}, {class, ~"btn btn-primary"}], [
+                {a, [{href, ~"/cloud"}, {class, ~"btn btn-primary"}, az_navigate], [
                     ~"Join the waitlist \x{2192}"
                 ]},
-                {a, [{href, ~"/docs/self-host"}, {class, ~"btn btn-secondary"}], [
+                {a, [{href, ~"/docs/self-host"}, {class, ~"btn btn-secondary"}, az_navigate], [
                     ~"Self-host in the meantime"
                 ]}
             ]}

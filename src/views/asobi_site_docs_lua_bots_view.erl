@@ -15,7 +15,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Bots"
             ]},
             {h1, [], [~"Lua bots"]},
@@ -162,9 +162,9 @@ end
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]}]},
-                {li, [], [{a, [{href, ~"/docs/lua/callbacks"}], [~"Game module callbacks"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}], [~"Performance & benchmarks"]}]}
+                {li, [], [{a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]}]},
+                {li, [], [{a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]}]},
+                {li, [], [{a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance & benchmarks"]}]}
             ]}
         ]}
     ),

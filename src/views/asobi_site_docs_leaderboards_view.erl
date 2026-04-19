@@ -21,7 +21,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Leaderboards & tournaments"
             ]},
             {h1, [], [~"Leaderboards & tournaments"]},
@@ -134,10 +134,10 @@ POST /api/v1/tournaments/:id/join      Join a tournament
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/economy"}], [~"Economy & IAP"]},
+                    {a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]},
                     ~" \x{2014} prize distribution currencies."
                 ]},
-                {li, [], [{a, [{href, ~"/docs/lua/api"}], [~"Lua API: game.leaderboard.*"]}]}
+                {li, [], [{a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.leaderboard.*"]}]}
             ]}
         ]}
     ),

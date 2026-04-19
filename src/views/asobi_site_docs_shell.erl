@@ -115,4 +115,4 @@ sidebar_link(Href, Label, Active) ->
             Active -> ~"docs-nav-link active";
             _ -> ~"docs-nav-link"
         end,
-    ?html({a, [{href, Href}, {class, Class}], [Label]}).
+    ?html({a, [{href, Href}, {class, Class}, az_navigate], [Label]}).

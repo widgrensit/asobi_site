@@ -18,7 +18,7 @@ render(Bindings) ->
     Content = ?html(
         {'div', [], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Protocols / WebSocket"
             ]},
             {h1, [], [~"WebSocket protocol"]},
@@ -292,17 +292,17 @@ render(Bindings) ->
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/protocols/rest"}], [~"REST API"]},
+                    {a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API"]},
                     ~" \x{2014} HTTP endpoints for things that don't fit a real-time channel."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/authentication"}], [~"Authentication"]},
+                    {a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]},
                     ~" \x{2014} how to get the session token for ",
                     {code, [], [~"session.connect"]},
                     ~"."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/voting"}], [~"Voting in depth"]},
+                    {a, [{href, ~"/docs/voting"}, az_navigate], [~"Voting in depth"]},
                     ~" \x{2014} methods, tie-breakers, weighted, ranked."
                 ]}
             ]}

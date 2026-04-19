@@ -39,7 +39,8 @@ render(Bindings) ->
                         {a,
                             [
                                 {href, ~"/#get-started"},
-                                {class, ~"btn btn-ghost"}
+                                {class, ~"btn btn-ghost"},
+                                az_navigate
                             ],
                             [~"Build Your Own"]}
                     ]}
@@ -213,7 +214,7 @@ render(Bindings) ->
                         ~" behaviour and build anything \x{2014} racing, puzzle, RTS, battle royale."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
-                        {a, [{href, ~"/#get-started"}, {class, ~"btn btn-primary"}], [
+                        {a, [{href, ~"/#get-started"}, {class, ~"btn btn-primary"}, az_navigate], [
                             ~"Get Started"
                         ]},
                         {a,
