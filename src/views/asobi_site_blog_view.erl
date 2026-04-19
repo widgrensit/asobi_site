@@ -12,7 +12,6 @@ render(Bindings) ->
     Nav = asobi_site_nav:render(blog),
     Footer = asobi_site_footer:render(),
     Posts = asobi_site_blog_posts:all(),
-    PostCards = [post_card(P) || P <- Posts],
     ?html(
         {'div', [{id, ?get(id)}], [
             Nav,
@@ -28,7 +27,9 @@ render(Bindings) ->
                         ~"."
                     ]}
                 ]},
-                {'div', [{class, ~"blog-list"}], PostCards}
+                {'div', [{class, ~"blog-list"}], [
+                    ?each(fun post_card/1, Posts)
+                ]}
             ]},
             Footer
         ]}
@@ -43,7 +44,6 @@ post_card(#{
     tags := Tags
 }) ->
     Href = iolist_to_binary([~"/blog/", Slug]),
-    TagEls = [{span, [{class, ~"blog-tag"}], [T]} || T <- Tags],
     ?html(
         {article, [{class, ~"blog-card"}], [
             {'div', [{class, ~"blog-card-meta"}], [
@@ -55,7 +55,9 @@ post_card(#{
                 {a, [{href, Href}], [Title]}
             ]},
             {p, [{class, ~"blog-card-lede"}], [Lede]},
-            {'div', [{class, ~"blog-card-tags"}], TagEls},
+            {'div', [{class, ~"blog-card-tags"}], [
+                ?each(fun(T) -> {span, [{class, ~"blog-tag"}], [T]} end, Tags)
+            ]},
             {a, [{href, Href}, {class, ~"blog-card-link"}], [~"Read \x{2192}"]}
         ]}
     ).
