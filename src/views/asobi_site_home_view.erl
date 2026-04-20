@@ -18,13 +18,18 @@ render(Bindings) ->
 
             %% Hero
             {section, [{class, ~"hero"}], [
-                {img, [
-                    {src, ~"/assets/img/mascot.png"},
-                    {alt, ~""},
-                    {class, ~"hero-mascot"},
-                    {loading, ~"eager"},
-                    {decoding, ~"async"},
-                    {'aria-hidden', ~"true"}
+                {figure, [{class, ~"hero-mascot"}], [
+                    {img, [
+                        {src, ~"/assets/img/mascot.png"},
+                        {alt, ~"The Asobi tanuki, cloaked and holding a controller"},
+                        {class, ~"hero-mascot-img"},
+                        {loading, ~"eager"},
+                        {decoding, ~"async"}
+                    ]},
+                    {figcaption, [{class, ~"hero-mascot-caption"}], [
+                        ~"Your matches are in ",
+                        {em, [], [~"these paws."]}
+                    ]}
                 ]},
                 {'div', [{class, ~"hero-inner"}], [
                     {span, [{class, ~"hero-badge"}], [~"Preview \x{2014} v0.1"]},

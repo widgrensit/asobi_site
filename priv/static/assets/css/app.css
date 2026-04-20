@@ -331,15 +331,36 @@ code {
        drifts toward the viewport edge then the mobile media query kicks in. */
     right: max(20px, calc(50% - 480px));
     width: clamp(260px, 30vw, 440px);
-    height: auto;
+    margin: 0;
     transform: translateY(-50%) rotate(4deg);
     pointer-events: none;
     user-select: none;
     z-index: 1;
-    filter: drop-shadow(0 18px 36px rgba(26, 18, 8, 0.14))
-            drop-shadow(0 6px 10px rgba(26, 18, 8, 0.08));
     animation: mascot-float 8s ease-in-out infinite, mascot-enter 900ms var(--ease-out) 200ms backwards;
     transform-origin: 50% 70%;
+}
+
+.hero-mascot-img {
+    width: 100%;
+    height: auto;
+    display: block;
+    filter: drop-shadow(0 18px 36px rgba(26, 18, 8, 0.14))
+            drop-shadow(0 6px 10px rgba(26, 18, 8, 0.08));
+}
+
+.hero-mascot-caption {
+    margin-top: var(--sp-4);
+    text-align: center;
+    font-family: var(--font-display);
+    font-size: var(--fs-sm);
+    font-style: italic;
+    color: var(--text-3);
+    letter-spacing: 0.01em;
+}
+.hero-mascot-caption em {
+    color: var(--indigo-deep);
+    font-style: italic;
+    font-variation-settings: 'SOFT' 60;
 }
 
 @keyframes mascot-enter {
@@ -772,6 +793,7 @@ code {
    Comparison table
    ========================================================================= */
 .comparison-table-wrap {
+    position: relative;
     overflow-x: auto;
     max-width: 880px;
     margin: 0 auto;
@@ -779,6 +801,19 @@ code {
     border-radius: var(--r-2);
     background: var(--ink-0);
     box-shadow: 0 1px 0 var(--line);
+    /* Scroll-hint: a soft cream-to-transparent fade glued to the right edge
+       so narrow viewports telegraph 'there's more to the right'. Disappears
+       once the user scrolls to the end because the wrap has no horizontal
+       overflow at that point. */
+    background-image: linear-gradient(
+        to right,
+        transparent calc(100% - 40px),
+        var(--ink-0)
+    );
+    background-repeat: no-repeat;
+    background-size: 40px 100%;
+    background-position: right center;
+    background-attachment: local;
 }
 .comparison-table { width: 100%; border-collapse: collapse; font-size: var(--fs-sm); }
 .comparison-table th,
@@ -787,6 +822,7 @@ code {
     text-align: left;
     border-bottom: 1px solid var(--line);
     vertical-align: middle;
+    white-space: nowrap;
 }
 .comparison-table tbody tr:last-child td { border-bottom: 0; }
 .comparison-table th {
@@ -1500,6 +1536,23 @@ code {
     .section-subtitle { margin-bottom: var(--sp-8); }
     .hero { padding: clamp(96px, 12vw, 140px) var(--gutter) clamp(72px, 9vw, 100px); }
     .hero-inner { padding-right: clamp(0px, 3vw, 32px); }
+    /* Comparison table tightens up on mobile: shorter padding, smaller
+       font, and the first column stays put while the feature rows scroll
+       so readers don't lose track of which feature they're comparing. */
+    .comparison-table th,
+    .comparison-table td {
+        padding: var(--sp-3) var(--sp-4);
+        font-size: var(--fs-xs);
+    }
+    .comparison-table th:first-child,
+    .comparison-table td:first-child {
+        position: sticky;
+        left: 0;
+        background: var(--ink-0);
+        z-index: 1;
+        box-shadow: 1px 0 0 var(--line);
+    }
+    .comparison-table th:first-child { background: var(--ink-1); }
     .hero-mascot {
         position: relative;
         top: auto;
