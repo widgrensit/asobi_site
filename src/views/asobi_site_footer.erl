@@ -11,14 +11,10 @@ render() ->
                 {'div', [{class, ~"footer-brand"}], [
                     {a, [{href, ~"/"}, {class, ~"footer-brand-link"}], [
                         {img, [
-                            {src, ~"/assets/img/logo-mark.png"},
-                            {alt, ~""},
-                            {class, ~"brand-logo"},
-                            {width, ~"56"},
-                            {height, ~"56"},
-                            {'aria-hidden', ~"true"}
-                        ]},
-                        {span, [{class, ~"brand-text"}], [~"asobi"]}
+                            {src, ~"/assets/img/logo-full.png"},
+                            {alt, ~"Asobi"},
+                            {class, ~"brand-logo"}
+                        ]}
                     ]},
                     {p, [{class, ~"footer-tagline"}], [
                         ~"Open-source game backend on Erlang/OTP."

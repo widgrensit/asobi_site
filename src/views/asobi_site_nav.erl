@@ -17,17 +17,13 @@ render(Active) ->
     ?html(
         {nav, [{class, ~"site-nav"}], [
             {'div', [{class, ~"nav-inner"}], [
-                {a, [{href, ~"/"}, {class, ~"nav-brand"}], [
-                    {img, [
-                        {src, ~"/assets/img/logo-mark.png"},
-                        {alt, ~""},
-                        {class, ~"brand-logo"},
-                        {width, ~"36"},
-                        {height, ~"36"},
-                        {'aria-hidden', ~"true"}
+                {a, [{href, ~"/"}, {class, ~"nav-brand"}, {'aria-label', ~"Asobi \x{2014} home"}], [
+                        {img, [
+                            {src, ~"/assets/img/logo-full.png"},
+                            {alt, ~"Asobi"},
+                            {class, ~"brand-logo"}
+                        ]}
                     ]},
-                    {span, [{class, ~"brand-text"}], [~"asobi"]}
-                ]},
                 {input, [{type, ~"checkbox"}, {id, ~"nav-toggle"}, {class, ~"nav-toggle"}], []},
                 {label, [{for, ~"nav-toggle"}, {class, ~"nav-hamburger"}, {'aria-label', ~"Menu"}],
                     [{span, [], []}, {span, [], []}, {span, [], []}]},
