@@ -29,7 +29,7 @@ render(_Bindings) ->
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8082/api/v1/auth/register \
+curl -X POST http://localhost:8080/api/v1/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"username": "player1", "password": "secret123"}'
 """
@@ -56,7 +56,7 @@ Authorization: Bearer <session_token>
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8082/api/v1/auth/oauth \
+curl -X POST http://localhost:8080/api/v1/auth/oauth \
   -H 'Content-Type: application/json' \
   -d '{"provider": "google", "token": "eyJhbGciOiJSUzI1NiIs..."}'
 """
@@ -113,7 +113,7 @@ curl -X POST http://localhost:8082/api/v1/auth/oauth \
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8082/api/v1/auth/oauth \
+curl -X POST http://localhost:8080/api/v1/auth/oauth \
   -H 'Content-Type: application/json' \
   -d '{"provider": "steam", "token": "14000000..."}'
 """
@@ -136,7 +136,7 @@ curl -X POST http://localhost:8082/api/v1/auth/oauth \
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8082/api/v1/auth/link \
+curl -X POST http://localhost:8080/api/v1/auth/link \
   -H 'Authorization: Bearer <session_token>' \
   -H 'Content-Type: application/json' \
   -d '{"provider": "discord", "token": "eyJhbGciOi..."}'

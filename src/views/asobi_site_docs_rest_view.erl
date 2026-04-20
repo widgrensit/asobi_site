@@ -50,15 +50,19 @@ PUT /api/v1/players/:id        Update own profile
             section(
                 ~"Social",
                 ~"""
-GET    /api/v1/friends                List friends
-POST   /api/v1/friends                Send friend request
-PUT    /api/v1/friends/:id            Accept / reject / block
-DELETE /api/v1/friends/:id            Remove friend
+GET    /api/v1/friends                          List friends
+POST   /api/v1/friends                          Send friend request
+PUT    /api/v1/friends/:friend_id               Accept / reject / block
+DELETE /api/v1/friends/:friend_id               Remove friend
 
-POST   /api/v1/groups                 Create group
-GET    /api/v1/groups/:id             Get group
-POST   /api/v1/groups/:id/join        Join group
-POST   /api/v1/groups/:id/leave       Leave group
+POST   /api/v1/groups                           Create group
+GET    /api/v1/groups/:id                       Get group
+PUT    /api/v1/groups/:id                       Update group
+POST   /api/v1/groups/:id/join                  Join group
+POST   /api/v1/groups/:id/leave                 Leave group
+GET    /api/v1/groups/:id/members               List group members
+PUT    /api/v1/groups/:id/members/:player_id/role  Update member role
+DELETE /api/v1/groups/:id/members/:player_id    Kick member
 """
             ),
 
@@ -72,8 +76,8 @@ POST /api/v1/store/purchase            Purchase a store listing
 GET  /api/v1/inventory                 List player items
 POST /api/v1/inventory/consume         Consume an item
 
-POST /api/v1/iap/apple/validate        Validate an Apple receipt
-POST /api/v1/iap/google/validate       Validate a Google Play receipt
+POST /api/v1/iap/apple                 Validate an Apple receipt
+POST /api/v1/iap/google                Validate a Google Play receipt
 """
             ),
 
@@ -137,18 +141,26 @@ DELETE /api/v1/storage/:collection/:key           Delete object
 """
             ),
 
+            section(
+                ~"Direct messages",
+                ~"""
+POST   /api/v1/dm                          Send a direct message
+GET    /api/v1/dm/:player_id/history       DM history with a player
+"""
+            ),
+
             {h2, [], [~"Typical curl example"]},
             code(
                 ~"bash",
                 ~"""
 # login
-curl -s -X POST http://localhost:8082/api/v1/auth/login \
+curl -s -X POST http://localhost:8080/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"username": "player1", "password": "secret123"}' > /tmp/login.json
 TOKEN=$(jq -r .session_token /tmp/login.json)
 
 # submit a matchmaking ticket
-curl -X POST http://localhost:8082/api/v1/matchmaker \
+curl -X POST http://localhost:8080/api/v1/matchmaker \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"mode": "arena", "properties": {"skill": 1200}}'
