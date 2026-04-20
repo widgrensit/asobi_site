@@ -20,8 +20,8 @@ render(_Bindings) ->
             ]},
             {h1, [], [~"Matchmaking"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Query-based matchmaker running as a periodic tick (default 1 Hz). ",
-                ~"Players submit tickets with properties and a query; when mutually compatible tickets exist, a match is spawned and players are notified."
+                ~"Periodic-tick matchmaker (default 1 Hz). ",
+                ~"Players submit tickets with a mode, optional properties, and an optional party; a per-mode strategy module groups tickets into matches and spawns them."
             ]},
 
             {h2, [], [~"Submitting a ticket"]},
@@ -31,16 +31,14 @@ render(_Bindings) ->
 {"type": "matchmaker.add",
  "payload": {
    "mode": "arena",
-   "properties": {"skill": 1200, "region": "eu-west"},
-   "query": "+region:eu-west skill:>=1000 skill:<=1400"
+   "properties": {"skill": 1200, "region": "eu-west"}
  }}
 """,
                 ~"""
 %% Erlang API
 {ok, TicketId} = asobi_matchmaker:add(PlayerId, #{
     mode       => <<"arena">>,
-    properties => #{skill => 1200, region => <<"eu-west">>},
-    query      => <<"+region:eu-west skill:>=1000 skill:<=1400">>
+    properties => #{skill => 1200, region => <<"eu-west">>}
 }).
 """
             ),
@@ -53,40 +51,51 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
   -H 'Content-Type: application/json' \
   -d '{
     "mode": "arena",
-    "properties": {"skill": 1200, "region": "eu-west"},
-    "query": "+region:eu-west skill:>=1000 skill:<=1400"
+    "properties": {"skill": 1200, "region": "eu-west"}
   }'
 """
             ),
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Ticket shape. "]},
+                    ~"A ticket currently supports ",
+                    {code, [], [~"mode"]},
+                    ~", ",
+                    {code, [], [~"properties"]},
+                    ~", and ",
+                    {code, [], [~"party"]},
+                    ~". A query-language extension (numeric ranges, required keys, auto skill-window expansion) is on the roadmap but not shipped \x{2014} do the filtering inside your strategy module instead."
+                ]}
+            ]},
 
-            {h2, [], [~"Query language"]},
+            {h2, [], [~"Skill-based matching"]},
             {p, [], [
-                ~"Tickets include a query describing acceptable opponents. Both sides must match each other's query for a pairing to form."
+                ~"Enable the built-in ",
+                {code, [], [~"skill_based"]},
+                ~" strategy per mode. Tickets are sorted by ",
+                {code, [], [~"properties.skill"]},
+                ~" and paired within an expanding window (configurable via ",
+                {code, [], [~"skill_window"]},
+                ~" + ",
+                {code, [], [~"skill_expand_rate"]},
+                ~")."
             ]},
             code(
-                ~"text",
+                ~"erlang",
                 ~"""
-+region:eu-west mode:ranked skill:>=800 skill:<=1200
+{asobi, [
+    {game_modes, #{
+        ~"ranked" => #{
+            module            => my_arena,
+            match_size        => 4,
+            strategy          => skill_based,
+            skill_window      => 200,
+            skill_expand_rate => 50
+        }
+    }}
+]}
 """
             ),
-            {ul, [], [
-                {li, [], [{code, [], [~"key:value"]}, ~" \x{2014} exact match"]},
-                {li, [], [{code, [], [~"+key:value"]}, ~" \x{2014} required (must match)"]},
-                {li, [], [
-                    {code, [], [~"key:>=N"]},
-                    ~" / ",
-                    {code, [], [~"key:<=N"]},
-                    ~" \x{2014} numeric range"
-                ]},
-                {li, [], [~"Multiple conditions are AND-ed."]}
-            ]},
-
-            {h2, [], [~"Skill window expansion"]},
-            {p, [], [
-                ~"When a player waits too long, the matchmaker widens the skill window automatically. Each tick increments the ",
-                {code, [], [~"expansion_level"]},
-                ~" for unfilled tickets, relaxing numeric constraints. This trades strict skill-fairness for queue time."
-            ]},
 
             {h2, [], [~"Parties"]},
             {p, [], [~"Queue together \x{2014} all party members land in the same match:"]},
@@ -97,8 +106,7 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
  "payload": {
    "mode": "arena",
    "party": ["player_id_2", "player_id_3"],
-   "properties": {"skill": 1200},
-   "query": "skill:>=1000 skill:<=1400"
+   "properties": {"skill": 1200}
  }}
 """
             ),
@@ -128,14 +136,15 @@ asobi_matchmaker:remove(PlayerId, TicketId).
 
             {h2, [], [~"Custom strategies"]},
             {p, [], [
-                ~"The default strategy is the ",
+                ~"The default strategy is ",
                 {code, [], [~"asobi_matchmaker_fill"]},
-                ~" first-come-first-matched module. ",
-                ~"For MMR-bucketed matching, use ",
+                ~" (first-come-first-matched). For MMR-bucketed matching use ",
                 {code, [], [~"asobi_matchmaker_skill"]},
                 ~". Write your own by implementing the ",
                 {code, [], [~"asobi_matchmaker_strategy"]},
-                ~" behaviour:"
+                ~" behaviour (a single ",
+                {code, [], [~"match/2"]},
+                ~" callback):"
             ]},
             code(
                 ~"erlang",
@@ -143,23 +152,41 @@ asobi_matchmaker:remove(PlayerId, TicketId).
 -module(my_matchmaker).
 -behaviour(asobi_matchmaker_strategy).
 
--export([group/2, compatible/3]).
+-export([match/2]).
 
-%% group tickets into potential matches each tick
-group(Tickets, _Cfg) ->
-    lists:filter(fun ready_group/1,
-        bucket_by(fun(#{properties := #{skill := S}}) -> S div 100 end, Tickets)).
-
-%% return true if two tickets can play together
-compatible(#{properties := A}, #{properties := B}, _Cfg) ->
-    abs(maps:get(skill, A) - maps:get(skill, B)) =< 150.
+%% match(Tickets, ModeConfig) -> {Matched, Unmatched}
+%% Matched is a list of groups (each group is a list of tickets).
+match(Tickets, Config) ->
+    Size = maps:get(match_size, Config, 4),
+    %% Bucket by skill tier, form groups of Size, return leftovers.
+    Buckets = bucket_by_skill(Tickets),
+    {Groups, Leftover} = lists:foldl(
+        fun(Bucket, {Gs, Left}) ->
+            {Full, Rest} = take_full_groups(Bucket, Size),
+            {Full ++ Gs, Rest ++ Left}
+        end,
+        {[], []},
+        Buckets),
+    {Groups, Leftover}.
 """
             ),
-            {p, [], [~"Register it in config:"]},
+            {p, [], [
+                ~"Strategy is selected per mode via the ",
+                {code, [], [~"strategy"]},
+                ~" key in ",
+                {code, [], [~"game_modes"]},
+                ~" (there is no top-level ",
+                {code, [], [~"matchmaker_strategy"]},
+                ~" config):"
+            ]},
             code(
                 ~"erlang",
                 ~"""
-{asobi, [{matchmaker_strategy, my_matchmaker}]}
+{asobi, [
+    {game_modes, #{
+        ~"ranked" => #{module => my_arena, match_size => 4, strategy => my_matchmaker}
+    }}
+]}
 """
             ),
 

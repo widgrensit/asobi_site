@@ -33,6 +33,23 @@ render(_Bindings) ->
 
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
+                    {strong, [], [~"End-of-match from Lua: "]},
+                    ~"to finish a match from ",
+                    {code, [], [~"tick"]},
+                    ~" or ",
+                    {code, [], [~"leave"]},
+                    ~", set ",
+                    {code, [], [~"state._finished = true"]},
+                    ~" and ",
+                    {code, [], [~"state._result = {...}"]},
+                    ~", then return the state. Returning ",
+                    {code, [], [~"{ finished = true, ... }"]},
+                    ~" does nothing."
+                ]}
+            ]},
+
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
                     {strong, [], [~"Required: "]},
                     {code, [], [~"init"]},
                     ~", ",
@@ -116,7 +133,8 @@ join(PlayerId, #{players := P} = State) ->
     Mark = case maps:size(P) of 0 -> <<"x">>; _ -> <<"o">> end,
     NewP = P#{PlayerId => Mark},
     Started = maps:size(NewP) =:= 2,
-    asobi_match:send(PlayerId, #{kind => <<"welcome">>, mark => Mark}),
+    %% Per-player send is a Lua-only helper (game.send). From Erlang,
+    %% expose the mark via get_state/2 instead.
     {ok, State#{players := NewP, started := Started}}.
 """
             ),
@@ -130,7 +148,8 @@ join(PlayerId, #{players := P} = State) ->
 function game.leave(player_id, state)
     state.players[player_id] = nil
     if state.started then
-        return { finished = true, result = { forfeit = player_id } }
+        state._finished = true
+        state._result   = { forfeit = player_id }
     end
     return state
 end
@@ -172,7 +191,8 @@ handle_input(PlayerId, #{<<"cell">> := Cell},
                 0 ->
                     NewBoard  = set_nth(Cell, Turn, Board),
                     NextTurn  = other(Turn),
-                    asobi_match:broadcast(<<"move">>, #{cell => Cell, mark => Turn}),
+                    asobi_match_server:broadcast_event(
+                      self(), <<"move">>, #{cell => Cell, mark => Turn}),
                     {ok, State#{board := NewBoard, turn := NextTurn}};
                 _ -> {ok, State}
             end;
@@ -195,9 +215,11 @@ handle_input(PlayerId, #{<<"cell">> := Cell},
 function game.tick(state)
     local w = winner(state.board)
     if w then
-        return { finished = true, result = { winner = w } }
+        state._finished = true
+        state._result   = { winner = w }
     elseif is_full(state.board) then
-        return { finished = true, result = { draw = true } }
+        state._finished = true
+        state._result   = { draw = true }
     end
     return state
 end
@@ -239,37 +261,31 @@ get_state(PlayerId, #{players := P} = State) ->
 """
             ),
 
-            {h2, [], [~"Optional: phases"]},
+            {h2, [], [~"Optional: phases (Erlang match mode, Lua world mode)"]},
             {p, [], [
-                ~"Declare named phases (lobby, active, results...) and hook into their transitions."
+                ~"Declare named phases (lobby, active, results...) and hook into their transitions. ",
+                ~"Phases are ",
+                {strong, [], [~"supported for Erlang match games and for Lua world games"]},
+                ~". Lua ",
+                {em, [], [~"match"]},
+                ~" games cannot use ",
+                {code, [], [~"phases/1"]},
+                ~" yet \x{2014} model them inside ",
+                {code, [], [~"tick"]},
+                ~" using explicit state fields."
             ]},
-            callback_pair(
-                ~"""
-function game.phases(_config)
-    return {
-        { name = "lobby",   duration_ms = 30000 },
-        { name = "active",  duration_ms = 180000 },
-        { name = "results", duration_ms = 15000 },
-    }
-end
-
-function game.on_phase_started(name, state)
-    game.broadcast("phase", { name = name })
-    return state
-end
-
-function game.on_phase_ended(_name, state) return state end
-""",
+            code(
+                ~"erlang",
                 ~"""
 phases(_Config) ->
     [
-        #{name => <<"lobby">>,   duration_ms => 30000},
-        #{name => <<"active">>,  duration_ms => 180000},
-        #{name => <<"results">>, duration_ms => 15000}
+        #{name => <<"lobby">>,   duration => 30000},
+        #{name => <<"active">>,  duration => 180000},
+        #{name => <<"results">>, duration => 15000}
     ].
 
 on_phase_started(Name, State) ->
-    asobi_match:broadcast(<<"phase">>, #{name => Name}),
+    asobi_match_server:broadcast_event(self(), <<"phase">>, #{name => Name}),
     {ok, State}.
 
 on_phase_ended(_Name, State) -> {ok, State}.
@@ -285,9 +301,9 @@ on_phase_ended(_Name, State) -> {ok, State}.
 function game.vote_requested(state)
     if state.offer_boons then
         return {
-            template    = "boon_pick",
-            options     = { "fireball", "shield", "speed" },
-            duration_ms = 20000,
+            template  = "boon_pick",
+            options   = { "fireball", "shield", "speed" },
+            window_ms = 20000,
         }
     end
     return nil
@@ -301,10 +317,10 @@ end
                 ~"""
 vote_requested(#{offer_boons := true}) ->
     {ok, #{
-        template    => <<"boon_pick">>,
-        method      => plurality,
-        options     => [<<"fireball">>, <<"shield">>, <<"speed">>],
-        duration_ms => 20000
+        template  => <<"boon_pick">>,
+        method    => plurality,
+        options   => [<<"fireball">>, <<"shield">>, <<"speed">>],
+        window_ms => 20000
     }};
 vote_requested(_State) ->
     none.

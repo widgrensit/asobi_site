@@ -128,8 +128,9 @@ return game
 init(_Config) ->
     {ok, #{hits => 0}}.
 
-join(PlayerId, State) ->
-    asobi_match:send(PlayerId, #{kind => <<"welcome">>, msg => <<"hi ", PlayerId/binary>>}),
+join(_PlayerId, State) ->
+    %% Per-player messages have no Erlang helper; project the welcome
+    %% into get_state/2 instead, or use Lua's game.send from a Lua match.
     {ok, State}.
 
 leave(_PlayerId, State) ->
@@ -137,7 +138,7 @@ leave(_PlayerId, State) ->
 
 handle_input(_PlayerId, #{action := <<"click">>}, #{hits := H} = State) ->
     NewState = State#{hits := H + 1},
-    asobi_match:broadcast(<<"update">>, #{hits => H + 1}),
+    asobi_match_server:broadcast_event(self(), <<"update">>, #{hits => H + 1}),
     {ok, NewState};
 handle_input(_PlayerId, _Input, State) ->
     {ok, State}.
@@ -179,19 +180,19 @@ asobi deploy ./game
 
             {h3, [], [~"Option B \x{2014} Erlang"]},
             {p, [], [
-                ~"Erlang game modules are hot-reloaded by ",
-                {code, [], [~"nova"]},
-                ~"/ rebar3. From your project root:"
+                ~"Erlang game modules rebuild and hot-load from ",
+                {code, [], [~"rebar3 shell"]},
+                ~" during development; for releases, rebuild and restart. From your project root:"
             ]},
             code(
                 ~"bash",
                 ~"""
 rebar3 compile
-rebar3 nova reload  # pushes new beam files to the running node
+# from a running rebar3 shell: r3:compile() (or l(hello_game) to reload)
 """
             ),
             {p, [], [
-                ~"In-flight matches finish on the old module version; new matches bind the new one. Same guarantee as the Lua path."
+                ~"In-flight matches keep running on the old module version; new matches pick up the new one. Same guarantee as the Lua path."
             ]},
 
             {h2, [], [~"4. Connect a client"]},
@@ -206,7 +207,9 @@ rebar3 nova reload  # pushes new beam files to the running node
 npm install -g wscat
 wscat -c ws://localhost:8080/ws
 > {"type":"session.connect","payload":{"token":"dev-token"}}
-> {"type":"match.create","payload":{"mode":"hello"}}
+> {"type":"matchmaker.add","payload":{"mode":"hello"}}
+# server replies with matchmaker.matched { match_id: "<id>" }
+> {"type":"match.join","payload":{"match_id":"<id>"}}
 > {"type":"match.input","payload":{"action":"click"}}
 """
             ),

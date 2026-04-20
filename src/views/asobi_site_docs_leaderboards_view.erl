@@ -51,7 +51,7 @@ render(_Bindings) ->
 game.leaderboard.submit("arena:weekly", player_id, kills)
 """,
                 ~"""
-asobi_leaderboard:submit(<<"arena:weekly">>, PlayerId, Kills).
+asobi_leaderboard_server:submit(<<"arena:weekly">>, PlayerId, Kills).
 """
             ),
 
@@ -65,9 +65,9 @@ local my_rank = game.leaderboard.rank("arena:weekly", player_id)
 local near    = game.leaderboard.around("arena:weekly", player_id, 5)
 """,
                 ~"""
-{ok, Top}  = asobi_leaderboard:top(<<"arena:weekly">>, 10),
-{ok, Rank} = asobi_leaderboard:rank(<<"arena:weekly">>, PlayerId),
-{ok, Near} = asobi_leaderboard:around(<<"arena:weekly">>, PlayerId, 5).
+Top        = asobi_leaderboard_server:top(<<"arena:weekly">>, 10),
+{ok, Rank} = asobi_leaderboard_server:rank(<<"arena:weekly">>, PlayerId),
+Near       = asobi_leaderboard_server:around(<<"arena:weekly">>, PlayerId, 5).
 """
             ),
 
@@ -81,27 +81,32 @@ POST /api/v1/leaderboards/:id                  Submit a score
 """
             ),
 
-            {h2, [], [~"Definitions"]},
-            {p, [], [~"Register leaderboards in ", {code, [], [~"sys.config"]}, ~":"]},
+            {h2, [], [~"Starting a board"]},
+            {p, [], [
+                ~"Boards are lazily spawned on first use \x{2014} the first call to ",
+                {code, [], [~"submit"]},
+                ~"/",
+                {code, [], [~"top"]},
+                ~"/",
+                {code, [], [~"rank"]},
+                ~" with a board ID starts a dedicated ",
+                {code, [], [~"asobi_leaderboard_server"]},
+                ~" process. You can also start one eagerly:"
+            ]},
             code(
                 ~"erlang",
                 ~"""
-{asobi, [
-    {leaderboards, #{
-        <<"arena:weekly">> => #{
-            mode    => monotonic,
-            window  => {weekly, monday, 0},   %% reset Monday 00:00 UTC
-            bucket  => <<"arena">>
-        },
-        <<"xp:lifetime">> => #{mode => cumulative}
-    }}
-]}
+{ok, _Pid} = asobi_leaderboard_sup:start_board(<<"arena:weekly">>).
 """
             ),
 
             {h2, [], [~"Tournaments"]},
             {p, [], [
-                ~"Tie a leaderboard to a season + bracket. Players join, submit scores during the window, and at close the tournament resolves brackets and distributes prizes."
+                ~"A tournament wraps a leaderboard with a time window and prize pool. Tournaments are created by inserting a row via ",
+                {code, [], [~"asobi_repo"]},
+                ~" and then booting a server under ",
+                {code, [], [~"asobi_tournament_sup"]},
+                ~":"
             ]},
             code(
                 ~"bash",
@@ -114,13 +119,9 @@ POST /api/v1/tournaments/:id/join      Join a tournament
             code(
                 ~"erlang",
                 ~"""
-{ok, TId} = asobi_tournament:create(#{
-    leaderboard  => <<"arena:weekly">>,
-    starts_at    => {{2026,4,22},{16,0,0}},
-    ends_at      => {{2026,4,29},{16,0,0}},
-    entry_fee    => #{currency => <<"gold">>, amount => 100},
-    prize_pool   => #{<<"gold">> => 100000},
-    distribution => [0.5, 0.3, 0.2]   %% top 3 split
+{ok, _Pid} = asobi_tournament_sup:start_tournament(#{
+    tournament_id => <<"arena:2026-w17">>,
+    leaderboard   => <<"arena:weekly">>
 }).
 """
             ),

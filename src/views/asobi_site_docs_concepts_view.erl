@@ -59,7 +59,8 @@ render(_Bindings) ->
 function game.tick(state)
     state.elapsed = state.elapsed + 0.1
     if state.elapsed >= 60 then
-        return { finished = true, result = { winner = leader(state) } }
+        state._finished = true
+        state._result   = { winner = leader(state) }
     end
     return state
 end
@@ -110,18 +111,19 @@ local nearby = game.spatial.query_radius(g.x, g.y, 50)
                 {strong, [], [~"skill-based"]},
                 ~" (MMR-bucketed, widens window over time)."
             ]},
-            pair(
-                ~"""
--- Lua: enqueue and poll
-local ticket = game.matchmaker.add(player_id, {
-    mode = "ranked", skill = 1250, region = "eu_west"
-})
-""",
+            {p, [], [
+                ~"Matchmaking is driven by the client over WebSocket (",
+                {code, [], [~"matchmaker.add"]},
+                ~" → server replies with ",
+                {code, [], [~"matchmaker.matched"]},
+                ~"). Server-side, you can also enqueue from Erlang:"
+            ]},
+            code(
+                ~"erlang",
                 ~"""
 {ok, TicketId} = asobi_matchmaker:add(PlayerId, #{
-    mode   => <<"ranked">>,
-    skill  => 1250,
-    region => eu_west
+    mode       => <<"ranked">>,
+    properties => #{skill => 1250, region => <<"eu_west">>}
 }).
 """
             ),
@@ -132,21 +134,19 @@ local ticket = game.matchmaker.add(player_id, {
                 ~"plurality, approval, weighted, ranked-choice, and spectator-weighted. ",
                 ~"Supports veto tokens, quorum early-resolution, and frustration bonuses for repeatedly losing voters."
             ]},
-            pair(
-                ~"""
--- open a plurality vote for 30s
-game.vote.start({
-    template = "boon_pick",
-    options = { "fireball", "shield", "speed" },
-    duration_ms = 30000,
-})
-""",
+            {p, [], [
+                ~"From Lua, votes are opened by implementing the ",
+                {code, [], [~"vote_requested(state)"]},
+                ~" callback \x{2014} return a vote config and the match server starts the vote. From Erlang, you can open one directly:"
+            ]},
+            code(
+                ~"erlang",
                 ~"""
 {ok, _} = asobi_match_server:start_vote(MatchPid, #{
-    template    => <<"boon_pick">>,
-    method      => plurality,
-    options     => [<<"fireball">>, <<"shield">>, <<"speed">>],
-    duration_ms => 30000
+    template  => <<"boon_pick">>,
+    method    => plurality,
+    options   => [<<"fireball">>, <<"shield">>, <<"speed">>],
+    window_ms => 30000
 }).
 """
             ),
@@ -157,23 +157,30 @@ game.vote.start({
                 ~"Timers let you schedule one-shot or repeating events. ",
                 ~"Seasons wrap longer lifecycles (weekly competitive, monthly events)."
             ]},
+            {p, [], [
+                {em, [], [
+                    ~"Phases fire for Erlang match games and for Lua world games. Lua match games should model phases inside "
+                ]},
+                {code, [], [~"tick"]},
+                {em, [], [~" with an explicit state field."]}
+            ]},
             pair(
                 ~"""
--- declare phases for the mode
+-- Lua: world mode only
 function game.phases(_config)
     return {
-        { name = "lobby",   duration_ms = 30000 },
-        { name = "active",  duration_ms = 300000 },
-        { name = "results", duration_ms = 15000 },
+        { name = "lobby",   duration = 30000 },
+        { name = "active",  duration = 300000 },
+        { name = "results", duration = 15000 },
     }
 end
 """,
                 ~"""
 phases(_Config) ->
     [
-        #{name => <<"lobby">>,   duration_ms => 30000},
-        #{name => <<"active">>,  duration_ms => 300000},
-        #{name => <<"results">>, duration_ms => 15000}
+        #{name => <<"lobby">>,   duration => 30000},
+        #{name => <<"active">>,  duration => 300000},
+        #{name => <<"results">>, duration => 15000}
     ].
 """
             ),
@@ -191,7 +198,7 @@ phases(_Config) ->
 game.chat.send("world:main", player_id, "gg")
 """,
                 ~"""
-asobi_world_chat:send(<<"world:main">>, PlayerId, <<"gg">>).
+asobi_chat_channel:send_message(<<"world:main">>, PlayerId, <<"gg">>).
 """
             ),
 
@@ -206,8 +213,8 @@ game.economy.grant(winner_id, "gold", 50, "match_win")
 game.leaderboard.submit("arena:weekly", winner_id, kills)
 """,
                 ~"""
-asobi_economy:grant(WinnerId, gold, 50, <<"match_win">>),
-asobi_leaderboard:submit(<<"arena:weekly">>, WinnerId, Kills).
+asobi_economy:grant(WinnerId, <<"gold">>, 50, #{reason => <<"match_win">>}),
+asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
 """
             ),
 

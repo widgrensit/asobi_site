@@ -149,13 +149,15 @@ game.broadcast("boss_spawned", {
             ),
 
             recipe(
-                ~"Phases: lobby → active → results",
+                ~"Phases: lobby → active → results (world mode only)",
                 ~"""
+-- NOTE: Lua phases only fire in WORLD mode (large session games).
+-- Lua match games should model phases inside tick(state) instead.
 function game.phases(_config)
     return {
-        { name = "lobby",   duration_ms = 30000 },
-        { name = "active",  duration_ms = 300000 },
-        { name = "results", duration_ms = 15000 },
+        { name = "lobby",   duration = 30000 },
+        { name = "active",  duration = 300000 },
+        { name = "results", duration = 15000 },
     }
 end
 
@@ -179,11 +181,11 @@ function game.vote_requested(state)
     if state.wave_cleared then
         state.wave_cleared = false
         return {
-            template    = "boon",
-            method      = "plurality",
-            options     = pick_3_boons(),
-            duration_ms = 20000,
-            quorum      = math.ceil(count_alive(state) / 2),  -- resolves early
+            template  = "boon",
+            method    = "plurality",
+            options   = pick_3_boons(),
+            window_ms = 20000,
+            quorum    = 0.5,  -- fraction (0.0-1.0); resolves when half voted
         }
     end
     return nil

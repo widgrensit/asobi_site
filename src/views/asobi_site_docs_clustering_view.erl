@@ -68,23 +68,21 @@ render(_Bindings) ->
             ]},
 
             {h2, [], [~"Forming a cluster"]},
-            {p, [], [~"Set a consistent cookie and explicit node names, then connect:"]},
-            code(
-                ~"bash",
-                ~"""
-# node 1
-ERLANG_COOKIE=... \
-  NODE_NAME=asobi@10.0.0.1 \
-  ghcr.io/widgrensit/asobi_lua:latest
-
-# node 2
-ERLANG_COOKIE=... \
-  NODE_NAME=asobi@10.0.0.2 \
-  ASOBI_CLUSTER_SEEDS=asobi@10.0.0.1 \
-  ghcr.io/widgrensit/asobi_lua:latest
-"""
-            ),
-
+            {p, [], [
+                ~"Asobi uses the BEAM's distribution protocol. Give each node a long name, share a cookie, and let the ",
+                {code, [], [~"asobi_cluster"]},
+                ~" discovery loop (configured below) connect them. Out of the box the image only reads ",
+                {code, [], [~"ASOBI_PORT"]},
+                ~", ",
+                {code, [], [~"ASOBI_DB_*"]},
+                ~", and ",
+                {code, [], [~"ASOBI_CORS_ORIGINS"]},
+                ~" \x{2014} set node name and cookie with the standard ",
+                {code, [], [~"-name"]},
+                ~"/",
+                {code, [], [~"-setcookie"]},
+                ~" VM flags."
+            ]},
             {p, [], [~"Or from a running shell:"]},
             code(
                 ~"erlang",
@@ -96,20 +94,28 @@ nodes().          %% ['asobi@10.0.0.1']
 
             {h2, [], [~"Service discovery"]},
             {p, [], [
-                ~"For Kubernetes or cloud deployments, use ",
-                {code, [], [~"libcluster"]},
-                ~" or a similar strategy. Asobi's ",
+                ~"Asobi ships a tiny discovery loop (",
                 {code, [], [~"asobi_cluster"]},
-                ~" module handles the common cases:"
+                ~") with two strategies \x{2014} DNS (for Kubernetes headless services) and EPMD (for a static list of hosts). It resolves peer addresses, derives node names by reusing the current node's base name, and pings them periodically."
             ]},
             code(
                 ~"erlang",
                 ~"""
+%% DNS (Kubernetes headless service):
 {asobi, [
     {cluster, #{
-        strategy => k8s_dns,
-        service  => <<"asobi-headless">>,
-        basename => <<"asobi">>
+        strategy      => dns,
+        dns_name      => ~"asobi-headless",
+        poll_interval => 10000
+    }}
+]}
+
+%% EPMD (static host list):
+{asobi, [
+    {cluster, #{
+        strategy      => epmd,
+        hosts         => ['asobi-1.example.internal', 'asobi-2.example.internal'],
+        poll_interval => 10000
     }}
 ]}
 """

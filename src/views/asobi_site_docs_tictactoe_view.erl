@@ -123,11 +123,13 @@ join(_PlayerId, #{started := true}) ->
 join(PlayerId, #{players := P} = State) ->
     Mark = case maps:size(P) of 0 -> <<"x">>; _ -> <<"o">> end,
     NewP = P#{PlayerId => Mark},
-    asobi_match:send(PlayerId, #{kind => <<"welcome">>, mark => Mark}),
+    %% Per-player welcome is a Lua-only helper; from Erlang use game logic
+    %% to project the mark into get_state/2 instead.
     State1 = State#{players := NewP},
     case maps:size(NewP) of
         2 ->
-            asobi_match:broadcast(<<"go">>, #{turn => maps:get(turn, State)}),
+            asobi_match_server:broadcast_event(
+              self(), <<"go">>, #{turn => maps:get(turn, State)}),
             {ok, State1#{started := true}};
         _ ->
             {ok, State1}
@@ -171,7 +173,8 @@ handle_input(PlayerId, #{<<"cell">> := Cell},
             case lists:nth(C, Board) of
                 0 ->
                     NewBoard = set_nth(C, Turn, Board),
-                    asobi_match:broadcast(<<"move">>, #{cell => C, mark => Turn}),
+                    asobi_match_server:broadcast_event(
+                      self(), <<"move">>, #{cell => C, mark => Turn}),
                     {ok, State#{board := NewBoard, turn := other(Turn)}};
                 _ ->
                     {ok, State}
@@ -214,14 +217,14 @@ local function is_full(board)
 end
 
 function game.tick(state)
-    if state.result or not state.started then return state end
+    if state._finished or not state.started then return state end
     local w = winner(state.board)
     if w then
-        state.result = { winner = w }
-        return { finished = true, result = state.result }
+        state._finished = true
+        state._result   = { winner = w }
     elseif is_full(state.board) then
-        state.result = { draw = true }
-        return { finished = true, result = state.result }
+        state._finished = true
+        state._result   = { draw = true }
     end
     return state
 end
@@ -277,15 +280,15 @@ function game.get_state(player_id, state)
         turn      = state.turn,
         started   = state.started,
         your_mark = state.players[player_id],
-        result    = state.result,  -- nil if still playing
+        result    = state._result,  -- nil if still playing
     }
 end
 
 function game.leave(player_id, state)
     state.players[player_id] = nil
-    if state.started and not state.result then
-        state.result = { forfeit = player_id }
-        return { finished = true, result = state.result }
+    if state.started and not state._finished then
+        state._finished = true
+        state._result   = { forfeit = player_id }
     end
     return state
 end
@@ -322,17 +325,18 @@ asobi deploy ./game
 """
             ),
             {p, [], [
-                ~"Erlang path \x{2014} compile and hot-reload into the running node:"
+                ~"Erlang path \x{2014} compile and restart your release (or use ",
+                {code, [], [~"rebar3 shell"]},
+                ~" during development):"
             ]},
             code(
                 ~"bash",
                 ~"""
 rebar3 compile
-rebar3 nova reload
 """
             ),
             {p, [], [
-                ~"Then start two WebSocket clients and exchange moves:"
+                ~"Then start two WebSocket clients and matchmake into a game:"
             ]},
             code(
                 ~"bash",
@@ -340,11 +344,14 @@ rebar3 nova reload
 # terminal 1
 wscat -c ws://localhost:8080/ws
 > {"type":"session.connect","payload":{"token":"alice-token"}}
-> {"type":"match.create","payload":{"mode":"ttt"}}
+> {"type":"matchmaker.add","payload":{"mode":"ttt"}}
+# server replies with matchmaker.matched { match_id: "<id>" }
+> {"type":"match.join","payload":{"match_id":"<id>"}}
 
-# terminal 2 (after match id returned)
+# terminal 2
 wscat -c ws://localhost:8080/ws
 > {"type":"session.connect","payload":{"token":"bob-token"}}
+> {"type":"matchmaker.add","payload":{"mode":"ttt"}}
 > {"type":"match.join","payload":{"match_id":"<id>"}}
 
 # either terminal
@@ -378,7 +385,7 @@ wscat -c ws://localhost:8080/ws
                     ~"Submit the winner to a leaderboard via ",
                     {code, [], [~"game.leaderboard.submit"]},
                     ~" (Lua) or ",
-                    {code, [], [~"asobi_leaderboard:submit/3"]},
+                    {code, [], [~"asobi_leaderboard_server:submit/3"]},
                     ~" (Erlang)."
                 ]}
             ]},

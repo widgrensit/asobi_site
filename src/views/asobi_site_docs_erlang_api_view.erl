@@ -141,15 +141,15 @@ get_state(PlayerId, State) ->
 
             api(
                 ~"asobi_match_server:start_link(Config)",
-                ~"Start a new match. Config must include `callback_module` and may include `tick_rate_ms`, `min_players`, `max_players`, `mode`.",
+                ~"Start a new match. Config must include `game_module` and may include `tick_rate`, `min_players`, `max_players`, `mode`.",
                 ~"erlang",
                 ~"""
 {ok, Pid} = asobi_match_server:start_link(#{
-    callback_module => my_card_game,
-    tick_rate_ms => 100,
+    game_module => my_card_game,
+    tick_rate   => 100,
     min_players => 2,
     max_players => 4,
-    mode => ~"ranked"
+    mode        => ~"ranked"
 }).
 """
             ),
@@ -291,11 +291,11 @@ asobi_world_server:move_player(WorldPid, PlayerId, {1024, 768}).
 
             api(
                 ~"asobi_spatial:query_radius(Entities, {X, Y}, Radius)",
-                ~"Entities is a list of maps with `x` and `y` keys. Returns the subset within radius.",
+                ~"`Entities` is a map of `#{Id => EntityMap}` where each entity has `x`/`y`. Returns the subset within radius as `[{Id, Entity, Distance}]`.",
                 ~"erlang",
                 ~"""
 Nearby = asobi_spatial:query_radius(Entities, {0, 0}, 100),
-lists:foreach(fun(E) -> notify(E) end, Nearby).
+lists:foreach(fun({_Id, _E, _Dist}) -> notify(_E) end, Nearby).
 """
             ),
             api(
