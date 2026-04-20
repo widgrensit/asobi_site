@@ -9,8 +9,8 @@
 -spec render(bindings()) -> az:template().
 render(Bindings) ->
     Links = [
-        {~"/#features", ~"Features", {active, features}, false},
-        {~"/#sdks", ~"SDKs", {active, sdks}, false},
+        {~"/#features", ~"Features", {active, features}, true},
+        {~"/#sdks", ~"SDKs", {active, sdks}, true},
         {~"/demo", ~"Demo", {active, demo}, true},
         {~"/docs", ~"Docs", {active, docs}, true},
         {~"/blog", ~"Blog", {active, blog}, true},
