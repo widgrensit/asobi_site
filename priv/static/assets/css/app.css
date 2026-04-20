@@ -207,7 +207,7 @@ code {
     color: var(--text);
 }
 .nav-brand:hover { color: var(--text); }
-.nav-brand:hover .brand-logo { transform: rotate(-4deg) scale(1.05); }
+.nav-brand:hover .brand-logo { transform: rotate(-6deg) scale(1.06); }
 
 .brand-logo {
     width: 36px;
@@ -215,16 +215,13 @@ code {
     object-fit: contain;
     display: block;
     transition: transform var(--dur-2) var(--ease);
-    transform-origin: 50% 70%;
+    transform-origin: 50% 72%;
+    /* Soft warm-ink drop so the black outline doesn't feel pasted on cream. */
+    filter: drop-shadow(0 2px 0 rgba(26, 18, 8, 0.04))
+            drop-shadow(0 6px 14px rgba(26, 18, 8, 0.08));
 }
 .brand-logo-lg { width: 56px; height: 56px; }
 
-.brand-icon {
-    font-size: 1.45rem;
-    line-height: 1;
-    color: var(--indigo);
-    transform: translateY(2px);
-}
 .brand-text {
     font-style: italic;
     font-variation-settings: 'SOFT' 60;
@@ -333,21 +330,52 @@ code {
 }
 
 .hero::after {
+    /* Ghosted kanji whisper behind the mascot — low-opacity context,
+       not a focal element. */
     content: "\904A";  /* 遊 */
     position: absolute;
     top: 50%;
-    right: -4vw;
+    right: -8vw;
     transform: translateY(-50%);
     font-family: var(--font-display);
     font-weight: 200;
-    font-size: clamp(360px, 60vw, 780px);
+    font-size: clamp(280px, 46vw, 600px);
     line-height: 0.85;
     color: var(--indigo);
-    opacity: 0.08;
+    opacity: 0.04;
     pointer-events: none;
     z-index: 0;
     user-select: none;
     letter-spacing: -0.05em;
+}
+
+.hero-mascot {
+    position: absolute;
+    top: 50%;
+    right: clamp(-40px, -2vw, 40px);
+    width: clamp(260px, 36vw, 520px);
+    height: auto;
+    transform: translateY(-50%) rotate(4deg);
+    pointer-events: none;
+    user-select: none;
+    z-index: 1;
+    filter: drop-shadow(0 18px 36px rgba(26, 18, 8, 0.12))
+            drop-shadow(0 6px 10px rgba(26, 18, 8, 0.08));
+    animation: mascot-float 8s ease-in-out infinite, mascot-enter 900ms var(--ease-out) 200ms backwards;
+    transform-origin: 50% 70%;
+}
+
+@keyframes mascot-enter {
+    from { opacity: 0; transform: translateY(-46%) rotate(12deg) scale(0.92); }
+    to   { opacity: 1; transform: translateY(-50%) rotate(4deg) scale(1); }
+}
+@keyframes mascot-float {
+    0%, 100% { transform: translateY(-50%) rotate(4deg); }
+    50%      { transform: translateY(calc(-50% - 10px)) rotate(2deg); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .hero-mascot { animation: none; }
 }
 
 .hero::before {
@@ -1135,8 +1163,17 @@ code {
     font-weight: 500;
     font-size: 1.3rem;
 }
-.footer-brand .brand-icon { font-size: 1.9rem; color: var(--indigo); }
 .footer-brand .brand-logo { width: 56px; height: 56px; }
+.footer-brand-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    color: var(--text);
+    font-family: var(--font-display);
+    font-size: 1.3rem;
+}
+.footer-brand-link:hover { color: var(--text); }
+.footer-brand-link:hover .brand-logo { transform: rotate(-6deg) scale(1.05); }
 .footer-brand .brand-text {
     font-style: italic;
     font-variation-settings: 'SOFT' 60;
@@ -1494,6 +1531,24 @@ code {
     .section-subtitle { margin-bottom: var(--sp-8); }
     .hero { padding: clamp(96px, 12vw, 140px) var(--gutter) clamp(72px, 9vw, 100px); }
     .hero::after { right: -30vw; font-size: clamp(320px, 90vw, 560px); }
+    .hero-mascot {
+        position: relative;
+        top: auto;
+        right: auto;
+        display: block;
+        width: min(72vw, 320px);
+        margin: 0 auto var(--sp-7);
+        transform: rotate(2deg);
+        animation: mascot-float-sm 8s ease-in-out infinite, mascot-enter-sm 900ms var(--ease-out) 200ms backwards;
+    }
+    @keyframes mascot-enter-sm {
+        from { opacity: 0; transform: translateY(20px) rotate(10deg) scale(0.92); }
+        to   { opacity: 1; transform: rotate(2deg) scale(1); }
+    }
+    @keyframes mascot-float-sm {
+        0%, 100% { transform: rotate(2deg) translateY(0); }
+        50%      { transform: rotate(0deg) translateY(-8px); }
+    }
     .hero-title { max-width: 100%; }
     .hero-subtitle { max-width: 100%; }
     .hero-notice { max-width: 100%; }

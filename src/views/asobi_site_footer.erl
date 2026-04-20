@@ -9,8 +9,17 @@ render() ->
         {footer, [{class, ~"site-footer"}], [
             {'div', [{class, ~"footer-inner"}], [
                 {'div', [{class, ~"footer-brand"}], [
-                    {span, [{class, ~"brand-icon"}], [<<16#904A/utf8>>]},
-                    {span, [{class, ~"brand-text"}], [~"asobi"]},
+                    {a, [{href, ~"/"}, {class, ~"footer-brand-link"}], [
+                        {img, [
+                            {src, ~"/assets/img/logo-mark.png"},
+                            {alt, ~""},
+                            {class, ~"brand-logo"},
+                            {width, ~"56"},
+                            {height, ~"56"},
+                            {'aria-hidden', ~"true"}
+                        ]},
+                        {span, [{class, ~"brand-text"}], [~"asobi"]}
+                    ]},
                     {p, [{class, ~"footer-tagline"}], [
                         ~"Open-source game backend on Erlang/OTP."
                     ]}
