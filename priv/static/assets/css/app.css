@@ -323,26 +323,6 @@ code {
         linear-gradient(180deg, var(--ink-0) 0%, var(--ink-1) 70%, var(--ink-1) 100%);
 }
 
-.hero::after {
-    /* Ghosted kanji whisper behind the mascot — low-opacity context,
-       not a focal element. */
-    content: "\904A";  /* 遊 */
-    position: absolute;
-    top: 50%;
-    right: -8vw;
-    transform: translateY(-50%);
-    font-family: var(--font-display);
-    font-weight: 200;
-    font-size: clamp(280px, 46vw, 600px);
-    line-height: 0.85;
-    color: var(--indigo);
-    opacity: 0.04;
-    pointer-events: none;
-    z-index: 0;
-    user-select: none;
-    letter-spacing: -0.05em;
-}
-
 .hero-mascot {
     position: absolute;
     top: 50%;
@@ -1519,7 +1499,6 @@ code {
     .section { padding: clamp(56px, 8vw, 96px) var(--gutter); }
     .section-subtitle { margin-bottom: var(--sp-8); }
     .hero { padding: clamp(96px, 12vw, 140px) var(--gutter) clamp(72px, 9vw, 100px); }
-    .hero::after { right: -30vw; font-size: clamp(320px, 90vw, 560px); }
     .hero-inner { padding-right: clamp(0px, 3vw, 32px); }
     .hero-mascot {
         position: relative;
