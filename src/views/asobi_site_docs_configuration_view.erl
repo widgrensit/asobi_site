@@ -40,21 +40,22 @@ render(_Bindings) ->
             code(
                 ~"erlang",
                 ~"""
-{asobi_repo, [
-    {database, <<"asobi">>},
-    {username, <<"postgres">>},
-    {password, <<"postgres">>},
-    {host,     <<"localhost">>},
+{kura, [
+    {repo,     asobi_repo},
+    {host,     "localhost"},
     {port,     5432},
+    {database, "asobi"},
+    {user,     "postgres"},
+    {password, "postgres"},
     {pool_size, 10}
 ]}
 """
             ),
             {p, [], [
-                ~"Environment variables: ",
+                ~"Environment variables (consumed via ",
+                {code, [], [~"sys.config.src"]},
+                ~"): ",
                 {code, [], [~"ASOBI_DB_HOST"]},
-                ~", ",
-                {code, [], [~"ASOBI_DB_PORT"]},
                 ~", ",
                 {code, [], [~"ASOBI_DB_NAME"]},
                 ~", ",
@@ -69,25 +70,47 @@ render(_Bindings) ->
                 ~"erlang",
                 ~"""
 {nova, [
-    {cowboy_options, [{port, 8080}, {max_connections, 10000}]}
+    {cowboy_configuration, #{port => 8080}},
+    {plugins, [
+        {pre_request, nova_cors_plugin, #{allow_origins => <<"*">>}}
+        %% ... other pre/post request plugins
+    ]}
 ]}
 """
             ),
 
-            {h2, [], [~"Matches"]},
+            {h2, [], [~"Game modes (matches and worlds)"]},
+            {p, [], [
+                ~"All per-mode config \x{2014} whether a mode is a match or a world, which module implements it, match size, tick rate, bots, spatial config \x{2014} lives under the single ",
+                {code, [], [~"game_modes"]},
+                ~" map."
+            ]},
             code(
                 ~"erlang",
                 ~"""
 {asobi, [
-    {match_defaults, #{
-        tick_rate_ms => 100,
-        min_players  => 2,
-        max_players  => 10,
-        waiting_timeout_ms => 60000
-    }},
-    {match_modes, #{
-        <<"arena">>  => #{callback_module => arena_game,  tick_rate_ms => 50},
-        <<"ranked">> => #{callback_module => ranked_game, tick_rate_ms => 100}
+    {game_modes, #{
+        ~"arena" => #{
+            module      => arena_game,
+            match_size  => 4,
+            max_players => 4,
+            tick_rate   => 50,          %% ms per tick (default 100)
+            strategy    => fill,        %% fill | skill_based | module()
+            bots        => #{enabled => true, min_players => 4,
+                             script => ~"bots/arena.lua"}
+        },
+        ~"world1" => #{
+            type         => world,
+            module       => {lua, ~"world1/match.lua"},
+            grid_size    => 10,
+            zone_size    => 200,
+            view_radius  => 1,
+            tick_rate    => 50,
+            persistent   => false,
+            lazy_zones   => true,
+            zone_idle_timeout => 30000,
+            max_active_zones  => 10000
+        }
     }}
 ]}
 """
@@ -101,25 +124,8 @@ render(_Bindings) ->
     {matchmaker, #{
         tick_interval    => 1000,
         max_wait_seconds => 60
-    }},
-    {matchmaker_strategy, asobi_matchmaker_fill}
-]}
-"""
-            ),
-
-            {h2, [], [~"World server"]},
-            code(
-                ~"erlang",
-                ~"""
-{asobi, [
-    {world, #{
-        zone_size            => 256,      %% units per side
-        tick_rate_ms         => 50,       %% 20 Hz
-        lazy_zones           => true,
-        zone_idle_ms         => 60000,
-        terrain_provider     => my_terrain_module,
-        snapshot_interval_ms => 30000
     }}
+    %% Strategy is per-mode — see the `strategy` key under game_modes.
 ]}
 """
             ),
@@ -143,44 +149,38 @@ render(_Bindings) ->
                 ~"erlang",
                 ~"""
 {asobi, [
+    {base_url, ~"https://api.example.com"},   %% used for OIDC redirects
     {oidc_providers, #{
-        google    => #{issuer => <<"https://accounts.google.com">>,
-                       client_id => <<"...">>, client_secret => <<"...">>},
-        apple     => #{issuer => <<"https://appleid.apple.com">>,
-                       client_id => <<"...">>, client_secret => <<"...">>}
+        google => #{issuer => ~"https://accounts.google.com",
+                    client_id => ~"...", client_secret => ~"..."},
+        apple  => #{issuer => ~"https://appleid.apple.com",
+                    client_id => ~"...", client_secret => ~"..."}
     }},
-    {steam_api_key, <<"...">>},
-    {steam_app_id,  <<"...">>},
-    {apple_bundle_id, <<"com.example.game">>},
-    {session_token_ttl_seconds, 2592000}   %% 30 days
+    {steam_api_key, ~"..."},
+    {steam_app_id,  ~"..."},
+    {apple_bundle_id,    ~"com.example.game"},
+    {google_package_name, ~"com.example.game"}
 ]}
 """
             ),
 
             {h2, [], [~"Leaderboards"]},
-            code(
-                ~"erlang",
-                ~"""
-{asobi, [
-    {leaderboards, #{
-        <<"arena:weekly">> => #{mode => monotonic,
-                                window => {weekly, monday, 0}},
-        <<"xp:lifetime">>  => #{mode => cumulative}
-    }}
-]}
-"""
-            ),
+            {p, [], [
+                ~"Leaderboards are spawned per-board on demand \x{2014} there is no config map. Start one eagerly with ",
+                {code, [], [~"asobi_leaderboard_sup:start_board/1"]},
+                ~", or just call ",
+                {code, [], [~"asobi_leaderboard_server:submit/3"]},
+                ~" and the first hit will spawn it."
+            ]},
 
             {h2, [], [~"Lua runtime"]},
             code(
                 ~"erlang",
                 ~"""
-{asobi_lua, [
-    {bundle_dir,  <<"./game">>},
-    {hot_reload,  true},
-    {sandbox,     strict},             %% strict | permissive
-    {instruction_limit, 1000000}       %% per-callback bytecode cap
-]}
+{asobi, [
+    {game_dir, "/app/game"}   %% where asobi_lua_config looks for match.lua / config.lua
+]},
+{asobi_lua, []}
 """
             ),
 
@@ -190,9 +190,10 @@ render(_Bindings) ->
                 ~"""
 {asobi, [
     {cluster, #{
-        strategy => k8s_dns,
-        service  => <<"asobi-headless">>,
-        basename => <<"asobi">>
+        strategy       => dns,               %% dns | epmd
+        dns_name       => ~"asobi-headless", %% DNS A record (for `dns`)
+        hosts          => [],                %% list of hosts (for `epmd`)
+        poll_interval  => 10000              %% ms between discovery polls
     }}
 ]}
 """
@@ -214,15 +215,22 @@ render(_Bindings) ->
             ),
 
             {h2, [], [~"Common env vars"]},
+            {p, [], [
+                ~"These are the variables consumed by the published ",
+                {code, [], [~"asobi_lua"]},
+                ~" image's ",
+                {code, [], [~"sys.config.src"]},
+                ~":"
+            ]},
             {pre, [], [
                 {code, [], [
                     ~"""
- ASOBI_DB_*           Postgres connection (HOST/PORT/NAME/USER/PASSWORD)
- ASOBI_CLUSTER_SEEDS  Comma-separated node names to ping on boot
- ERLANG_COOKIE        Distribution cookie (required for clustering)
- NODE_NAME            Full node name, e.g. asobi@10.0.0.1
- PORT                 HTTP listen port (default 8080)
- ASOBI_BUNDLE_DIR     Where asobi_lua looks for game/*.lua
+ ASOBI_PORT           HTTP/WebSocket listen port (required)
+ ASOBI_DB_HOST        Postgres host
+ ASOBI_DB_NAME        Postgres database name
+ ASOBI_DB_USER        Postgres user
+ ASOBI_DB_PASSWORD    Postgres password
+ ASOBI_CORS_ORIGINS   Comma-separated allowed origins for CORS
 """
                 ]}
             ]},

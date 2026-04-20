@@ -134,11 +134,7 @@ render(_Bindings) ->
                     ~"Avoid allocating big tables every tick \x{2014} reuse state. Luerl's GC is per-VM and stops the tick."
                 ]},
                 {li, [], [
-                    ~"Set ",
-                    {code, [], [~"instruction_limit"]},
-                    ~" in ",
-                    {code, [], [~"asobi_lua"]},
-                    ~" config to prevent pathological scripts from hogging a tick."
+                    ~"The Lua tick has a hard 500ms timeout; keep callbacks under a few milliseconds and split long-running work across ticks with an explicit state cursor."
                 ]}
             ]},
 

@@ -162,13 +162,18 @@ function game.handle_input(player_id, input, entities)
 end
 
 function game.post_tick(tick_n, state)
+    -- Signal vote/finish by setting reserved keys on state and returning it.
     if state.boss_hp <= 0 then
-        return { vote = { template = "boon_pick", window_ms = 15000,
-                          options = { "shield", "speed", "damage" } },
-                 state = { boss_hp = 10000, dungeon_level = state.dungeon_level + 1 } }
-    end
-    if tick_n >= 36000 then
-        return { finished = true, result = { reason = "time_up" } }
+        state._vote = {
+            template  = "boon_pick",
+            window_ms = 15000,
+            options   = { "shield", "speed", "damage" }
+        }
+        state.boss_hp       = 10000
+        state.dungeon_level = state.dungeon_level + 1
+    elseif tick_n >= 36000 then
+        state._finished = true
+        state._result   = { reason = "time_up" }
     end
     return state
 end

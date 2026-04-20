@@ -36,127 +36,127 @@ render(_Bindings) ->
 
             {h2, [], [~"Writing a bot"]},
             {p, [], [
-                ~"A bot is a Lua file exporting a ",
-                {code, [], [~"think"]},
-                ~" function. Asobi calls it each bot tick (default 5 Hz)."
+                ~"A bot script exports a top-level ",
+                {code, [], [~"think(bot_id, state)"]},
+                ~" function. Asobi calls it each bot tick (100ms) with the latest match state for that bot."
             ]},
             code(
                 ~"lua",
                 ~"""
 -- bots/random_player.lua
-local bot = {}
+-- Optional: advertise display names the platform reads back
+names = {"Spark", "Blitz", "Volt", "Neon", "Pulse"}
 
-function bot.on_join(state, view)
-    -- Called once when the bot joins the match.
-    return { targeting = nil }
+function think(bot_id, state)
+    -- state is the full match state as of the latest match.state broadcast.
+    -- Return an input table to submit, or nil/{} to skip this tick.
+    local players = state.players or {}
+    local me = players[bot_id]
+    if not me then return {} end
+
+    -- wander randomly; real bots would pick targets, cast abilities, etc.
+    return {
+        right = math.random() < 0.5,
+        left  = math.random() < 0.5,
+        up    = math.random() < 0.5,
+        down  = math.random() < 0.5,
+    }
 end
-
-function bot.think(state, view)
-    -- view is what get_state(bot_id, match_state) returned.
-    -- Return an input table to submit, or nil to skip this tick.
-    if view.phase ~= "active" then return nil end
-
-    local enemies = enemies_in_sight(view)
-    if #enemies == 0 then
-        return { action = "move", x = math.random(-5, 5), y = math.random(-5, 5) }
-    end
-
-    local target = enemies[1]
-    state.targeting = target.id
-    return { action = "attack", target = target.id }
-end
-
-function bot.on_leave(_state, _view) end
-
-return bot
 """
             ),
 
-            {h2, [], [~"Spawning a bot into a match"]},
+            {h2, [], [~"Wiring bots into a mode"]},
+            {p, [], [
+                ~"Bots are configured per mode. In a Lua game, set ",
+                {code, [], [~"bots"]},
+                ~" as a top-level global in ",
+                {code, [], [~"match.lua"]},
+                ~". In ",
+                {code, [], [~"sys.config"]},
+                ~", use the ",
+                {code, [], [~"bots"]},
+                ~" key inside the mode:"
+            ]},
             pair(
                 ~"""
--- Lua (from your game module)
-function game.init(config)
-    -- Add 3 bots to fill the arena
-    for i = 1, 3 do
-        game.bots.add("random_player", {
-            display_name = "Bot " .. i,
-            skill = 1000,
-        })
-    end
-    return { ... }
-end
+-- match.lua
+match_size  = 4
+max_players = 4
+bots = {
+    script = "bots/random_player.lua"
+}
 """,
                 ~"""
-%% Erlang API
-{ok, _BotId} = asobi_bot:add(MatchPid, #{
-    script       => <<"random_player">>,
-    display_name => <<"Bot Alpha">>,
-    skill        => 1000
-}).
+{asobi, [
+    {game_modes, #{
+        ~"arena" => #{
+            module     => my_arena,
+            match_size => 4,
+            bots       => #{
+                enabled     => true,
+                min_players => 4,
+                script      => ~"bots/random_player.lua"
+            }
+        }
+    }}
+]}
 """
             ),
+            {p, [], [
+                ~"When ",
+                {code, [], [~"enabled = true"]},
+                ~" and the queue for that mode is under ",
+                {code, [], [~"min_players"]},
+                ~", ",
+                {code, [], [~"asobi_bot_spawner"]},
+                ~" fills the shortfall with bots that are added to the matchmaker like regular players."
+            ]},
 
             {h2, [], [~"Bot callbacks"]},
             {ul, [], [
                 {li, [], [
-                    {code, [], [~"on_join(state, view)"]},
-                    ~" \x{2014} called once; returns the bot's private state."
-                ]},
-                {li, [], [
-                    {code, [], [~"think(state, view)"]},
-                    ~" \x{2014} called per bot tick. Return an input table or ",
-                    {code, [], [~"nil"]},
+                    {code, [], [~"think(bot_id, state)"]},
+                    ~" \x{2014} required. Called each bot tick. Return an input map or ",
+                    {code, [], [~"{}"]},
                     ~"."
                 ]},
                 {li, [], [
-                    {code, [], [~"on_message(state, view, msg)"]},
-                    ~" \x{2014} optional; receives messages ",
-                    {code, [], [~"game.send"]},
-                    ~" would have sent to a human."
-                ]},
-                {li, [], [{code, [], [~"on_leave(state, view)"]}, ~" \x{2014} optional; cleanup."]}
+                    {code, [], [~"names"]},
+                    ~" \x{2014} optional top-level table of display-name strings the spawner picks from."
+                ]}
             ]},
-
-            {h2, [], [~"Configuration"]},
-            code(
-                ~"erlang",
-                ~"""
-{asobi_lua, [
-    {bot_dir,      <<"./bots">>},
-    {bot_tick_ms,  200},                 %% 5 Hz default
-    {max_bots_per_match, 8}
-]}
-"""
-            ),
+            {p, [], [
+                ~"There is no ",
+                {code, [], [~"on_join"]},
+                ~"/",
+                {code, [], [~"on_leave"]},
+                ~"/",
+                {code, [], [~"on_message"]},
+                ~" surface: a bot is a plain input source, nothing more. Keep per-bot state by keying off ",
+                {code, [], [~"bot_id"]},
+                ~"."
+            ]},
 
             {h2, [], [~"Difficulty knobs"]},
             {p, [], [
-                ~"Common pattern: add a reaction-time delay based on \x{201C}skill\x{201D} metadata."
+                ~"Common pattern: key private state off ",
+                {code, [], [~"bot_id"]},
+                ~" in a module-level table and add a reaction-time delay."
             ]},
             code(
                 ~"lua",
                 ~"""
-function bot.think(state, view)
-    state.reaction_countdown = (state.reaction_countdown or 0) - 1
-    if state.reaction_countdown > 0 then return nil end
+local mem = {}
 
-    -- simulate decision-making delay (higher skill = faster reactions)
-    state.reaction_countdown = math.max(1, math.floor(30 / state.skill * 10))
+function think(bot_id, state)
+    local m = mem[bot_id] or { reaction = 0, skill = 1000 }
+    m.reaction = m.reaction - 1
+    if m.reaction > 0 then mem[bot_id] = m; return {} end
 
-    return pick_action(view)
+    m.reaction = math.max(1, math.floor(3000 / m.skill))
+    mem[bot_id] = m
+    return pick_action(bot_id, state)
 end
-"""
-            ),
-
-            {h2, [], [~"Load testing with bots"]},
-            {p, [], [
-                ~"To pressure-test a match, spawn N bots that do trivial actions and let the tick loop run. Because bots skip the WebSocket, you can saturate CPU with a few lines of config."
-            ]},
-            code(
-                ~"erlang",
-                ~"""
-[ asobi_bot:add(MatchPid, #{script => <<"noop_bot">>}) || _ <- lists:seq(1, 100) ].
 """
             ),
 
