@@ -207,24 +207,18 @@ code {
     color: var(--text);
 }
 .nav-brand:hover { color: var(--text); }
-.nav-brand:hover .brand-logo { transform: rotate(-6deg) scale(1.06); }
+.nav-brand:hover .brand-logo { transform: translateX(1px) rotate(-1.5deg); }
 
 .brand-logo {
-    width: 36px;
-    height: 36px;
+    height: 40px;
+    width: auto;
     object-fit: contain;
     display: block;
     transition: transform var(--dur-2) var(--ease);
-    transform-origin: 50% 72%;
+    transform-origin: 16% 62%;  /* pivot around the tanuki's head */
     /* Soft warm-ink drop so the black outline doesn't feel pasted on cream. */
     filter: drop-shadow(0 2px 0 rgba(26, 18, 8, 0.04))
             drop-shadow(0 6px 14px rgba(26, 18, 8, 0.08));
-}
-.brand-logo-lg { width: 56px; height: 56px; }
-
-.brand-text {
-    font-style: italic;
-    font-variation-settings: 'SOFT' 60;
 }
 
 .nav-links {
@@ -352,14 +346,17 @@ code {
 .hero-mascot {
     position: absolute;
     top: 50%;
-    right: clamp(-40px, -2vw, 40px);
-    width: clamp(260px, 36vw, 520px);
+    /* Hug the centered hero-inner's right edge on wide screens; on narrower
+       screens (below hero-inner's max-width + breathing room) the mascot
+       drifts toward the viewport edge then the mobile media query kicks in. */
+    right: max(20px, calc(50% - 480px));
+    width: clamp(260px, 30vw, 440px);
     height: auto;
     transform: translateY(-50%) rotate(4deg);
     pointer-events: none;
     user-select: none;
     z-index: 1;
-    filter: drop-shadow(0 18px 36px rgba(26, 18, 8, 0.12))
+    filter: drop-shadow(0 18px 36px rgba(26, 18, 8, 0.14))
             drop-shadow(0 6px 10px rgba(26, 18, 8, 0.08));
     animation: mascot-float 8s ease-in-out infinite, mascot-enter 900ms var(--ease-out) 200ms backwards;
     transform-origin: 50% 70%;
@@ -397,6 +394,9 @@ code {
     max-width: 920px;
     margin: 0 auto;
     padding-left: clamp(0px, 3vw, 32px);
+    /* Reserve room on the right so the mascot can sit next to the copy
+       without overlapping long subtitle lines. Collapses on mobile. */
+    padding-right: clamp(0px, 32vw, 420px);
 }
 
 .hero-inner::before {
@@ -1159,26 +1159,15 @@ code {
     flex-direction: column;
     gap: var(--sp-3);
     align-items: flex-start;
-    font-family: var(--font-display);
-    font-weight: 500;
-    font-size: 1.3rem;
 }
-.footer-brand .brand-logo { width: 56px; height: 56px; }
+.footer-brand .brand-logo { height: 64px; width: auto; }
 .footer-brand-link {
     display: inline-flex;
     align-items: center;
-    gap: 14px;
     color: var(--text);
-    font-family: var(--font-display);
-    font-size: 1.3rem;
 }
 .footer-brand-link:hover { color: var(--text); }
-.footer-brand-link:hover .brand-logo { transform: rotate(-6deg) scale(1.05); }
-.footer-brand .brand-text {
-    font-style: italic;
-    font-variation-settings: 'SOFT' 60;
-    color: var(--text);
-}
+.footer-brand-link:hover .brand-logo { transform: translateX(1px) rotate(-1.5deg); }
 .footer-tagline {
     font-family: var(--font-body);
     font-weight: 400;
@@ -1531,6 +1520,7 @@ code {
     .section-subtitle { margin-bottom: var(--sp-8); }
     .hero { padding: clamp(96px, 12vw, 140px) var(--gutter) clamp(72px, 9vw, 100px); }
     .hero::after { right: -30vw; font-size: clamp(320px, 90vw, 560px); }
+    .hero-inner { padding-right: clamp(0px, 3vw, 32px); }
     .hero-mascot {
         position: relative;
         top: auto;
