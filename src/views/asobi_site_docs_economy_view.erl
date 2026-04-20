@@ -32,17 +32,15 @@ render(_Bindings) ->
             ]},
             pair(
                 ~"""
--- Lua
-local wallet = game.economy.balance(player_id)
-if (wallet.gold or 0) >= 100 then
-    game.economy.debit(player_id, "gold", 100, "shop_buy")
-end
+-- Lua: game.economy.balance returns the full wallet list for the player
+local wallets = game.economy.balance(player_id)
+-- each entry looks like { currency = "...", balance = N }
 """,
                 ~"""
-%% Erlang
-case asobi_economy:balance(PlayerId, <<"gold">>) of
-    {ok, Bal} when Bal >= 100 ->
-        asobi_economy:debit(PlayerId, <<"gold">>, 100, #{reason => store_purchase});
+%% Erlang: fetch the wallet for a single currency, then debit
+case asobi_economy:get_or_create_wallet(PlayerId, <<"gold">>) of
+    {ok, #{balance := Bal}} when Bal >= 100 ->
+        asobi_economy:debit(PlayerId, <<"gold">>, 100, #{reason => <<"store_purchase">>});
     _ ->
         {error, insufficient}
 end.
@@ -111,13 +109,13 @@ asobi_economy:purchase(PlayerId, <<"shop:starter_pack">>).
                 ~"erlang",
                 ~"""
 %% grant currency (e.g. match rewards)
-asobi_economy:credit(PlayerId, <<"gold">>, 100, #{reason => match_reward}).
+asobi_economy:grant(PlayerId, <<"gold">>, 100, #{reason => <<"match_reward">>}).
 
 %% debit
-asobi_economy:debit(PlayerId, <<"gold">>, 50, #{reason => respawn_fee}).
+asobi_economy:debit(PlayerId, <<"gold">>, 50, #{reason => <<"respawn_fee">>}).
 
-%% grant an item directly
-asobi_economy:grant_item(PlayerId, <<"sword_of_fire">>, 1).
+%% items are granted via the store/purchase flow or by writing an
+%% asobi_player_item row through asobi_repo — there is no grant_item/3 helper.
 """
             ),
 
@@ -144,7 +142,7 @@ asobi_economy:grant_item(PlayerId, <<"sword_of_fire">>, 1).
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8082/api/v1/iap/apple \
+curl -X POST http://localhost:8080/api/v1/iap/apple \
   -H 'Authorization: Bearer <session_token>' \
   -H 'Content-Type: application/json' \
   -d '{"signed_transaction": "eyJhbGciOi..."}'
@@ -173,7 +171,7 @@ curl -X POST http://localhost:8082/api/v1/iap/apple \
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8082/api/v1/iap/google \
+curl -X POST http://localhost:8080/api/v1/iap/google \
   -H 'Authorization: Bearer <session_token>' \
   -H 'Content-Type: application/json' \
   -d '{"product_id": "gems_100", "purchase_token": "..."}'
@@ -186,7 +184,7 @@ curl -X POST http://localhost:8082/api/v1/iap/google \
                 ~"""
 case asobi_iap:verify_apple(SignedTransaction) of
     {ok, #{product_id := <<"gems_100">>, valid := true}} ->
-        asobi_economy:credit(PlayerId, <<"gems">>, 100, #{reason => iap_apple});
+        asobi_economy:grant(PlayerId, <<"gems">>, 100, #{reason => <<"iap_apple">>});
     {ok, #{valid := false}} ->
         {error, invalid_receipt};
     {error, Reason} ->
