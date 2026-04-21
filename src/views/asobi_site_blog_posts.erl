@@ -33,6 +33,18 @@ all() ->
             tags => [~"engineering", ~"manifesto"],
             reading_time => ~"6 min",
             body => fun post_why_erlang/1
+        },
+        #{
+            slug => ~"migrating-from-hathora",
+            title => ~"Hathora shuts down May 5. Here's how to move to Asobi.",
+            lede =>
+                ~"""
+                Hathora ends game hosting on 2026-05-05 after its acquisition by an AI company. If you're running a game on it, you have two weeks. We wrote a migration guide, and we'll help you ship before the deadline.
+                """,
+            date => ~"2026-04-21",
+            tags => [~"migration", ~"hathora"],
+            reading_time => ~"5 min",
+            body => fun post_migrating_from_hathora/1
         }
     ],
     lists:sort(fun(#{date := A}, #{date := B}) -> A >= B end, Posts).
@@ -156,6 +168,167 @@ post_why_erlang(_Bindings) ->
                 ~", and the ",
                 {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
                 ~" is the fastest way to ask questions. I'd love to know what multiplayer you're trying to ship."
+            ]}
+        ]}
+    ).
+
+-spec post_migrating_from_hathora(az:bindings()) -> az:template().
+post_migrating_from_hathora(_Bindings) ->
+    ?html(
+        {'div', [], [
+            {p, [], [
+                ~"On 2026-03-04 Hathora announced it was ",
+                {a,
+                    [
+                        {href,
+                            ~"https://www.pcworld.com/article/3105695/ai-is-coming-for-your-online-gaming-servers-next.html"}
+                    ],
+                    [
+                        ~"ending its game-hosting service"
+                    ]},
+                ~" after being acquired by an AI-inference company. The shutdown date is 2026-05-05. Stormgate, Splitgate 2, and Predecessor are among the casualties. If you're running on ",
+                {code, [], [~"hathora.dev"]},
+                ~" or ",
+                {code, [], [~"hathora.cloud"]},
+                ~", you have about two weeks."
+            ]},
+
+            {p, [], [
+                ~"We've written a ",
+                {a,
+                    [
+                        {href,
+                            ~"https://github.com/widgrensit/asobi/blob/main/guides/migrate-from-hathora.md"}
+                    ],
+                    [
+                        ~"full migration guide"
+                    ]},
+                ~". This post is the short version, the pitch, and an open offer: we will prioritise Hathora-migration help in the ",
+                {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
+                ~" through May."
+            ]},
+
+            {h2, [], [~"The short version"]},
+            {p, [], [
+                ~"Asobi is an open-source, Apache-2, self-hostable multiplayer backend. One container, one Postgres, no Kubernetes. It has the pieces Hathora had (matchmaker, lobbies, rooms, regions) plus the pieces Hathora didn't (hot-reloadable Lua, voting, phases, seasons, spatial zones, Godot/Defold SDKs)."
+            ]},
+            {p, [], [
+                ~"Managed cloud opens later in 2026. For the next fortnight the path is self-host. A small Hetzner box (CX22, €4/mo) comfortably holds thousands of concurrent players. You can run it on your laptop while you port, then move it somewhere real when you're ready."
+            ]},
+
+            {h2, [], [~"Concept map"]},
+            {p, [], [
+                ~"Hathora's nouns line up with ours almost cleanly:"
+            ]},
+            {ul, [], [
+                {li, [], [
+                    {strong, [], [~"Application"]},
+                    ~" → asobi deployment (one container per env)."
+                ]},
+                {li, [], [
+                    {strong, [], [~"Room / Process"]},
+                    ~" → Match (a BEAM process per match, thousands per container)."
+                ]},
+                {li, [], [
+                    {strong, [], [~"Lobby"]},
+                    ~" → Matchmaker ticket + match in \"waiting\" phase."
+                ]},
+                {li, [], [
+                    {strong, [], [~"Matchmaker 2.0"]},
+                    ~" → ",
+                    {code, [], [~"asobi_matchmaker"]},
+                    ~" with pluggable strategies (fill / skill / your own)."
+                ]},
+                {li, [], [
+                    {strong, [], [~"HathoraClient.loginAnonymous"]},
+                    ~" → ",
+                    {code, [], [~"POST /api/v1/auth/register"]},
+                    ~" with a client-generated username+password (no anonymous flag today; the guide has details)."
+                ]},
+                {li, [], [
+                    {strong, [], [~"getConnectionInfo(roomId)"]},
+                    ~" → one long-lived WebSocket per player. First frame is ",
+                    {code, [], [~"session.connect"]},
+                    ~" with the session token; the server pushes ",
+                    {code, [], [~"match.matched"]},
+                    ~" when matchmaking resolves."
+                ]}
+            ]},
+
+            {h2, [], [~"Two paths"]},
+
+            {h3, [], [~"A. Keep your existing game server"]},
+            {p, [], [
+                ~"If you have a lot of C# / Go / Node server code, keep running it in its own container on Hetzner, Fly, or Scaleway. Let Asobi handle auth, matchmaking, lobbies, leaderboards, and persistence. Your server talks to Asobi with an API key. This is the fast path — usually a week of work."
+            ]},
+
+            {h3, [], [~"B. Fold the game into Lua"]},
+            {p, [], [
+                ~"Rewrite your tick/input/state logic as a ",
+                {code, [], [~"match.lua"]},
+                ~" file. The callbacks are ",
+                {code, [], [~"init / join / leave / handle_input / tick / get_state"]},
+                ~". For most Hathora games this is a few hundred lines. You get hot-reload for free (edit + save + live matches update), and you delete a container from your ops budget."
+            ]},
+
+            {h2, [], [~"Cost comparison"]},
+            {p, [], [
+                ~"A small-indie Hathora game was typically $200–800/month on process-hours. The same game on Asobi at Hetzner is €5–20/month of infra. That's not a typo. The BEAM gets you tens of thousands of cheap processes per node; Hathora was paying container-per-match overhead."
+            ]},
+
+            {h2, [], [~"What Asobi doesn't do"]},
+            {p, [], [
+                ~"Be honest with yourself before committing:"
+            ]},
+            {ul, [], [
+                {li, [], [
+                    ~"No UDP transport. WebSocket/TCP only. If you're a twitch FPS, pair Asobi with a UDP relay for physics and use Asobi for everything else."
+                ]},
+                {li, [], [
+                    ~"No auto-multi-region. Deploy one container per region yourself."
+                ]},
+                {li, [], [
+                    ~"No client-side prediction / rollback primitives yet. On the roadmap."
+                ]},
+                {li, [], [
+                    ~"Pre-1.0 API. Minor breaks possible before 1.0."
+                ]}
+            ]},
+
+            {h2, [], [~"What to do today"]},
+            {ol, [], [
+                {li, [], [
+                    {code, [], [~"git clone"]},
+                    ~" the ",
+                    {a, [{href, ~"https://github.com/widgrensit/asobi_lua"}], [~"asobi_lua"]},
+                    ~" repo and run ",
+                    {code, [], [~"docker compose up"]},
+                    ~". Register a player. Confirm it works."
+                ]},
+                {li, [], [
+                    ~"Pick one SDK call in your client (",
+                    {code, [], [~"loginAnonymous"]},
+                    ~" is the usual first) and port it."
+                ]},
+                {li, [], [
+                    ~"Join the ",
+                    {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
+                    ~" #migrations channel. We'll sanity-check your plan."
+                ]},
+                {li, [], [
+                    ~"Set a cutover date before 2026-05-05."
+                ]}
+            ]},
+
+            {p, [], [
+                ~"We'd rather you land on Asobi than drown in a 72-hour panic next month. Even if you don't migrate to us, ",
+                {a,
+                    [
+                        {href,
+                            ~"https://github.com/widgrensit/asobi/blob/main/guides/migrate-from-hathora.md"}
+                    ],
+                    [~"the full guide"]},
+                ~" has enough concept-mapping to help you migrate to any backend. Good luck, and ping us if you need a hand."
             ]}
         ]}
     ).

@@ -10,10 +10,12 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
+    View = ?get(view),
+    true = is_atom(View),
     ?html(
         {'div', [{id, ?get(id)}], [
             ?stateless(asobi_site_nav, render, #{active => ?get(active)}),
-            ?stateful(?get(view), #{
+            ?stateful(View, #{
                 id => ?get(view_id),
                 %% Route extras forwarded to the child view (workaround for
                 %% arizona not supporting arbitrary route-binding passthrough).

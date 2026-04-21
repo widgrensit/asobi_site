@@ -16,7 +16,7 @@ render(Bindings) ->
         {'div', [{id, ?get(id)}], [
             {'div', [{class, ~"guide-page blog-post"}], [
                 case ?get(post) of
-                    {ok, Post} -> ?stateless(post_body, Post);
+                    {ok, Post} when is_map(Post) -> ?stateless(post_body, Post);
                     not_found -> ?stateless(not_found_body, #{})
                 end
             ]}
