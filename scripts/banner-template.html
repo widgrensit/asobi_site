@@ -1,0 +1,54 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap');
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 3000px; height: 1000px; overflow: hidden; }
+  body {
+    font-family: 'Inter', -apple-system, sans-serif;
+    background: radial-gradient(circle at 50% 45%, #2a1e5c 0%, #1A1A2E 55%, #0e0e1a 100%);
+    color: #E8E8E8;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .glow {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: 1600px;
+    height: 900px;
+    background: radial-gradient(ellipse, rgba(108,92,231,0.32) 0%, rgba(108,92,231,0) 65%);
+    filter: blur(30px);
+    pointer-events: none;
+  }
+  .logo {
+    height: 440px;
+    width: auto;
+    z-index: 1;
+    filter: drop-shadow(0 28px 56px rgba(0,0,0,0.45));
+    margin-bottom: 80px;
+  }
+  .tagline {
+    font-size: 62px;
+    font-weight: 600;
+    color: #E8E8E8;
+    line-height: 1.2;
+    letter-spacing: -0.01em;
+    text-align: center;
+    z-index: 1;
+    white-space: nowrap;
+  }
+</style>
+</head>
+<body>
+  <div class="glow"></div>
+  <img class="logo" src="file:///home/dnwid/ai/work/asobi/docs/media/logo-dark.png" alt="">
+  <div class="tagline">Open-source multiplayer backend for indie games.</div>
+</body>
+</html>

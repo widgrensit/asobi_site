@@ -52,9 +52,9 @@ render(Bindings) ->
                         {content, ~"Open-source multiplayer game backend built on Erlang/OTP."}
                     ],
                     []},
-                {meta, [{property, ~"og:image"}, {content, ~"/assets/img/logo-head.png"}], []},
+                {meta, [{property, ~"og:image"}, {content, ~"/assets/img/og-image.png"}], []},
                 {meta, [{name, ~"twitter:card"}, {content, ~"summary_large_image"}], []},
-                {meta, [{name, ~"twitter:image"}, {content, ~"/assets/img/logo-head.png"}], []},
+                {meta, [{name, ~"twitter:image"}, {content, ~"/assets/img/og-image.png"}], []},
                 %% Plausible Analytics (Estonia-based, data hosted in EU, no cookies).
                 %% Per-site script ID encodes the domain; no `data-domain` attribute.
                 {script,
