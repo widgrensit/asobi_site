@@ -53,27 +53,35 @@ render(Bindings) ->
                 {'data-scroll-key', ~"docs-sidebar"}
             ],
             [
-                {nav, [{class, ~"docs-nav"}], [
-                    ?each(
-                        fun({Title, Links}) ->
-                            {'div', [{class, ~"docs-nav-section"}], [
-                                {h3, [], [Title]},
-                                ?each(
-                                    fun({Href, Label}) ->
-                                        {a,
-                                            [
-                                                {href, Href},
-                                                {class, link_class(Href, ?get(active_path))},
-                                                az_navigate
-                                            ],
-                                            [Label]}
-                                    end,
-                                    Links
-                                )
-                            ]}
-                        end,
-                        Sections
-                    )
+                {details, [{class, ~"docs-menu"}, {open, ~"open"}], [
+                    {summary, [{class, ~"docs-menu-summary"}], [
+                        {span, [{class, ~"docs-menu-label"}], [~"Docs menu"]},
+                        {span, [{class, ~"docs-menu-caret"}, {'aria-hidden', ~"true"}], [
+                            ~"\x{25BE}"
+                        ]}
+                    ]},
+                    {nav, [{class, ~"docs-nav"}], [
+                        ?each(
+                            fun({Title, Links}) ->
+                                {'div', [{class, ~"docs-nav-section"}], [
+                                    {h3, [], [Title]},
+                                    ?each(
+                                        fun({Href, Label}) ->
+                                            {a,
+                                                [
+                                                    {href, Href},
+                                                    {class, link_class(Href, ?get(active_path))},
+                                                    az_navigate
+                                                ],
+                                                [Label]}
+                                        end,
+                                        Links
+                                    )
+                                ]}
+                            end,
+                            Sections
+                        )
+                    ]}
                 ]}
             ]}
     ).

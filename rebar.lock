@@ -1,7 +1,7 @@
 {"1.2.0",
 [{<<"arizona">>,
   {git,"https://github.com/arizona-framework/arizona.git",
-       {ref,"d2684456f334da894fee375ea9de89f8e7bd5603"}},
+       {ref,"41ed0628c5c77373c5782a43872343d070e0fa77"}},
   0},
  {<<"arizona_nova">>,
   {git,"https://github.com/arizona-framework/arizona_nova.git",

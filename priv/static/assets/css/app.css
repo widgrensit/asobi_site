@@ -1322,11 +1322,6 @@ code {
     gap: var(--sp-9);
     align-items: start;
 }
-@media (max-width: 900px) {
-    .docs-shell { grid-template-columns: 1fr; gap: var(--sp-5); padding-top: var(--sp-8); }
-    .docs-sidebar { position: static; top: auto; max-height: none; }
-}
-
 .docs-sidebar {
     position: sticky;
     top: 88px;
@@ -1334,6 +1329,27 @@ code {
     overflow-y: auto;
     padding-right: var(--sp-4);
 }
+
+/* Details/summary wrapper: collapses the nav on mobile, always-open on desktop. */
+.docs-menu { display: block; }
+.docs-menu-summary {
+    display: none;
+    list-style: none;
+    cursor: pointer;
+}
+.docs-menu-summary::-webkit-details-marker { display: none; }
+
+@media (max-width: 900px) {
+    .docs-shell { grid-template-columns: 1fr; gap: var(--sp-5); padding-top: var(--sp-8); }
+    .docs-sidebar {
+        position: static;
+        top: auto;
+        max-height: none;
+        overflow: visible;
+        padding-right: 0;
+    }
+}
+
 .docs-nav { display: flex; flex-direction: column; gap: var(--sp-6); }
 .docs-nav-section h3 {
     font-family: var(--font-mono);
@@ -1574,23 +1590,40 @@ code {
     .hero-title { max-width: 100%; }
     .hero-subtitle { max-width: 100%; }
     .hero-notice { max-width: 100%; }
-    /* Docs sidebar on mobile: horizontal scrolling chip bar instead of a
-       long vertical list that dominates the top of content. */
+    /* Docs sidebar on mobile: native <details> collapsible so the nav
+       doesn't dominate the top of the content. Starts open (honoring the
+       `open` attribute) and users can tap to collapse. */
     .docs-sidebar {
         padding-right: 0;
-        padding-bottom: var(--sp-4);
+        padding-bottom: 0;
         border-bottom: 1px solid var(--line);
         max-height: none;
     }
-    .docs-nav { flex-direction: row; gap: var(--sp-4); overflow-x: auto; padding-bottom: var(--sp-2); }
-    .docs-nav-section {
-        flex: 0 0 auto;
-        min-width: 150px;
-        padding-right: var(--sp-5);
-        border-right: 1px solid var(--line);
+    .docs-menu-summary {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: var(--sp-3);
+        padding: var(--sp-3) var(--sp-4);
+        margin-bottom: var(--sp-4);
+        font-family: var(--font-mono);
+        font-size: var(--fs-xs);
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        font-weight: 500;
+        color: var(--text-2);
+        background: var(--ink-1);
+        border: 1px solid var(--line);
+        border-radius: var(--r-1);
     }
-    .docs-nav-section:last-child { border-right: 0; }
-    .docs-nav-section h3 { white-space: nowrap; }
+    .docs-menu-caret {
+        transition: transform var(--dur-1) var(--ease);
+        font-size: 0.75rem;
+        color: var(--text-3);
+    }
+    .docs-menu[open] .docs-menu-caret { transform: rotate(180deg); }
+    .docs-menu:not([open]) .docs-nav { display: none; }
+    .docs-menu[open] { padding-bottom: var(--sp-4); }
 }
 @media (max-width: 520px) {
     :root { --gutter: 20px; }
