@@ -9,6 +9,8 @@ mount(Bindings) ->
 
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
+    DocView = ?get(doc_view),
+    true = is_atom(DocView),
     ?html(
         {'div', [{id, ?get(id)}, {class, ~"docs-root"}], [
             {'div', [{class, ~"docs-shell"}], [
@@ -17,7 +19,7 @@ render(Bindings) ->
                 }),
                 {main, [{class, ~"docs-main"}], [
                     {'div', [{class, ~"docs-content"}], [
-                        ?stateful(?get(doc_view), #{id => ?get(doc_view_id)})
+                        ?stateful(DocView, #{id => ?get(doc_view_id)})
                     ]}
                 ]}
             ]}
