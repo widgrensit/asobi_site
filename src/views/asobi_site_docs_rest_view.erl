@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-rest", title => ~"REST API — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Protocols / REST"
             ]},
             {h1, [], [~"REST API"]},
@@ -171,21 +171,25 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
                 {p, [], [
                     {strong, [], [~"Real-time flows go over WebSocket. "]},
                     ~"Matchmaking notifications, chat, votes, presence, and live state updates are on the ",
-                    {a, [{href, ~"/docs/protocols/websocket"}], [~"WebSocket protocol"]},
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
+                        ~"WebSocket protocol"
+                    ]},
                     ~". Use REST for request/response; use WS for push + low-latency interactions."
                 ]}
             ]},
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/protocols/websocket"}], [~"WebSocket protocol"]}]},
-                {li, [], [{a, [{href, ~"/docs/authentication"}], [~"Authentication"]}]},
-                {li, [], [{a, [{href, ~"/docs/economy"}], [~"Economy & IAP"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
+                        ~"WebSocket protocol"
+                    ]}
+                ]},
+                {li, [], [{a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]}]},
+                {li, [], [{a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/protocols/rest", Content).
-
+    ).
 section(Title, Body) ->
     ?html(
         {'div', [], [

@@ -3,7 +3,7 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(
@@ -16,12 +16,12 @@ mount(Bindings) ->
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Leaderboards & tournaments"
             ]},
             {h1, [], [~"Leaderboards & tournaments"]},
@@ -134,15 +134,15 @@ POST /api/v1/tournaments/:id/join      Join a tournament
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/economy"}], [~"Economy & IAP"]},
+                    {a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]},
                     ~" \x{2014} prize distribution currencies."
                 ]},
-                {li, [], [{a, [{href, ~"/docs/lua/api"}], [~"Lua API: game.leaderboard.*"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.leaderboard.*"]}
+                ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/leaderboards", Content).
-
+    ).
 pair(LuaBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

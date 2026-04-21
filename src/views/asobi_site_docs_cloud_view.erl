@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-cloud", title => ~"Cloud — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Cloud"
             ]},
             {h1, [], [~"Cloud hosting"]},
@@ -31,13 +31,12 @@ render(_Bindings) ->
             ]},
 
             {'div', [{class, ~"docs-cta-row"}], [
-                {a, [{href, ~"/cloud"}, {class, ~"btn btn-primary"}], [
+                {a, [{href, ~"/cloud"}, {class, ~"btn btn-primary"}, az_navigate], [
                     ~"Join the waitlist \x{2192}"
                 ]},
-                {a, [{href, ~"/docs/self-host"}, {class, ~"btn btn-secondary"}], [
+                {a, [{href, ~"/docs/self-host"}, {class, ~"btn btn-secondary"}, az_navigate], [
                     ~"Self-host in the meantime"
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/cloud", Content).
+    ).

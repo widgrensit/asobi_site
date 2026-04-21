@@ -3,16 +3,16 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"docs-concepts", title => ~"Core concepts — Asobi docs"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Core concepts"
             ]},
             {h1, [], [~"Core concepts"]},
@@ -235,24 +235,22 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/quickstart"}], [~"Quick start"]},
+                    {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"Quick start"]},
                     ~" \x{2014} run the engine and ship a first game (Lua or Erlang)."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
                     ~" \x{2014} the ",
                     {code, [], [~"game.*"]},
                     ~" surface in full."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/erlang/api"}], [~"Erlang API reference"]},
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
                     ~" \x{2014} behaviours, modules, and specs."
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/concepts", Content).
-
+    ).
 pair(LuaBody, ErlangBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

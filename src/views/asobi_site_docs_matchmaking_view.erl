@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-matchmaking", title => ~"Matchmaking — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Matchmaking"
             ]},
             {h1, [], [~"Matchmaking"]},
@@ -193,16 +193,18 @@ match(Tickets, Config) ->
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/protocols/websocket"}], [
+                    {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
                         ~"WebSocket: matchmaker.* messages"
                     ]}
                 ]},
-                {li, [], [{a, [{href, ~"/docs/erlang/api"}], [~"Erlang API: asobi_matchmaker"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [
+                        ~"Erlang API: asobi_matchmaker"
+                    ]}
+                ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/matchmaking", Content).
-
+    ).
 pair(WsBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

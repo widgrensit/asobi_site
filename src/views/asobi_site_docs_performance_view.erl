@@ -3,7 +3,7 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(
@@ -13,12 +13,12 @@ mount(Bindings) ->
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Performance"
             ]},
             {h1, [], [~"Performance & benchmarks"]},
@@ -67,7 +67,9 @@ render(_Bindings) ->
                 ]},
                 {li, [], [
                     ~"Split heavy per-entity work across frames (round-robin): see the ",
-                    {a, [{href, ~"/docs/lua/cookbook"}], [~"cookbook AI-stepping recipe"]},
+                    {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [
+                        ~"cookbook AI-stepping recipe"
+                    ]},
                     ~"."
                 ]},
                 {li, [], [
@@ -149,13 +151,13 @@ render(_Bindings) ->
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/clustering"}], [~"Clustering"]}]},
-                {li, [], [{a, [{href, ~"/docs/world-server"}], [~"World server deep dive"]}]},
-                {li, [], [{a, [{href, ~"/docs/configuration"}], [~"Configuration"]}]}
+                {li, [], [{a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]}]},
+                {li, [], [
+                    {a, [{href, ~"/docs/world-server"}, az_navigate], [~"World server deep dive"]}
+                ]},
+                {li, [], [{a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/performance", Content).
-
+    ).
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

@@ -1,35 +1,36 @@
 -module(asobi_site_blog_post_view).
 -include_lib("arizona/include/arizona_stateful.hrl").
 
--export([mount/1, render/1]).
+-export([mount/1, render/1, handle_info/2]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
+    ?connected andalso ?send(connected),
     Slug = maps:get(slug, Bindings, ~""),
-    Title =
-        case asobi_site_blog_posts:by_slug(Slug) of
-            {ok, #{title := T}} -> <<T/binary, " \x{2014} Asobi blog"/utf8>>;
-            not_found -> ~"Not found \x{2014} Asobi blog"
-        end,
-    {maps:merge(#{id => ~"blog-post", title => Title}, Bindings), #{}}.
+    Post = asobi_site_blog_posts:by_slug(Slug),
+    {Bindings#{post => Post}, #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(blog),
-    Footer = asobi_site_footer:render(),
-    Slug = maps:get(slug, Bindings, ~""),
-    Body =
-        case asobi_site_blog_posts:by_slug(Slug) of
-            {ok, Post} -> post_body(Post);
-            not_found -> not_found_body()
-        end,
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
-            {'div', [{class, ~"guide-page blog-post"}], [Body]},
-            Footer
+            {'div', [{class, ~"guide-page blog-post"}], [
+                case ?get(post) of
+                    {ok, Post} -> ?stateless(post_body, Post);
+                    not_found -> ?stateless(not_found_body, #{})
+                end
+            ]}
         ]}
     ).
+
+-spec handle_info(connected, az:bindings()) -> az:handle_info_ret().
+handle_info(connected, Bindings) ->
+    case Bindings of
+        #{post := {ok, #{title := Title}}} ->
+            {Bindings, #{}, [arizona_js:set_title(Title)]};
+        #{} ->
+            {Bindings, #{}, []}
+    end.
 
 post_body(#{
     title := Title,
@@ -39,13 +40,11 @@ post_body(#{
     tags := Tags,
     body := BodyFun
 }) ->
-    TagEls = [{span, [{class, ~"blog-tag"}], [T]} || T <- Tags],
-    Content = BodyFun(),
     ?html(
         {'div', [], [
             {'div', [{class, ~"guide-header blog-post-header"}], [
                 {p, [{class, ~"blog-breadcrumb"}], [
-                    {a, [{href, ~"/blog"}], [~"Blog"]},
+                    {a, [{href, ~"/blog"}, az_navigate], [~"Blog"]},
                     ~" / ",
                     Date
                 ]},
@@ -56,10 +55,12 @@ post_body(#{
                     {span, [{class, ~"blog-card-sep"}], [~"\x{2022}"]},
                     {span, [{class, ~"blog-reading-time"}], [ReadingTime]},
                     {span, [{class, ~"blog-card-sep"}], [~"\x{2022}"]},
-                    {'div', [{class, ~"blog-card-tags"}], TagEls}
+                    {'div', [{class, ~"blog-card-tags"}], [
+                        ?each(fun(T) -> {span, [{class, ~"blog-tag"}], [T]} end, Tags)
+                    ]}
                 ]}
             ]},
-            {article, [{class, ~"blog-body docs-content"}], [Content]},
+            {article, [{class, ~"blog-body docs-content"}], [?stateless(BodyFun, #{})]},
             {'div', [{class, ~"blog-footer-cta"}], [
                 {p, [], [
                     ~"Want the next post in your feed? ",
@@ -69,19 +70,19 @@ post_body(#{
                     ~"."
                 ]},
                 {p, [], [
-                    {a, [{href, ~"/blog"}], [~"\x{2190} Back to blog"]}
+                    {a, [{href, ~"/blog"}, az_navigate], [~"\x{2190} Back to blog"]}
                 ]}
             ]}
         ]}
     ).
 
-not_found_body() ->
+not_found_body(_Bindings) ->
     ?html(
         {'div', [{class, ~"guide-header"}], [
             {h1, [], [~"Post not found"]},
             {p, [], [
                 ~"That blog post doesn't exist (or has been unpublished). ",
-                {a, [{href, ~"/blog"}], [~"Back to the blog index"]},
+                {a, [{href, ~"/blog"}, az_navigate], [~"Back to the blog index"]},
                 ~"."
             ]}
         ]}

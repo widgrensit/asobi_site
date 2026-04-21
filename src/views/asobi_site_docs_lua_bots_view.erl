@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-lua-bots", title => ~"Lua bots — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / Bots"
             ]},
             {h1, [], [~"Lua bots"]},
@@ -162,14 +162,16 @@ end
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]}]},
-                {li, [], [{a, [{href, ~"/docs/lua/callbacks"}], [~"Game module callbacks"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}], [~"Performance & benchmarks"]}]}
+                {li, [], [{a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]}]},
+                {li, [], [
+                    {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance & benchmarks"]}
+                ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/lua/bots", Content).
-
+    ).
 pair(LuaBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

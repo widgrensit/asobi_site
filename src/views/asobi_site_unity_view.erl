@@ -3,17 +3,14 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"unity-guide"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(sdks),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
             {'div', [{class, ~"guide-page"}], [
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Unity SDK"]},
@@ -174,7 +171,6 @@ render(Bindings) ->
                             ~"Unity Demo Project"
                         ]}
                 ]}
-            ]},
-            Footer
+            ]}
         ]}
     ).

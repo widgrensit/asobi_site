@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-voting", title => ~"Voting — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Voting"
             ]},
             {h1, [], [~"Voting"]},
@@ -249,7 +249,9 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
             {h2, [], [~"WS + REST"]},
             {p, [], [
                 ~"See the ",
-                {a, [{href, ~"/docs/protocols/websocket#voting"}], [~"WebSocket voting messages"]},
+                {a, [{href, ~"/docs/protocols/websocket#voting"}, az_navigate], [
+                    ~"WebSocket voting messages"
+                ]},
                 ~" for ",
                 {code, [], [~"vote.cast"]},
                 ~", ",
@@ -274,9 +276,7 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/voting", Content).
-
+    ).
 pair(LuaBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

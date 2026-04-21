@@ -3,18 +3,14 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"cloud"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(cloud),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
-
             %% Post-submit success banner (toggled by JS below when ?submitted=1).
             {'div',
                 [
@@ -230,8 +226,6 @@ render(Bindings) ->
                         ]}
                     ]}
                 ]}
-            ]},
-
-            Footer
+            ]}
         ]}
     ).

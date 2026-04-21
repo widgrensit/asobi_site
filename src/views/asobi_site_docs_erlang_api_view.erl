@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-erlang-api", title => ~"Erlang API — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Erlang / API"
             ]},
             {h1, [], [~"Erlang API reference"]},
@@ -324,11 +324,11 @@ lists:foreach(fun({_Id, _E, _Dist}) -> notify(_E) end, Nearby).
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/api"}], [~"Lua API reference"]},
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
                     ~" \x{2014} the same surface, for scripted games."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/concepts"}], [~"Core concepts"]},
+                    {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
                     ~" \x{2014} matches, zones, presence, phases, seasons."
                 ]},
                 {li, [], [
@@ -341,9 +341,7 @@ lists:foreach(fun({_Id, _E, _Dist}) -> notify(_E) end, Nearby).
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/erlang/api", Content).
-
+    ).
 api(Signature, Desc, Lang, Example) ->
     ?html(
         {'div', [{class, ~"docs-api"}], [

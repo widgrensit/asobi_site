@@ -3,7 +3,7 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(
@@ -13,12 +13,12 @@ mount(Bindings) ->
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Economy"
             ]},
             {h1, [], [~"Economy & IAP"]},
@@ -195,14 +195,18 @@ end.
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/leaderboards"}], [~"Leaderboards & tournaments"]}]},
-                {li, [], [{a, [{href, ~"/docs/lua/api"}], [~"Lua API: game.economy.*"]}]},
-                {li, [], [{a, [{href, ~"/docs/protocols/rest"}], [~"REST API"]}]}
+                {li, [], [
+                    {a, [{href, ~"/docs/leaderboards"}, az_navigate], [
+                        ~"Leaderboards & tournaments"
+                    ]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.economy.*"]}
+                ]},
+                {li, [], [{a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API"]}]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/economy", Content).
-
+    ).
 pair(LuaBody, ErlBody) ->
     ?html(
         {'div', [{class, ~"docs-lang-pair"}], [

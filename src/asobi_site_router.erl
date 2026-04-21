@@ -5,126 +5,74 @@
 
 -spec routes(atom()) -> [map()].
 routes(_Environment) ->
-    Layout = {asobi_site_layout, render},
     [
         #{
             prefix => ~"",
             security => false,
             routes => [
-                arizona_nova_live:route(~"/", asobi_site_home_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/cloud", asobi_site_cloud_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/unity", asobi_site_unity_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/godot", asobi_site_godot_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/defold", asobi_site_defold_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/dart", asobi_site_dart_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/demo", asobi_site_demo_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/blog", asobi_site_blog_view, #{layout => Layout}),
+                live(~"/", asobi_site_home_view, home),
+                live(~"/cloud", asobi_site_cloud_view, cloud),
+                live(~"/unity", asobi_site_unity_view, sdks),
+                live(~"/godot", asobi_site_godot_view, sdks),
+                live(~"/defold", asobi_site_defold_view, sdks),
+                live(~"/dart", asobi_site_dart_view, sdks),
+                live(~"/demo", asobi_site_demo_view, demo),
+                live(~"/blog", asobi_site_blog_view, blog),
                 {~"/blog/rss.xml", fun asobi_site_controller:blog_rss/1, #{methods => [get]}},
-                arizona_nova_live:route(
-                    ~"/blog/:slug", asobi_site_blog_post_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(~"/docs", asobi_site_docs_view, #{layout => Layout}),
-                arizona_nova_live:route(
-                    ~"/docs/quickstart", asobi_site_docs_quickstart_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/concepts", asobi_site_docs_concepts_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/self-host", asobi_site_docs_selfhost_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/lua/api", asobi_site_docs_lua_api_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/erlang/api", asobi_site_docs_erlang_api_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/lua/callbacks",
-                    asobi_site_docs_lua_callbacks_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/lua/cookbook",
-                    asobi_site_docs_lua_cookbook_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/tutorials/tic-tac-toe",
-                    asobi_site_docs_tictactoe_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/cloud", asobi_site_docs_cloud_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/authentication",
-                    asobi_site_docs_auth_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/protocols/websocket",
-                    asobi_site_docs_websocket_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/protocols/rest",
-                    asobi_site_docs_rest_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/matchmaking",
-                    asobi_site_docs_matchmaking_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/world-server",
-                    asobi_site_docs_world_server_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/voting",
-                    asobi_site_docs_voting_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/economy",
-                    asobi_site_docs_economy_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/leaderboards",
-                    asobi_site_docs_leaderboards_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/clustering",
-                    asobi_site_docs_clustering_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/configuration",
-                    asobi_site_docs_configuration_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/performance",
-                    asobi_site_docs_performance_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/docs/lua/bots",
-                    asobi_site_docs_lua_bots_view,
-                    #{layout => Layout}
-                ),
-                arizona_nova_live:route(
-                    ~"/privacy", asobi_site_privacy_view, #{layout => Layout}
-                ),
-                arizona_nova_live:route(~"/terms", asobi_site_terms_view, #{layout => Layout}),
-                arizona_nova_live:route(~"/dpa", asobi_site_dpa_view, #{layout => Layout}),
+                live(~"/blog/:slug", asobi_site_blog_post_view, blog),
+                docs(~"/docs", asobi_site_docs_view),
+                docs(~"/docs/quickstart", asobi_site_docs_quickstart_view),
+                docs(~"/docs/concepts", asobi_site_docs_concepts_view),
+                docs(~"/docs/self-host", asobi_site_docs_selfhost_view),
+                docs(~"/docs/lua/api", asobi_site_docs_lua_api_view),
+                docs(~"/docs/erlang/api", asobi_site_docs_erlang_api_view),
+                docs(~"/docs/lua/callbacks", asobi_site_docs_lua_callbacks_view),
+                docs(~"/docs/lua/cookbook", asobi_site_docs_lua_cookbook_view),
+                docs(~"/docs/tutorials/tic-tac-toe", asobi_site_docs_tictactoe_view),
+                docs(~"/docs/cloud", asobi_site_docs_cloud_view),
+                docs(~"/docs/authentication", asobi_site_docs_auth_view),
+                docs(~"/docs/protocols/websocket", asobi_site_docs_websocket_view),
+                docs(~"/docs/protocols/rest", asobi_site_docs_rest_view),
+                docs(~"/docs/matchmaking", asobi_site_docs_matchmaking_view),
+                docs(~"/docs/world-server", asobi_site_docs_world_server_view),
+                docs(~"/docs/voting", asobi_site_docs_voting_view),
+                docs(~"/docs/economy", asobi_site_docs_economy_view),
+                docs(~"/docs/leaderboards", asobi_site_docs_leaderboards_view),
+                docs(~"/docs/clustering", asobi_site_docs_clustering_view),
+                docs(~"/docs/configuration", asobi_site_docs_configuration_view),
+                docs(~"/docs/performance", asobi_site_docs_performance_view),
+                docs(~"/docs/lua/bots", asobi_site_docs_lua_bots_view),
+                live(~"/privacy", asobi_site_privacy_view, none),
+                live(~"/terms", asobi_site_terms_view, none),
+                live(~"/dpa", asobi_site_dpa_view, none),
                 {~"/ws", arizona_nova_ws, #{protocol => ws}},
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
             ]
         }
     ].
+
+live(Path, View, Active) ->
+    arizona_nova_live:route(Path, asobi_site_page, #{
+        layout => {asobi_site_layout, render},
+        bindings => #{
+            id => ~"page",
+            view => View,
+            view_id => atom_to_binary(View),
+            active => Active
+        }
+    }).
+
+docs(Path, DocView) ->
+    arizona_nova_live:route(Path, asobi_site_page, #{
+        layout => {asobi_site_layout, render},
+        bindings => #{
+            id => ~"page",
+            view => asobi_site_docs_page,
+            view_id => ~"docs-page",
+            active => docs,
+            doc_view => DocView,
+            doc_view_id => atom_to_binary(DocView),
+            active_path => Path
+        }
+    }).

@@ -1,10 +1,10 @@
 -module(asobi_site_footer).
 -include_lib("arizona/include/arizona_stateless.hrl").
 
--export([render/0]).
+-export([render/1]).
 
--spec render() -> arizona_template:template().
-render() ->
+-spec render(az:bindings()) -> az:template().
+render(_Bindings) ->
     ?html(
         {footer, [{class, ~"site-footer"}], [
             {'div', [{class, ~"footer-inner"}], [
@@ -23,23 +23,23 @@ render() ->
                 {'div', [{class, ~"footer-links"}], [
                     {'div', [{class, ~"footer-col"}], [
                         {h4, [], [~"Product"]},
-                        {a, [{href, ~"/"}], [~"Home"]},
-                        {a, [{href, ~"/cloud"}], [~"Cloud"]},
-                        {a, [{href, ~"/demo"}], [~"Demo"]},
-                        {a, [{href, ~"/docs"}], [~"Docs"]}
+                        {a, [{href, ~"/"}, az_navigate], [~"Home"]},
+                        {a, [{href, ~"/cloud"}, az_navigate], [~"Cloud"]},
+                        {a, [{href, ~"/demo"}, az_navigate], [~"Demo"]},
+                        {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]}
                     ]},
                     {'div', [{class, ~"footer-col"}], [
                         {h4, [], [~"Community"]},
                         {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"GitHub"]},
                         {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
-                        {a, [{href, ~"/blog"}], [~"Blog"]},
+                        {a, [{href, ~"/blog"}, az_navigate], [~"Blog"]},
                         {a, [{href, ~"/blog/rss.xml"}], [~"RSS"]}
                     ]},
                     {'div', [{class, ~"footer-col"}], [
                         {h4, [], [~"Legal"]},
-                        {a, [{href, ~"/terms"}], [~"Terms"]},
-                        {a, [{href, ~"/privacy"}], [~"Privacy"]},
-                        {a, [{href, ~"/dpa"}], [~"DPA"]}
+                        {a, [{href, ~"/terms"}, az_navigate], [~"Terms"]},
+                        {a, [{href, ~"/privacy"}, az_navigate], [~"Privacy"]},
+                        {a, [{href, ~"/dpa"}, az_navigate], [~"DPA"]}
                     ]}
                 ]}
             ]},

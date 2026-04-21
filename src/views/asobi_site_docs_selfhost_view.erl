@@ -3,16 +3,16 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"docs-selfhost", title => ~"Self-host — Asobi docs"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Self-host"
             ]},
             {h1, [], [~"Self-host Asobi"]},
@@ -25,7 +25,9 @@ render(_Bindings) ->
                 {p, [], [
                     {strong, [], [~"Prefer managed? "]},
                     ~"Asobi Cloud is coming \x{2014} fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
-                    {a, [{href, ~"/cloud"}], [~"Join the waitlist at asobi.dev/cloud."]}
+                    {a, [{href, ~"/cloud"}, az_navigate], [
+                        ~"Join the waitlist at asobi.dev/cloud."
+                    ]}
                 ]}
             ]},
 
@@ -262,7 +264,7 @@ spec:
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/concepts"}], [~"Core concepts"]},
+                    {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
                     ~" \x{2014} understand what the engine runs."
                 ]},
                 {li, [], [
@@ -270,13 +272,11 @@ spec:
                     ~" \x{2014} reference Helm stack for managed k8s."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/cloud"}], [~"Asobi Cloud"]},
+                    {a, [{href, ~"/cloud"}, az_navigate], [~"Asobi Cloud"]},
                     ~" \x{2014} managed hosting, coming soon."
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/self-host", Content).
-
+    ).
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

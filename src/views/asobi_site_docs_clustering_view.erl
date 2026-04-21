@@ -3,19 +3,19 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {
         maps:merge(#{id => ~"docs-clustering", title => ~"Clustering — Asobi docs"}, Bindings),
         #{}
     }.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Clustering"
             ]},
             {h1, [], [~"Clustering"]},
@@ -152,13 +152,15 @@ nodes().          %% ['asobi@10.0.0.1']
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
-                {li, [], [{a, [{href, ~"/docs/self-host"}], [~"Self-host"]}]},
-                {li, [], [{a, [{href, ~"/docs/performance"}], [~"Performance tuning"]}]},
-                {li, [], [{a, [{href, ~"/docs/configuration"}], [~"Configuration reference"]}]}
+                {li, [], [{a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]}]},
+                {li, [], [
+                    {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration reference"]}
+                ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/clustering", Content).
-
+    ).
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

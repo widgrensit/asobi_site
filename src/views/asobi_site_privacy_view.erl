@@ -3,17 +3,14 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"privacy", title => ~"Privacy Policy \x{2014} Asobi"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(none),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
             {'div', [{class, ~"guide-page"}], [
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Privacy Policy"]},
@@ -138,11 +135,10 @@ render(Bindings) ->
                         ~"When Asobi Cloud exits closed beta, a separate privacy policy will cover player data processed ",
                         {em, [], [~"by game developers using the hosted service"]},
                         ~". Our role there will be a processor under a ",
-                        {a, [{href, ~"/dpa"}], [~"Data Processing Agreement"]},
+                        {a, [{href, ~"/dpa"}, az_navigate], [~"Data Processing Agreement"]},
                         ~"; this page only covers the marketing site you're reading now."
                     ]}
                 ]}
-            ]},
-            Footer
+            ]}
         ]}
     ).

@@ -3,18 +3,14 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"demo"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(demo),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}, {class, ~"demo-page"}], [
-            Nav,
-
             %% Hero
             {section, [{class, ~"demo-hero"}], [
                 {'div', [{class, ~"demo-hero-inner"}], [
@@ -42,7 +38,8 @@ render(Bindings) ->
                         {a,
                             [
                                 {href, ~"/#get-started"},
-                                {class, ~"btn btn-ghost"}
+                                {class, ~"btn btn-ghost"},
+                                az_navigate
                             ],
                             [~"Build Your Own"]}
                     ]}
@@ -216,7 +213,7 @@ render(Bindings) ->
                         ~" behaviour and build anything \x{2014} racing, puzzle, RTS, battle royale."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
-                        {a, [{href, ~"/#get-started"}, {class, ~"btn btn-primary"}], [
+                        {a, [{href, ~"/#get-started"}, {class, ~"btn btn-primary"}, az_navigate], [
                             ~"Get Started"
                         ]},
                         {a,
@@ -273,9 +270,7 @@ render(Bindings) ->
                         ~"The backend runs on port 8084 by default. Check each demo's README for engine-specific setup."
                     ]}
                 ]}
-            ]},
-
-            Footer
+            ]}
         ]}
     ).
 

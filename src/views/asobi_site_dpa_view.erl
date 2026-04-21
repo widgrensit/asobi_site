@@ -3,17 +3,14 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"dpa", title => ~"DPA \x{2014} Asobi"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
+-spec render(az:bindings()) -> az:template().
 render(Bindings) ->
-    Nav = asobi_site_nav:render(none),
-    Footer = asobi_site_footer:render(),
     ?html(
         {'div', [{id, ?get(id)}], [
-            Nav,
             {'div', [{class, ~"guide-page"}], [
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Data Processing Agreement"]},
@@ -124,7 +121,6 @@ render(Bindings) ->
                         ~". The finalised, countersignable DPA will publish here when Asobi Cloud enters general availability."
                     ]}
                 ]}
-            ]},
-            Footer
+            ]}
         ]}
     ).

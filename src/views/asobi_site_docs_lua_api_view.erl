@@ -3,16 +3,16 @@
 
 -export([mount/1, render/1]).
 
--spec mount(map()) -> {map(), map()}.
+-spec mount(az:bindings()) -> az:mount_ret().
 mount(Bindings) ->
     {maps:merge(#{id => ~"docs-lua-api", title => ~"Lua API — Asobi docs"}, Bindings), #{}}.
 
--spec render(map()) -> arizona_template:template().
-render(_Bindings) ->
-    Content = ?html(
-        {'div', [], [
+-spec render(az:bindings()) -> az:template().
+render(Bindings) ->
+    ?html(
+        {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}], [~"Docs"]},
+                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Lua / ",
                 {code, [], [~"game.*"]},
                 ~" API"
@@ -333,24 +333,24 @@ game.terrain.preload({ {5, 7}, {5, 8}, {6, 7}, {6, 8} })
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/callbacks"}], [~"Game module callbacks"]},
+                    {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]},
                     ~" \x{2014} the functions ",
                     {em, [], [~"you"]},
                     ~" implement (init, tick, join, leave, etc.)"
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/lua/cookbook"}], [~"Cookbook"]},
+                    {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"Cookbook"]},
                     ~" \x{2014} short patterns for common tasks."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}], [~"Tic-tac-toe tutorial"]},
+                    {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
+                        ~"Tic-tac-toe tutorial"
+                    ]},
                     ~" \x{2014} see the API in context."
                 ]}
             ]}
         ]}
-    ),
-    asobi_site_docs_shell:render(~"/docs/lua/api", Content).
-
+    ).
 api(Signature, Desc, Lang, Example) ->
     ?html(
         {'div', [{class, ~"docs-api"}], [
