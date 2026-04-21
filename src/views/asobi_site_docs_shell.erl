@@ -55,52 +55,60 @@ render(ActivePath, Content) ->
             Nav,
             {'div', [{class, ~"docs-shell"}], [
                 {aside, [{class, ~"docs-sidebar"}], [
-                    {nav, [{class, ~"docs-nav"}], [
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Get started"]},
-                            Overview,
-                            Quickstart,
-                            Concepts
+                    {details, [{class, ~"docs-menu"}, {open, ~"open"}], [
+                        {summary, [{class, ~"docs-menu-summary"}], [
+                            {span, [{class, ~"docs-menu-label"}], [~"Docs menu"]},
+                            {span, [{class, ~"docs-menu-caret"}, {'aria-hidden', ~"true"}], [
+                                ~"\x{25BE}"
+                            ]}
                         ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Tutorials"]},
-                            TicTacToe
-                        ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Protocols & auth"]},
-                            WsProto,
-                            RestProto,
-                            Auth
-                        ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Gameplay systems"]},
-                            Matchmaking,
-                            World,
-                            Voting
-                        ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Commerce"]},
-                            Economy,
-                            Leaderboards
-                        ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Lua reference"]},
-                            LuaApi,
-                            LuaCallbacks,
-                            LuaCookbook,
-                            LuaBots
-                        ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Erlang reference"]},
-                            ErlangApi
-                        ]},
-                        {'div', [{class, ~"docs-nav-section"}], [
-                            {h3, [], [~"Operate"]},
-                            SelfHost,
-                            Configuration,
-                            Clustering,
-                            Performance,
-                            Cloud
+                        {nav, [{class, ~"docs-nav"}], [
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Get started"]},
+                                Overview,
+                                Quickstart,
+                                Concepts
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Tutorials"]},
+                                TicTacToe
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Protocols & auth"]},
+                                WsProto,
+                                RestProto,
+                                Auth
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Gameplay systems"]},
+                                Matchmaking,
+                                World,
+                                Voting
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Commerce"]},
+                                Economy,
+                                Leaderboards
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Lua reference"]},
+                                LuaApi,
+                                LuaCallbacks,
+                                LuaCookbook,
+                                LuaBots
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Erlang reference"]},
+                                ErlangApi
+                            ]},
+                            {'div', [{class, ~"docs-nav-section"}], [
+                                {h3, [], [~"Operate"]},
+                                SelfHost,
+                                Configuration,
+                                Clustering,
+                                Performance,
+                                Cloud
+                            ]}
                         ]}
                     ]}
                 ]},
