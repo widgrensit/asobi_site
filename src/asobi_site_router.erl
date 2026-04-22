@@ -16,6 +16,7 @@ routes(_Environment) ->
                 live(~"/godot", asobi_site_godot_view, sdks),
                 live(~"/defold", asobi_site_defold_view, sdks),
                 live(~"/dart", asobi_site_dart_view, sdks),
+                live(~"/migrate-from-hathora", asobi_site_migrate_hathora_view, none),
                 live(~"/demo", asobi_site_demo_view, demo),
                 live(~"/blog", asobi_site_blog_view, blog),
                 {~"/blog/rss.xml", fun asobi_site_controller:blog_rss/1, #{methods => [get]}},
