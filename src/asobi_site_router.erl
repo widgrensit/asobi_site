@@ -12,10 +12,13 @@ routes(_Environment) ->
             routes => [
                 live(~"/", asobi_site_home_view, home),
                 live(~"/cloud", asobi_site_cloud_view, cloud),
+                live(~"/unreal", asobi_site_unreal_view, sdks),
                 live(~"/unity", asobi_site_unity_view, sdks),
                 live(~"/godot", asobi_site_godot_view, sdks),
                 live(~"/defold", asobi_site_defold_view, sdks),
                 live(~"/dart", asobi_site_dart_view, sdks),
+                live(~"/js", asobi_site_js_view, sdks),
+                live(~"/lua", asobi_site_lua_view, sdks),
                 live(~"/migrate-from-hathora", asobi_site_migrate_hathora_view, none),
                 live(~"/demo", asobi_site_demo_view, demo),
                 live(~"/blog", asobi_site_blog_view, blog),
