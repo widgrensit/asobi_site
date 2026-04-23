@@ -36,6 +36,7 @@ render(Bindings) ->
             {~"/docs/lua/bots", ~"Bots"}
         ]},
         {~"Erlang reference", [
+            {~"/docs/erlang/getting-started", ~"Quick start"},
             {~"/docs/erlang/api", ~"Erlang API"}
         ]},
         {~"Operate", [

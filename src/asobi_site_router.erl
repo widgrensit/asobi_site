@@ -31,6 +31,10 @@ routes(_Environment) ->
                 docs(~"/docs/self-host", asobi_site_docs_selfhost_view),
                 docs(~"/docs/lua/api", asobi_site_docs_lua_api_view),
                 docs(~"/docs/erlang/api", asobi_site_docs_erlang_api_view),
+                docs(
+                    ~"/docs/erlang/getting-started",
+                    asobi_site_docs_erlang_getting_started_view
+                ),
                 docs(~"/docs/lua/callbacks", asobi_site_docs_lua_callbacks_view),
                 docs(~"/docs/lua/cookbook", asobi_site_docs_lua_cookbook_view),
                 docs(~"/docs/tutorials/tic-tac-toe", asobi_site_docs_tictactoe_view),
