@@ -54,7 +54,8 @@ render(Bindings) ->
                 {code, [], [~"get_state"]},
                 ~" serialises per-player views. The minimal game is a few dozen lines:"
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"concepts-tick",
                 ~"""
 function game.tick(state)
     state.elapsed = state.elapsed + 0.1
@@ -88,7 +89,8 @@ tick(#{elapsed := E} = State) ->
                 ~" (spawned on first access, reaped when empty) and paired with terrain chunks served on zone entry. ",
                 ~"Benchmarked at 500 real WebSocket players on a 128K\x{00D7}128K tile map at 208MB RAM."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"concepts-zones",
                 ~"""
 -- spawn a goblin and find nearby players
 local g = game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
@@ -164,7 +166,8 @@ local nearby = game.spatial.query_radius(g.x, g.y, 50)
                 {code, [], [~"tick"]},
                 {em, [], [~" with an explicit state field."]}
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"concepts-phases",
                 ~"""
 -- Lua: world mode only
 function game.phases(_config)
@@ -193,7 +196,8 @@ phases(_Config) ->
                 ~" \x{2014} cross-node out of the box in a cluster. ",
                 ~"Direct messages have their own lifecycle and persistence."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"concepts-chat",
                 ~"""
 game.chat.send("world:main", player_id, "gg")
 """,
@@ -207,7 +211,8 @@ asobi_chat_channel:send_message(<<"world:main">>, PlayerId, <<"gg">>).
                 ~"First-class wallet, store listings, IAP, inventory, and transactional ledger. ",
                 ~"Leaderboards support multiple scoring modes and time windows. Tournaments tie leaderboards to seasonal resets."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"concepts-economy",
                 ~"""
 game.economy.grant(winner_id, "gold", 50, "match_win")
 game.leaderboard.submit("arena:weekly", winner_id, kills)
@@ -251,19 +256,5 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
             ]}
         ]}
     ).
-pair(LuaBody, ErlangBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LuaBody)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                code(~"erlang", ErlangBody)
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

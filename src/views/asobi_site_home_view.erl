@@ -72,9 +72,9 @@ render(Bindings) ->
             ]},
 
             %% Tabbed canonical connect snippet — "same server, any engine".
-            %% Uses radio inputs + CSS :checked for a pure-CSS tab switcher.
             %% All 7 snippets come from asobi_site_snippets (single source of
-            %% truth, CI-enforced).
+            %% truth, CI-enforced). Rendering is delegated to the reusable
+            %% asobi_site_tabbed_code component.
             {section, [{id, ~"connect"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
                     {p, [{class, ~"section-marker"}], [~"02 / Client"]},
@@ -86,55 +86,18 @@ render(Bindings) ->
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Connect and receive match state in 15 lines — pick your engine."
                     ]},
-                    {'div', [{class, ~"sdk-tabs"}], [
-                        {input,
-                            [
-                                {type, ~"radio"},
-                                {name, ~"sdk-tab"},
-                                {id, ~"sdk-tab-unreal"},
-                                {checked, ~"checked"}
-                            ],
-                            []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-unity"}], []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-godot"}], []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-defold"}],
-                            []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-js"}], []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-dart"}], []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-lua"}], []},
-                        {'div', [{class, ~"sdk-tabs-labels"}, {role, ~"tablist"}], [
-                            {label, [{for, ~"sdk-tab-unreal"}], [~"Unreal"]},
-                            {label, [{for, ~"sdk-tab-unity"}], [~"Unity"]},
-                            {label, [{for, ~"sdk-tab-godot"}], [~"Godot"]},
-                            {label, [{for, ~"sdk-tab-defold"}], [~"Defold"]},
-                            {label, [{for, ~"sdk-tab-js"}], [~"TypeScript"]},
-                            {label, [{for, ~"sdk-tab-dart"}], [~"Dart"]},
-                            {label, [{for, ~"sdk-tab-lua"}], [~"Lua"]}
-                        ]},
-                        {'div', [{class, ~"sdk-tabs-panels"}], [
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"unreal"}], [
-                                {pre, [], [{code, [], [UnrealSnippet]}]}
-                            ]},
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"unity"}], [
-                                {pre, [], [{code, [], [UnitySnippet]}]}
-                            ]},
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"godot"}], [
-                                {pre, [], [{code, [], [GodotSnippet]}]}
-                            ]},
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"defold"}], [
-                                {pre, [], [{code, [], [DefoldSnippet]}]}
-                            ]},
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"js"}], [
-                                {pre, [], [{code, [], [JsSnippet]}]}
-                            ]},
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"dart"}], [
-                                {pre, [], [{code, [], [DartSnippet]}]}
-                            ]},
-                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"lua"}], [
-                                {pre, [], [{code, [], [LuaSnippet]}]}
-                            ]}
-                        ]}
-                    ]}
+                    ?stateless(asobi_site_tabbed_code, render, #{
+                        id => ~"hero-connect",
+                        tabs => [
+                            #{label => ~"Unreal", lang => ~"cpp", body => UnrealSnippet},
+                            #{label => ~"Unity", lang => ~"csharp", body => UnitySnippet},
+                            #{label => ~"Godot", lang => ~"gdscript", body => GodotSnippet},
+                            #{label => ~"Defold", lang => ~"lua", body => DefoldSnippet},
+                            #{label => ~"TypeScript", lang => ~"typescript", body => JsSnippet},
+                            #{label => ~"Dart", lang => ~"dart", body => DartSnippet},
+                            #{label => ~"Lua", lang => ~"lua", body => LuaSnippet}
+                        ]
+                    })
                 ]}
             ]},
 

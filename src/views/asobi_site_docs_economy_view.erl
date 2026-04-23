@@ -30,7 +30,8 @@ render(Bindings) ->
             {p, [], [
                 ~"Each player can have multiple wallets, one per currency. Every change is a transaction in an audit-ready ledger."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"economy-wallet",
                 ~"""
 -- Lua: game.economy.balance returns the full wallet list for the player
 local wallets = game.economy.balance(player_id)
@@ -95,7 +96,8 @@ GET  /api/v1/store                     List store catalog
 POST /api/v1/store/purchase            Purchase a listing
 """
             ),
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"economy-purchase",
                 ~"""
 game.economy.purchase(player_id, "shop:starter_pack")
 """,
@@ -207,19 +209,5 @@ end.
             ]}
         ]}
     ).
-pair(LuaBody, ErlBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LuaBody)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                code(~"erlang", ErlBody)
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

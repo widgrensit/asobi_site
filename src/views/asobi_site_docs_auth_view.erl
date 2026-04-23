@@ -165,21 +165,34 @@ curl -X POST http://localhost:8080/api/v1/auth/link \
             ]},
 
             {h2, [], [~"SDK integration"]},
-            pair(
-                ~"""
+            ?stateless(asobi_site_tabbed_code, render, #{
+                id => ~"auth-sdk",
+                tabs => [
+                    #{
+                        label => ~"Lua",
+                        lang => ~"lua",
+                        body =>
+                            ~"""
 -- Defold (Lua)
 local id_token = google_sign_in.get_id_token()
 asobi.auth.oauth("google", id_token, function(result)
     -- session token stored internally
 end)
-""",
-                ~"""
+"""
+                    },
+                    #{
+                        label => ~"C#",
+                        lang => ~"csharp",
+                        body =>
+                            ~"""
 // Unity (C#)
 string idToken = googleSignIn.IdToken;
 var response = await asobi.Auth.OAuth("google", idToken);
 // session token stored internally
 """
-            ),
+                    }
+                ]
+            }),
 
             {h2, [], [~"Where next?"]},
             {ul, [], [
@@ -200,19 +213,5 @@ var response = await asobi.Auth.OAuth("google", idToken);
             ]}
         ]}
     ).
-pair(LangALabel, LangBLabel) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LangALabel)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"C#"]},
-                code(~"csharp", LangBLabel)
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).
