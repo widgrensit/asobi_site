@@ -46,6 +46,11 @@ render(Bindings) ->
                     ~"Install Asobi, spin up the engine, deploy a Lua game \x{2014} all in 15 minutes."
                 ),
                 card(
+                    ~"/docs/glossary",
+                    ~"Project glossary",
+                    ~"asobi vs asobi_lua vs asobi.dev Cloud. Read this first if the names blur."
+                ),
+                card(
                     ~"/docs/concepts",
                     ~"Core concepts",
                     ~"Matches, worlds, zones, voting, phases. The primitives Asobi gives you."

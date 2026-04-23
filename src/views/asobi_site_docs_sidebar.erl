@@ -9,6 +9,7 @@ render(Bindings) ->
         {~"Get started", [
             {~"/docs", ~"Overview"},
             {~"/docs/quickstart", ~"Quick start"},
+            {~"/docs/glossary", ~"Project glossary"},
             {~"/docs/concepts", ~"Core concepts"}
         ]},
         {~"Tutorials", [
