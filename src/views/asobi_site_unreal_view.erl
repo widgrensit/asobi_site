@@ -75,9 +75,9 @@ render(Bindings) ->
                     ]},
                     {p, [], [
                         ~"Open AsobiUnrealDemo.uproject in UE 5.7+, hit Play. See ",
-                        {a,
-                            [{href, ~"https://github.com/widgrensit/asobi-unreal-demo"}],
-                            [~"asobi-unreal-demo"]},
+                        {a, [{href, ~"https://github.com/widgrensit/asobi-unreal-demo"}], [
+                            ~"asobi-unreal-demo"
+                        ]},
                         ~" on GitHub."
                     ]}
                 ]}

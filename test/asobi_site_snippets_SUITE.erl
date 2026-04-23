@@ -55,7 +55,10 @@ required_keywords(_Config) ->
     ok.
 
 label_coverage(_Config) ->
-    Missing = [S || S <- asobi_site_snippets:sdks(), not is_binary(catch asobi_site_snippets:sdk_label(S))],
+    Missing = [
+        S
+     || S <- asobi_site_snippets:sdks(), not is_binary(catch asobi_site_snippets:sdk_label(S))
+    ],
     ?assertEqual([], Missing, "SDK label missing").
 
 %%====================================================================

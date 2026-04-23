@@ -87,10 +87,18 @@ render(Bindings) ->
                         ~"Connect and receive match state in 15 lines — pick your engine."
                     ]},
                     {'div', [{class, ~"sdk-tabs"}], [
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-unreal"}, {checked, ~"checked"}], []},
+                        {input,
+                            [
+                                {type, ~"radio"},
+                                {name, ~"sdk-tab"},
+                                {id, ~"sdk-tab-unreal"},
+                                {checked, ~"checked"}
+                            ],
+                            []},
                         {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-unity"}], []},
                         {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-godot"}], []},
-                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-defold"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-defold"}],
+                            []},
                         {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-js"}], []},
                         {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-dart"}], []},
                         {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-lua"}], []},
@@ -156,12 +164,20 @@ render(Bindings) ->
                                 {li, [], [~"Auto-cleanup when the match ends"]},
                                 {li, [], [~"In-match voting, DMs, chat"]}
                             ]},
-                            {a, [{href, ~"/docs/matchmaking"}, {class, ~"concept-card-link"}, az_navigate], [
-                                ~"Matchmaking docs \x{2192}"
-                            ]}
+                            {a,
+                                [
+                                    {href, ~"/docs/matchmaking"},
+                                    {class, ~"concept-card-link"},
+                                    az_navigate
+                                ],
+                                [
+                                    ~"Matchmaking docs \x{2192}"
+                                ]}
                         ]},
                         {'div', [{class, ~"concept-card"}], [
-                            {span, [{class, ~"concept-card-tag concept-card-tag-alt"}], [~"Persistent"]},
+                            {span, [{class, ~"concept-card-tag concept-card-tag-alt"}], [
+                                ~"Persistent"
+                            ]},
                             {h3, [], [~"Worlds"]},
                             {p, [], [
                                 ~"Long-running worlds with lazy-loaded zones and streamed terrain. Find-or-create joins a world that isn\x{2019}t full; players drop in and out. Like EVE, Albion, MMOs, shared sandboxes."
@@ -172,9 +188,15 @@ render(Bindings) ->
                                 {li, [], [~"ETS-backed reconnection state"]},
                                 {li, [], [~"500+ concurrent players per world"]}
                             ]},
-                            {a, [{href, ~"/docs/world-server"}, {class, ~"concept-card-link"}, az_navigate], [
-                                ~"World server docs \x{2192}"
-                            ]}
+                            {a,
+                                [
+                                    {href, ~"/docs/world-server"},
+                                    {class, ~"concept-card-link"},
+                                    az_navigate
+                                ],
+                                [
+                                    ~"World server docs \x{2192}"
+                                ]}
                         ]}
                     ]}
                 ]}

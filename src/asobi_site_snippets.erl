@@ -156,7 +156,6 @@ get(hero_connect, lua) ->
         -- match.state is diffed and broadcast automatically each tick.
     end
     """;
-
 %%====================================================================
 %% Flow: connect_world
 %%
