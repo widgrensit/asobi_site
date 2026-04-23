@@ -26,10 +26,21 @@ routes(_Environment) ->
                 live(~"/blog/:slug", asobi_site_blog_post_view, blog),
                 docs(~"/docs", asobi_site_docs_view),
                 docs(~"/docs/quickstart", asobi_site_docs_quickstart_view),
+                docs(~"/docs/glossary", asobi_site_docs_glossary_view),
                 docs(~"/docs/concepts", asobi_site_docs_concepts_view),
                 docs(~"/docs/self-host", asobi_site_docs_selfhost_view),
                 docs(~"/docs/lua/api", asobi_site_docs_lua_api_view),
                 docs(~"/docs/erlang/api", asobi_site_docs_erlang_api_view),
+                docs(
+                    ~"/docs/erlang/getting-started",
+                    asobi_site_docs_erlang_getting_started_view
+                ),
+                docs(
+                    ~"/docs/erlang/matchmaker-strategies",
+                    asobi_site_docs_erlang_matchmaker_strategies_view
+                ),
+                docs(~"/docs/phases", asobi_site_docs_phases_view),
+                docs(~"/docs/seasons", asobi_site_docs_seasons_view),
                 docs(~"/docs/lua/callbacks", asobi_site_docs_lua_callbacks_view),
                 docs(~"/docs/lua/cookbook", asobi_site_docs_lua_cookbook_view),
                 docs(~"/docs/tutorials/tic-tac-toe", asobi_site_docs_tictactoe_view),

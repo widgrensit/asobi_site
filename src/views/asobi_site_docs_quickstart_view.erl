@@ -158,24 +158,28 @@ get_state(_PlayerId, #{hits := H}) -> #{hits => H}.
 
             {h3, [], [~"Option A \x{2014} Lua"]},
             {p, [], [
-                ~"Install the ",
-                {code, [], [~"asobi"]},
-                ~" CLI once, then push the bundle to the engine:"
+                ~"Mount your Lua folder into the ",
+                {code, [], [~"asobi_lua"]},
+                ~" container and save the file \x{2014} the engine hot-loads it."
             ]},
             code(
-                ~"bash",
+                ~"yaml",
                 ~"""
-go install github.com/widgrensit/asobi-cli/cmd/asobi@latest
-
-asobi config set url http://localhost:8080
-asobi config set api_key dev
-asobi deploy ./game
+# docker-compose.yml
+services:
+  asobi:
+    image: ghcr.io/widgrensit/asobi_lua:latest
+    ports: ["8080:8080"]
+    volumes:
+      - ./game:/app/game:ro
 """
             ),
             {p, [], [
-                ~"The engine hot-loads your Lua. No restart, no dropped connections. You'll see ",
-                {code, [], [~"\"Deployed 1 script successfully\""]},
-                ~"."
+                ~"Edit ",
+                {code, [], [~"game/match.lua"]},
+                ~" and save. The engine hot-loads your Lua with no restart, no dropped connections \x{2014} you'll see ",
+                {code, [], [~"\"reloaded match.lua\""]},
+                ~" in the logs."
             ]},
 
             {h3, [], [~"Option B \x{2014} Erlang"]},

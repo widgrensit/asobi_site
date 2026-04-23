@@ -9,6 +9,7 @@ render(Bindings) ->
         {~"Get started", [
             {~"/docs", ~"Overview"},
             {~"/docs/quickstart", ~"Quick start"},
+            {~"/docs/glossary", ~"Project glossary"},
             {~"/docs/concepts", ~"Core concepts"}
         ]},
         {~"Tutorials", [
@@ -21,6 +22,8 @@ render(Bindings) ->
         ]},
         {~"Gameplay systems", [
             {~"/docs/matchmaking", ~"Matchmaking"},
+            {~"/docs/phases", ~"Phases & timers"},
+            {~"/docs/seasons", ~"Seasons"},
             {~"/docs/world-server", ~"World server"},
             {~"/docs/voting", ~"Voting"}
         ]},
@@ -35,6 +38,8 @@ render(Bindings) ->
             {~"/docs/lua/bots", ~"Bots"}
         ]},
         {~"Erlang reference", [
+            {~"/docs/erlang/getting-started", ~"Quick start"},
+            {~"/docs/erlang/matchmaker-strategies", ~"Matchmaker strategies"},
             {~"/docs/erlang/api", ~"Erlang API"}
         ]},
         {~"Operate", [

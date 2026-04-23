@@ -46,6 +46,11 @@ render(Bindings) ->
                     ~"Install Asobi, spin up the engine, deploy a Lua game \x{2014} all in 15 minutes."
                 ),
                 card(
+                    ~"/docs/glossary",
+                    ~"Project glossary",
+                    ~"asobi vs asobi_lua vs asobi.dev Cloud. Read this first if the names blur."
+                ),
+                card(
                     ~"/docs/concepts",
                     ~"Core concepts",
                     ~"Matches, worlds, zones, voting, phases. The primitives Asobi gives you."
@@ -61,9 +66,9 @@ render(Bindings) ->
                     ~"Full reference for the game.* API available in your Lua scripts."
                 ),
                 card(
-                    ~"/docs/erlang/api",
-                    ~"Erlang API",
-                    ~"Behaviours, modules, and specs for writing games directly in Erlang."
+                    ~"/docs/erlang/getting-started",
+                    ~"Erlang quick start",
+                    ~"Your first asobi_match module \x{2014} from rebar3 new app to hot-reload, 20 minutes."
                 ),
                 card(
                     ~"/docs/lua/cookbook",
