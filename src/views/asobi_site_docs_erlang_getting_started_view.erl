@@ -40,6 +40,24 @@ render(Bindings) ->
 
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
+                    {strong, [], [~"Don't want to scaffold by hand? "]},
+                    ~"The ",
+                    {a,
+                        [
+                            {href,
+                                ~"https://github.com/widgrensit/asobi/tree/main/examples/erlang-match"}
+                        ],
+                        [
+                            {code, [], [~"examples/erlang-match/"]}
+                        ]},
+                    ~" folder in the asobi repo is this exact project, ready to ",
+                    {code, [], [~"git clone && rebar3 shell"]},
+                    ~"."
+                ]}
+            ]},
+
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
                     {strong, [], [~"Prerequisites: "]},
                     ~"Erlang/OTP 28+, ",
                     {a, [{href, ~"https://rebar3.org"}], [~"rebar3"]},
@@ -252,7 +270,7 @@ rebar3 shell
                 ~"""
 curl -s localhost:8080/api/v1/auth/register \
   -H 'content-type: application/json' \
-  -d '{"username":"alice","password":"hunter2"}' | jq
+  -d '{"username":"alice","password":"hunter-2026"}' | jq
 """
             ),
             code(
