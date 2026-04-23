@@ -22,6 +22,8 @@ render(Bindings) ->
         ]},
         {~"Gameplay systems", [
             {~"/docs/matchmaking", ~"Matchmaking"},
+            {~"/docs/phases", ~"Phases & timers"},
+            {~"/docs/seasons", ~"Seasons"},
             {~"/docs/world-server", ~"World server"},
             {~"/docs/voting", ~"Voting"}
         ]},
@@ -37,6 +39,7 @@ render(Bindings) ->
         ]},
         {~"Erlang reference", [
             {~"/docs/erlang/getting-started", ~"Quick start"},
+            {~"/docs/erlang/matchmaker-strategies", ~"Matchmaker strategies"},
             {~"/docs/erlang/api", ~"Erlang API"}
         ]},
         {~"Operate", [
