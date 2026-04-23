@@ -45,7 +45,8 @@ render(Bindings) ->
 
             {h2, [], [~"Starting a vote"]},
             {p, [], [~"Two paths: automatic via callback, or manual via API."]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"voting-start",
                 ~"""
 -- Lua: automatic
 function game.vote_requested(state)
@@ -227,7 +228,8 @@ asobi_match_sup:start_match(#{
             ]},
 
             {h2, [], [~"Handling results"]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"voting-resolved",
                 ~"""
 function game.vote_resolved(template, result, state)
     if template == "path_choice" then
@@ -277,19 +279,5 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
             ]}
         ]}
     ).
-pair(LuaBody, ErlBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LuaBody)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                code(~"erlang", ErlBody)
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

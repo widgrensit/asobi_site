@@ -25,23 +25,36 @@ render(Bindings) ->
             ]},
 
             {h2, [], [~"Submitting a ticket"]},
-            pair(
-                ~"""
+            ?stateless(asobi_site_tabbed_code, render, #{
+                id => ~"mm-submit",
+                tabs => [
+                    #{
+                        label => ~"JSON",
+                        lang => ~"json",
+                        body =>
+                            ~"""
 -- WebSocket
 {"type": "matchmaker.add",
  "payload": {
    "mode": "arena",
    "properties": {"skill": 1200, "region": "eu-west"}
  }}
-""",
-                ~"""
+"""
+                    },
+                    #{
+                        label => ~"Erlang",
+                        lang => ~"erlang",
+                        body =>
+                            ~"""
 %% Erlang API
 {ok, TicketId} = asobi_matchmaker:add(PlayerId, #{
     mode       => <<"arena">>,
     properties => #{skill => 1200, region => <<"eu-west">>}
 }).
 """
-            ),
+                    }
+                ]
+            }),
             {p, [], [~"REST equivalent:"]},
             code(
                 ~"bash",
@@ -112,14 +125,27 @@ curl -X POST http://localhost:8080/api/v1/matchmaker \
             ),
 
             {h2, [], [~"Cancelling"]},
-            pair(
-                ~"""
+            ?stateless(asobi_site_tabbed_code, render, #{
+                id => ~"mm-cancel",
+                tabs => [
+                    #{
+                        label => ~"JSON",
+                        lang => ~"json",
+                        body =>
+                            ~"""
 {"type": "matchmaker.remove", "payload": {"ticket_id": "..."}}
-""",
-                ~"""
+"""
+                    },
+                    #{
+                        label => ~"Erlang",
+                        lang => ~"erlang",
+                        body =>
+                            ~"""
 asobi_matchmaker:remove(PlayerId, TicketId).
 """
-            ),
+                    }
+                ]
+            }),
 
             {h2, [], [~"Configuration"]},
             code(
@@ -205,19 +231,5 @@ match(Tickets, Config) ->
             ]}
         ]}
     ).
-pair(WsBody, ErlBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"JSON"]},
-                {pre, [], [{code, [{class, ~"language-json"}], [WsBody]}]}
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                {pre, [], [{code, [{class, ~"language-erlang"}], [ErlBody]}]}
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

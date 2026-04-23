@@ -829,23 +829,22 @@ code {
 .concept-card-link:hover { color: var(--indigo); }
 
 /* =========================================================================
-   SDK tabs — pure-CSS tab switcher.
-   7 radio inputs, hidden, toggled by label[for] clicks. CSS :checked
-   sibling selectors show the matching panel. No JS required.
+   Tabbed code — reusable pure-CSS tab switcher.
+   Generic for any N ≤ 7 tabs. Uses :has() + :nth-of-type so the same
+   rules work for every instance, regardless of the radio group name.
+   Rendered by asobi_site_tabbed_code.
    ========================================================================= */
-.sdk-tabs {
+.tabbed-code {
     position: relative;
-    margin-top: var(--sp-6);
-    max-width: 780px;
-    margin-left: auto;
-    margin-right: auto;
+    margin-top: var(--sp-4);
+    margin-bottom: var(--sp-5);
 }
-.sdk-tabs > input[type="radio"] {
+.tabbed-code > input[type="radio"] {
     position: absolute;
     opacity: 0;
     pointer-events: none;
 }
-.sdk-tabs-labels {
+.tabbed-code-labels {
     display: flex;
     flex-wrap: wrap;
     gap: 4px;
@@ -855,7 +854,7 @@ code {
     border-radius: 10px 10px 0 0;
     border-bottom: 0;
 }
-.sdk-tabs-labels label {
+.tabbed-code-labels label {
     flex: 1 1 auto;
     min-width: 80px;
     text-align: center;
@@ -871,14 +870,14 @@ code {
     transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
     user-select: none;
 }
-.sdk-tabs-labels label:hover { color: var(--text); }
-.sdk-tabs-panels {
+.tabbed-code-labels label:hover { color: var(--text); }
+.tabbed-code-panels {
     border: 1px solid var(--line);
     border-radius: 0 0 10px 10px;
     overflow: hidden;
 }
-.sdk-tabs-panel { display: none; }
-.sdk-tabs-panel pre {
+.tabbed-code-panel {
+    display: none;
     margin: 0;
     padding: var(--sp-5);
     background: var(--surface-deep);
@@ -889,34 +888,42 @@ code {
     overflow-x: auto;
     white-space: pre;
 }
-.sdk-tabs-panel code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+.tabbed-code-panel code {
+    background: none;
+    border: 0;
+    padding: 0;
+    color: inherit;
+    font-size: inherit;
+    font-family: inherit;
+}
 
-/* Active tab: selected label is highlighted; matching panel is shown. */
-#sdk-tab-unreal:checked ~ .sdk-tabs-labels label[for="sdk-tab-unreal"],
-#sdk-tab-unity:checked ~ .sdk-tabs-labels label[for="sdk-tab-unity"],
-#sdk-tab-godot:checked ~ .sdk-tabs-labels label[for="sdk-tab-godot"],
-#sdk-tab-defold:checked ~ .sdk-tabs-labels label[for="sdk-tab-defold"],
-#sdk-tab-js:checked ~ .sdk-tabs-labels label[for="sdk-tab-js"],
-#sdk-tab-dart:checked ~ .sdk-tabs-labels label[for="sdk-tab-dart"],
-#sdk-tab-lua:checked ~ .sdk-tabs-labels label[for="sdk-tab-lua"] {
+/* Active-tab styling. :has() scopes each rule to the matching tabbed-code
+   instance, so multiple tab groups on the same page don't interfere. */
+.tabbed-code:has(> input:nth-of-type(1):checked) > .tabbed-code-labels > label:nth-child(1),
+.tabbed-code:has(> input:nth-of-type(2):checked) > .tabbed-code-labels > label:nth-child(2),
+.tabbed-code:has(> input:nth-of-type(3):checked) > .tabbed-code-labels > label:nth-child(3),
+.tabbed-code:has(> input:nth-of-type(4):checked) > .tabbed-code-labels > label:nth-child(4),
+.tabbed-code:has(> input:nth-of-type(5):checked) > .tabbed-code-labels > label:nth-child(5),
+.tabbed-code:has(> input:nth-of-type(6):checked) > .tabbed-code-labels > label:nth-child(6),
+.tabbed-code:has(> input:nth-of-type(7):checked) > .tabbed-code-labels > label:nth-child(7) {
     background: var(--bg);
     color: var(--text);
     border-color: var(--line-strong);
 }
 
-#sdk-tab-unreal:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="unreal"],
-#sdk-tab-unity:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="unity"],
-#sdk-tab-godot:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="godot"],
-#sdk-tab-defold:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="defold"],
-#sdk-tab-js:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="js"],
-#sdk-tab-dart:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="dart"],
-#sdk-tab-lua:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="lua"] {
+.tabbed-code:has(> input:nth-of-type(1):checked) > .tabbed-code-panels > :nth-child(1),
+.tabbed-code:has(> input:nth-of-type(2):checked) > .tabbed-code-panels > :nth-child(2),
+.tabbed-code:has(> input:nth-of-type(3):checked) > .tabbed-code-panels > :nth-child(3),
+.tabbed-code:has(> input:nth-of-type(4):checked) > .tabbed-code-panels > :nth-child(4),
+.tabbed-code:has(> input:nth-of-type(5):checked) > .tabbed-code-panels > :nth-child(5),
+.tabbed-code:has(> input:nth-of-type(6):checked) > .tabbed-code-panels > :nth-child(6),
+.tabbed-code:has(> input:nth-of-type(7):checked) > .tabbed-code-panels > :nth-child(7) {
     display: block;
 }
 
-/* Focus outline for keyboard users. */
-.sdk-tabs > input[type="radio"]:focus-visible ~ .sdk-tabs-labels label[for$="unreal"],
-.sdk-tabs > input[type="radio"]#sdk-tab-unreal:focus-visible ~ .sdk-tabs-labels label[for="sdk-tab-unreal"] {
+/* Keyboard focus outline on the active label. */
+.tabbed-code > input[type="radio"]:focus-visible + .tabbed-code-labels label,
+.tabbed-code:has(> input:focus-visible) > .tabbed-code-labels > label {
     outline: 2px solid var(--indigo);
     outline-offset: 2px;
 }

@@ -56,7 +56,8 @@ render(Bindings) ->
                 {code, [], [~"started"]},
                 ~" flag so late-joiners get rejected."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"ttt-state",
                 ~"""
 -- game/ttt.lua
 local game = {}
@@ -98,7 +99,8 @@ init(_Config) ->
                 {code, [], [~"go"]},
                 ~"."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"ttt-join",
                 ~"""
 function game.join(player_id, state)
     if state.started then
@@ -142,7 +144,8 @@ join(PlayerId, #{players := P} = State) ->
                 ~"Three rules: the player must be in the match, it must be their turn, and the target cell must be empty. ",
                 ~"Anything else is silently ignored \x{2014} never trust the client."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"ttt-input",
                 ~"""
 function game.handle_input(player_id, input, state)
     if not state.started or state.result then return state end
@@ -195,7 +198,8 @@ other(<<"o">>) -> <<"x">>.
             {p, [], [
                 ~"Eight winning lines, same for both players. Run them every tick: cheap enough that we don't need to optimise, clear enough to audit."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"ttt-winner",
                 ~"""
 local LINES = {
     {1,2,3},{4,5,6},{7,8,9},  -- rows
@@ -272,7 +276,8 @@ finish(Result, State) ->
                 {code, [], [~"get_state"]},
                 ~" so reconnects work: the client can ask the server for the current view at any time."
             ]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"ttt-getstate",
                 ~"""
 function game.get_state(player_id, state)
     return {
@@ -409,19 +414,5 @@ wscat -c ws://localhost:8080/ws
             ]}
         ]}
     ).
-pair(LuaBody, ErlangBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LuaBody)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                code(~"erlang", ErlangBody)
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

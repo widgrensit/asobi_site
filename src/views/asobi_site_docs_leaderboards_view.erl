@@ -46,7 +46,8 @@ render(Bindings) ->
             ]},
 
             {h2, [], [~"Submitting scores"]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"lb-submit",
                 ~"""
 game.leaderboard.submit("arena:weekly", player_id, kills)
 """,
@@ -56,7 +57,8 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, PlayerId, Kills).
             ),
 
             {h2, [], [~"Reading"]},
-            pair(
+            asobi_site_tabbed_code:lua_erlang(
+                ~"lb-read",
                 ~"""
 for _, e in ipairs(game.leaderboard.top("arena:weekly", 10)) do
     print(e.rank, e.player_id, e.score)
@@ -143,19 +145,5 @@ POST /api/v1/tournaments/:id/join      Join a tournament
             ]}
         ]}
     ).
-pair(LuaBody, ErlBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LuaBody)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                code(~"erlang", ErlBody)
-            ]}
-        ]}
-    ).
-
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).
