@@ -757,6 +757,171 @@ code {
 }
 
 /* =========================================================================
+   Concept cards — two-column Sessions vs Worlds on the homepage.
+   ========================================================================= */
+.concept-cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    gap: var(--sp-5);
+    margin-top: var(--sp-6);
+}
+.concept-card {
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    padding: var(--sp-5);
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+}
+.concept-card-tag {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    background: color-mix(in oklab, var(--indigo) 10%, transparent);
+    padding: 4px 10px;
+    border-radius: 999px;
+    align-self: flex-start;
+}
+.concept-card-tag-alt {
+    color: var(--coral, #e06a5a);
+    background: color-mix(in oklab, var(--coral, #e06a5a) 10%, transparent);
+}
+.concept-card h3 {
+    font-size: var(--fs-lg, 1.5rem);
+    margin: 0;
+    color: var(--text);
+}
+.concept-card p { color: var(--text-2); margin: 0; }
+.concept-card-bullets {
+    list-style: none;
+    padding: 0;
+    margin: var(--sp-3) 0 0 0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+}
+.concept-card-bullets li {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text-2);
+    padding-left: 18px;
+    position: relative;
+}
+.concept-card-bullets li::before {
+    content: "\2192";
+    position: absolute;
+    left: 0;
+    color: var(--indigo);
+}
+.concept-card-link {
+    margin-top: auto;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    color: var(--text);
+    letter-spacing: 0.04em;
+    text-decoration: none;
+    padding-top: var(--sp-3);
+    border-top: 1px solid var(--line);
+}
+.concept-card-link:hover { color: var(--indigo); }
+
+/* =========================================================================
+   SDK tabs — pure-CSS tab switcher.
+   7 radio inputs, hidden, toggled by label[for] clicks. CSS :checked
+   sibling selectors show the matching panel. No JS required.
+   ========================================================================= */
+.sdk-tabs {
+    position: relative;
+    margin-top: var(--sp-6);
+    max-width: 780px;
+    margin-left: auto;
+    margin-right: auto;
+}
+.sdk-tabs > input[type="radio"] {
+    position: absolute;
+    opacity: 0;
+    pointer-events: none;
+}
+.sdk-tabs-labels {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 4px;
+    padding: 4px;
+    background: var(--surface-raised);
+    border: 1px solid var(--line);
+    border-radius: 10px 10px 0 0;
+    border-bottom: 0;
+}
+.sdk-tabs-labels label {
+    flex: 1 1 auto;
+    min-width: 80px;
+    text-align: center;
+    padding: 10px 14px;
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.04em;
+    color: var(--text-3);
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 6px;
+    cursor: pointer;
+    transition: background 0.12s ease, color 0.12s ease, border-color 0.12s ease;
+    user-select: none;
+}
+.sdk-tabs-labels label:hover { color: var(--text); }
+.sdk-tabs-panels {
+    border: 1px solid var(--line);
+    border-radius: 0 0 10px 10px;
+    overflow: hidden;
+}
+.sdk-tabs-panel { display: none; }
+.sdk-tabs-panel pre {
+    margin: 0;
+    padding: var(--sp-5);
+    background: var(--surface-deep);
+    color: var(--text);
+    font-family: var(--font-mono);
+    font-size: 0.82rem;
+    line-height: 1.55;
+    overflow-x: auto;
+    white-space: pre;
+}
+.sdk-tabs-panel code { background: none; border: 0; padding: 0; color: inherit; font-size: inherit; }
+
+/* Active tab: selected label is highlighted; matching panel is shown. */
+#sdk-tab-unreal:checked ~ .sdk-tabs-labels label[for="sdk-tab-unreal"],
+#sdk-tab-unity:checked ~ .sdk-tabs-labels label[for="sdk-tab-unity"],
+#sdk-tab-godot:checked ~ .sdk-tabs-labels label[for="sdk-tab-godot"],
+#sdk-tab-defold:checked ~ .sdk-tabs-labels label[for="sdk-tab-defold"],
+#sdk-tab-js:checked ~ .sdk-tabs-labels label[for="sdk-tab-js"],
+#sdk-tab-dart:checked ~ .sdk-tabs-labels label[for="sdk-tab-dart"],
+#sdk-tab-lua:checked ~ .sdk-tabs-labels label[for="sdk-tab-lua"] {
+    background: var(--bg);
+    color: var(--text);
+    border-color: var(--line-strong);
+}
+
+#sdk-tab-unreal:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="unreal"],
+#sdk-tab-unity:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="unity"],
+#sdk-tab-godot:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="godot"],
+#sdk-tab-defold:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="defold"],
+#sdk-tab-js:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="js"],
+#sdk-tab-dart:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="dart"],
+#sdk-tab-lua:checked ~ .sdk-tabs-panels .sdk-tabs-panel[data-sdk="lua"] {
+    display: block;
+}
+
+/* Focus outline for keyboard users. */
+.sdk-tabs > input[type="radio"]:focus-visible ~ .sdk-tabs-labels label[for$="unreal"],
+.sdk-tabs > input[type="radio"]#sdk-tab-unreal:focus-visible ~ .sdk-tabs-labels label[for="sdk-tab-unreal"] {
+    outline: 2px solid var(--indigo);
+    outline-offset: 2px;
+}
+
+/* =========================================================================
    Code block — warm dark-on-cream, not full dark
    ========================================================================= */
 .code-block {

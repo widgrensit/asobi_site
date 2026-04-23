@@ -10,6 +10,13 @@ mount(Bindings) ->
 -spec render(az:bindings()) -> az:template().
 render(Bindings) ->
     DepSnippet = ~"{asobi, \"~> 0.1\"}",
+    UnrealSnippet = asobi_site_snippets:get(hero_connect, unreal),
+    UnitySnippet = asobi_site_snippets:get(hero_connect, unity),
+    GodotSnippet = asobi_site_snippets:get(hero_connect, godot),
+    DefoldSnippet = asobi_site_snippets:get(hero_connect, defold),
+    JsSnippet = asobi_site_snippets:get(hero_connect, js),
+    DartSnippet = asobi_site_snippets:get(hero_connect, dart),
+    LuaSnippet = asobi_site_snippets:get(hero_connect, lua),
     ?html(
         {'div', [{id, ?get(id)}], [
             %% Hero
@@ -64,10 +71,119 @@ render(Bindings) ->
                 ]}
             ]},
 
+            %% Tabbed canonical connect snippet — "same server, any engine".
+            %% Uses radio inputs + CSS :checked for a pure-CSS tab switcher.
+            %% All 7 snippets come from asobi_site_snippets (single source of
+            %% truth, CI-enforced).
+            {section, [{id, ~"connect"}, {class, ~"section"}], [
+                {'div', [{class, ~"section-inner"}], [
+                    {p, [{class, ~"section-marker"}], [~"02 / Client"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Same server, ",
+                        {em, [], [~"any"]},
+                        ~" engine"
+                    ]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Connect and receive match state in 15 lines — pick your engine."
+                    ]},
+                    {'div', [{class, ~"sdk-tabs"}], [
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-unreal"}, {checked, ~"checked"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-unity"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-godot"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-defold"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-js"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-dart"}], []},
+                        {input, [{type, ~"radio"}, {name, ~"sdk-tab"}, {id, ~"sdk-tab-lua"}], []},
+                        {'div', [{class, ~"sdk-tabs-labels"}, {role, ~"tablist"}], [
+                            {label, [{for, ~"sdk-tab-unreal"}], [~"Unreal"]},
+                            {label, [{for, ~"sdk-tab-unity"}], [~"Unity"]},
+                            {label, [{for, ~"sdk-tab-godot"}], [~"Godot"]},
+                            {label, [{for, ~"sdk-tab-defold"}], [~"Defold"]},
+                            {label, [{for, ~"sdk-tab-js"}], [~"TypeScript"]},
+                            {label, [{for, ~"sdk-tab-dart"}], [~"Dart"]},
+                            {label, [{for, ~"sdk-tab-lua"}], [~"Lua"]}
+                        ]},
+                        {'div', [{class, ~"sdk-tabs-panels"}], [
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"unreal"}], [
+                                {pre, [], [{code, [], [UnrealSnippet]}]}
+                            ]},
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"unity"}], [
+                                {pre, [], [{code, [], [UnitySnippet]}]}
+                            ]},
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"godot"}], [
+                                {pre, [], [{code, [], [GodotSnippet]}]}
+                            ]},
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"defold"}], [
+                                {pre, [], [{code, [], [DefoldSnippet]}]}
+                            ]},
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"js"}], [
+                                {pre, [], [{code, [], [JsSnippet]}]}
+                            ]},
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"dart"}], [
+                                {pre, [], [{code, [], [DartSnippet]}]}
+                            ]},
+                            {'div', [{class, ~"sdk-tabs-panel"}, {'data-sdk', ~"lua"}], [
+                                {pre, [], [{code, [], [LuaSnippet]}]}
+                            ]}
+                        ]}
+                    ]}
+                ]}
+            ]},
+
+            %% Sessions vs Worlds — the two mental models asobi supports.
+            %% Competitors generally offer one or the other; asobi has both.
+            {section, [{id, ~"sessions-vs-worlds"}, {class, ~"section"}], [
+                {'div', [{class, ~"section-inner"}], [
+                    {p, [{class, ~"section-marker"}], [~"03 / Models"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Sessions ",
+                        {em, [], [~"or"]},
+                        ~" worlds \x{2014} pick the right shape"
+                    ]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Your game decides, not the backend. Both models share the same auth, social, economy, and storage."
+                    ]},
+                    {'div', [{class, ~"concept-cards"}], [
+                        {'div', [{class, ~"concept-card"}], [
+                            {span, [{class, ~"concept-card-tag"}], [~"Sessions"]},
+                            {h3, [], [~"Matches"]},
+                            {p, [], [
+                                ~"Small, ephemeral game sessions assembled by the matchmaker. Players queue, the server forms a match, a game mode runs, results are recorded. Like FTL, Brotato-with-friends, arena shooters, card games."
+                            ]},
+                            {ul, [{class, ~"concept-card-bullets"}], [
+                                {li, [], [~"Matchmaker with skill + party rules"]},
+                                {li, [], [~"Server-authoritative tick (30\x{2013}60 Hz)"]},
+                                {li, [], [~"Auto-cleanup when the match ends"]},
+                                {li, [], [~"In-match voting, DMs, chat"]}
+                            ]},
+                            {a, [{href, ~"/docs/matchmaking"}, {class, ~"concept-card-link"}, az_navigate], [
+                                ~"Matchmaking docs \x{2192}"
+                            ]}
+                        ]},
+                        {'div', [{class, ~"concept-card"}], [
+                            {span, [{class, ~"concept-card-tag concept-card-tag-alt"}], [~"Persistent"]},
+                            {h3, [], [~"Worlds"]},
+                            {p, [], [
+                                ~"Long-running worlds with lazy-loaded zones and streamed terrain. Find-or-create joins a world that isn\x{2019}t full; players drop in and out. Like EVE, Albion, MMOs, shared sandboxes."
+                            ]},
+                            {ul, [{class, ~"concept-card-bullets"}], [
+                                {li, [], [~"Lazy zones scale on demand"]},
+                                {li, [], [~"Binary terrain chunks on join"]},
+                                {li, [], [~"ETS-backed reconnection state"]},
+                                {li, [], [~"500+ concurrent players per world"]}
+                            ]},
+                            {a, [{href, ~"/docs/world-server"}, {class, ~"concept-card-link"}, az_navigate], [
+                                ~"World server docs \x{2192}"
+                            ]}
+                        ]}
+                    ]}
+                ]}
+            ]},
+
             %% Why BEAM
             {section, [{id, ~"why-beam"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"02 / Runtime"]},
+                    {p, [{class, ~"section-marker"}], [~"04 / Runtime"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Built on the ",
                         {em, [], [~"BEAM"]}
@@ -200,7 +316,7 @@ render(Bindings) ->
             %% Features
             {section, [{id, ~"features"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"03 / Kit"]},
+                    {p, [{class, ~"section-marker"}], [~"05 / Kit"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Everything you ",
                         {em, [], [~"need"]}
@@ -256,7 +372,7 @@ render(Bindings) ->
             %% SDKs
             {section, [{id, ~"sdks"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"04 / Clients"]},
+                    {p, [{class, ~"section-marker"}], [~"06 / Clients"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"SDKs for ",
                         {em, [], [~"every"]},
@@ -266,6 +382,14 @@ render(Bindings) ->
                         ~"Official client libraries with full API coverage. Pick your engine and start building."
                     ]},
                     {'div', [{class, ~"sdk-grid"}], [
+                        {a, [{href, ~"/unreal"}, {class, ~"sdk-card-link"}, az_navigate], [
+                            {'div', [{class, ~"sdk-card"}], [
+                                {h3, [], [~"Unreal"]},
+                                {span, [{class, ~"sdk-lang"}], [~"C++"]},
+                                {p, [], [~"UE 5.7+ plugin. Blueprint-callable subsystems."]},
+                                {span, [{class, ~"sdk-link"}], [~"View guide"]}
+                            ]}
+                        ]},
                         {a, [{href, ~"/unity"}, {class, ~"sdk-card-link"}, az_navigate], [
                             {'div', [{class, ~"sdk-card"}], [
                                 {h3, [], [~"Unity"]},
@@ -290,11 +414,27 @@ render(Bindings) ->
                                 {span, [{class, ~"sdk-link"}], [~"View guide"]}
                             ]}
                         ]},
+                        {a, [{href, ~"/js"}, {class, ~"sdk-card-link"}, az_navigate], [
+                            {'div', [{class, ~"sdk-card"}], [
+                                {h3, [], [~"TypeScript"]},
+                                {span, [{class, ~"sdk-lang"}], [~"TS / JS"]},
+                                {p, [], [~"Browser + Node.js 18+. Event-emitter WS API."]},
+                                {span, [{class, ~"sdk-link"}], [~"View guide"]}
+                            ]}
+                        ]},
                         {a, [{href, ~"/dart"}, {class, ~"sdk-card-link"}, az_navigate], [
                             {'div', [{class, ~"sdk-card"}], [
                                 {h3, [], [~"Flutter / Dart"]},
                                 {span, [{class, ~"sdk-lang"}], [~"Dart"]},
                                 {p, [], [~"Works with Flutter, Flame, and standalone Dart."]},
+                                {span, [{class, ~"sdk-link"}], [~"View guide"]}
+                            ]}
+                        ]},
+                        {a, [{href, ~"/lua"}, {class, ~"sdk-card-link"}, az_navigate], [
+                            {'div', [{class, ~"sdk-card"}], [
+                                {h3, [], [~"Lua"]},
+                                {span, [{class, ~"sdk-lang"}], [~"Server-side"]},
+                                {p, [], [~"Hot-reloaded game modes hosted by asobi_lua."]},
                                 {span, [{class, ~"sdk-link"}], [~"View guide"]}
                             ]}
                         ]}
@@ -308,7 +448,7 @@ render(Bindings) ->
             %% Code example
             {section, [{class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"05 / Contract"]},
+                    {p, [{class, ~"section-marker"}], [~"07 / Contract"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Define your ",
                         {em, [], [~"game logic"]}
@@ -327,7 +467,7 @@ render(Bindings) ->
             %% Comparison
             {section, [{class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"06 / Position"]},
+                    {p, [{class, ~"section-marker"}], [~"08 / Position"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"How Asobi ",
                         {em, [], [~"compares"]}
@@ -405,7 +545,7 @@ render(Bindings) ->
             %% Getting started
             {section, [{id, ~"get-started"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"07 / Start"]},
+                    {p, [{class, ~"section-marker"}], [~"09 / Start"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Get started in ",
                         {em, [], [~"minutes"]}
@@ -461,7 +601,7 @@ render(Bindings) ->
             %% Community
             {section, [{id, ~"community"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner community-section"}], [
-                    {p, [{class, ~"section-marker"}], [~"08 / People"]},
+                    {p, [{class, ~"section-marker"}], [~"10 / People"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Join the ",
                         {em, [], [~"community"]}
