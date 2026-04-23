@@ -23,7 +23,7 @@ jobs:
       enable-dependency-submission: true
       enable-summary: true
       enable-elp-lint: true
-      enable-ct: false
+      enable-ct: true
       enable-coverage: false
       enable-ex-doc: false
       enable-mutate: false
