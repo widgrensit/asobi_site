@@ -80,10 +80,10 @@ input_id(Id, N) ->
     iolist_to_binary([Id, $-, integer_to_binary(N)]).
 
 %% @doc Shortcut for the common two-tab Lua/Erlang layout used across
-%% the `/docs/*' pages. Returns an `az:template()' that views can drop
-%% directly into their `?html/1' tree.
+%% the `/docs/*' pages. Returns a stateless descriptor that views can
+%% drop directly into their `?html/1' tree.
 -spec lua_erlang(Id :: binary(), LuaBody :: binary(), ErlBody :: binary()) ->
-    az:template().
+    arizona_template:stateless_descriptor().
 lua_erlang(Id, LuaBody, ErlBody) ->
     ?stateless(?MODULE, render, #{
         id => Id,
