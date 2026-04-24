@@ -58,7 +58,7 @@ routes(_Environment) ->
 
 live(Path, View, Active) ->
     arizona_nova_live:route(Path, asobi_site_page, #{
-        layout => {asobi_site_layout, render},
+        layouts => [{asobi_site_layout, render}],
         bindings => #{
             id => ~"page",
             view => View,
@@ -69,7 +69,7 @@ live(Path, View, Active) ->
 
 docs(Path, DocView) ->
     arizona_nova_live:route(Path, asobi_site_page, #{
-        layout => {asobi_site_layout, render},
+        layouts => [{asobi_site_layout, render}],
         bindings => #{
             id => ~"page",
             view => asobi_site_docs_page,
