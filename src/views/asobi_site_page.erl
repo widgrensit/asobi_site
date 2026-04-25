@@ -18,15 +18,10 @@ render(Bindings) ->
     ?html(
         {'div', [{id, ?get(id)}], [
             ?stateless(asobi_site_nav, render, #{active => ?get(active)}),
-            ?stateful(View, #{
-                id => ?get(view_id),
-                %% Route extras forwarded to the child view (workaround for
-                %% arizona not supporting arbitrary route-binding passthrough).
-                slug => ?get(slug, ~""),
-                doc_view => ?get(doc_view, undefined),
-                doc_view_id => ?get(doc_view_id, ~""),
-                active_path => ?get(active_path, ~"")
-            })
+            %% Forward all parent bindings; only `view_id` is tracked as a
+            %% dep. Fine here: every nav remounts the page handler, so the
+            %% child always gets fresh Bindings.
+            ?stateful(View, Bindings#{id => ?get(view_id)})
         ]}
     ).
 
