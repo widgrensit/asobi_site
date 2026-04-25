@@ -8,7 +8,7 @@ render(Bindings) ->
     Prefix = arizona_nova:prefix(),
     ?html([
         ~"<!DOCTYPE html>",
-        {html, [{lang, ~"en"}, az_nodiff], [
+        {html, [{lang, ~"en"}], [
             {head, [], [
                 {meta, [{charset, ~"UTF-8"}], []},
                 {meta, [{name, ~"viewport"}, {content, ~"width=device-width, initial-scale=1.0"}],
