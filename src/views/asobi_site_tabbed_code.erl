@@ -59,22 +59,26 @@ render(Bindings) ->
 %% The first radio is checked by default so one tab is visible before
 %% any user interaction.
 radio(Id, 1) ->
-    {input,
-        [
-            {type, ~"radio"},
-            {name, Id},
-            {id, input_id(Id, 1)},
-            {checked, ~"checked"}
-        ],
-        []};
+    ?html(
+        {input,
+            [
+                {type, ~"radio"},
+                {name, Id},
+                {id, input_id(Id, 1)},
+                {checked, true}
+            ],
+            []}
+    );
 radio(Id, N) ->
-    {input,
-        [
-            {type, ~"radio"},
-            {name, Id},
-            {id, input_id(Id, N)}
-        ],
-        []}.
+    ?html(
+        {input,
+            [
+                {type, ~"radio"},
+                {name, Id},
+                {id, input_id(Id, N)}
+            ],
+            []}
+    ).
 
 input_id(Id, N) ->
     iolist_to_binary([Id, $-, integer_to_binary(N)]).
