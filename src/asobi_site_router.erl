@@ -5,7 +5,7 @@
 
 -spec routes(atom()) -> [map()].
 routes(_Environment) ->
-    [
+    arizona_nova:routes([
         #{
             prefix => ~"",
             security => false,
@@ -54,22 +54,22 @@ routes(_Environment) ->
                 {"/assets/[...]", "static/assets"}
             ]
         }
-    ].
+    ]).
 
 live(Path, View, Active) ->
-    arizona_nova_live:route(Path, asobi_site_page, #{
-        layout => {asobi_site_layout, render},
+    {live, Path, asobi_site_page, #{
+        layouts => [{asobi_site_layout, render}],
         bindings => #{
             id => ~"page",
             view => View,
             view_id => atom_to_binary(View),
             active => Active
         }
-    }).
+    }}.
 
 docs(Path, DocView) ->
-    arizona_nova_live:route(Path, asobi_site_page, #{
-        layout => {asobi_site_layout, render},
+    {live, Path, asobi_site_page, #{
+        layouts => [{asobi_site_layout, render}],
         bindings => #{
             id => ~"page",
             view => asobi_site_docs_page,
@@ -79,4 +79,4 @@ docs(Path, DocView) ->
             doc_view_id => atom_to_binary(DocView),
             active_path => Path
         }
-    }).
+    }}.
