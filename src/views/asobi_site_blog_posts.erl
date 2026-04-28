@@ -23,6 +23,18 @@
 all() ->
     Posts = [
         #{
+            slug => ~"meet-asobi-indie-multiplayer",
+            title => ~"Meet Asobi: the multiplayer backend for indie 2D games",
+            lede =>
+                ~"""
+                Godot, Defold, LÖVE, Phaser, Flame+Flutter. Five engines, one backend. Apache-2, Lua-scripted, self-host or managed. Here's the wedge and why the runtime makes it possible.
+                """,
+            date => ~"2026-04-28",
+            tags => [~"positioning", ~"indie"],
+            reading_time => ~"4 min",
+            body => fun post_meet_asobi_indie_multiplayer/1
+        },
+        #{
             slug => ~"why-erlang-for-game-backends",
             title => ~"Why I'm building a game backend in Erlang",
             lede =>
@@ -59,6 +71,82 @@ by_slug(Slug) ->
 %%----------------------------------------------------------------------
 %% Post bodies
 %%----------------------------------------------------------------------
+
+-spec post_meet_asobi_indie_multiplayer(az:bindings()) -> az:template().
+post_meet_asobi_indie_multiplayer(_Bindings) ->
+    ?html(
+        {'div', [], [
+            {p, [], [
+                ~"""
+                Indie multiplayer is having a moment. Solo devs and two-person studios are shipping multiplayer games on engines nobody used to market a backend at: Godot, Defold, LÖVE, Phaser, Flame. Asobi is the backend for that wave, and this post is the pitch.
+                """
+            ]},
+            {p, [], [~"The 4-second version:"]},
+            {blockquote, [], [
+                {p, [], [
+                    {strong, [], [~"Asobi is the multiplayer backend for indie 2D games."]},
+                    ~" Godot, Defold, LÖVE, Phaser, Flame+Flutter. Apache-2, Lua-scripted, polyglot clients, self-host or managed."
+                ]}
+            ]},
+
+            {h2, [], [~"What it is"]},
+            {p, [], [
+                ~"""
+                One runtime that handles matches, matchmaker, lobbies, chat, leaderboards, economy, IAP, voting, phases, seasons, and spatial zones. Apache-2. One Docker container plus Postgres. Game logic is Lua (hot-reloadable) or any language that can speak the REST/WebSocket API.
+                """
+            ]},
+            {p, [], [
+                ~"""
+                Seven client SDKs are live today: Godot, Defold, Unity, Unreal, TypeScript, Dart, and Flame. LÖVE and Phaser land in May — the README has the live status.
+                """
+            ]},
+            {p, [], [
+                ~"""
+                Three things make it work. Matches run as lightweight processes — microseconds to spawn, ~15KB each — so a single node holds tens of thousands of them at idle cost near zero. Game logic is Lua via a pure-Erlang interpreter, hot-reloadable in flight: push a new script and in-flight matches drain on the old version while new matches bind the new one. Every match is supervised, so a bug in one player's logic can't take down the others. On a single mid-sized node: 83K WebSocket msg/sec at 3,500 concurrent connections, p99 RTT 6.5ms.
+                """
+            ]},
+
+            {h2, [], [~"Who it's for"]},
+            {p, [], [
+                ~"""
+                Solo devs and small teams shipping 2D multiplayer. Turn-based, party, casual, MMO zones, roguelike, co-op — anything that fits over a WebSocket. If your game is a twitch FPS that needs per-match dedicated UDP servers, Asobi isn't the whole answer; pair it with a UDP relay for physics and let Asobi handle everything else.
+                """
+            ]},
+            {p, [], [
+                ~"""
+                The five wedge engines aren't a grab-bag. They share a profile: solo-friendly, 2D-capable, indie-first. None of them have a backend that takes them seriously today.
+                """
+            ]},
+
+            {h2, [], [~"\"Does this work for 3D?\""]},
+            {p, [], [
+                ~"Yes. The runtime is dimension-agnostic — spatial zones take whatever coordinates you give them, and Unity + Unreal SDKs ship today. The ",
+                {em, [], [~"indie 2D"]},
+                ~" framing is where we're leading because that's where the underserved gap is. If you're shipping a 3D Godot game or a co-op Unity title and want hot-reloadable Lua matches, Asobi fits — we're just not building the marketing around 3D first."
+            ]},
+
+            {h2, [], [~"What's next"]},
+            {p, [], [
+                ~"""
+                LÖVE and Phaser SDKs land in May — the README has the live status. Beyond that: a local dev emulator with a Studio UI is in progress, managed cloud is in private testing, and a content cadence around tutorials for each engine is planned. Specifics will land here as they ship, not before.
+                """
+            ]},
+            {p, [], [
+                ~"If indie multiplayer is what you're working on right now, the ",
+                {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
+                ~" is the fastest channel — that's where the day-to-day happens. The ",
+                {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"code is on GitHub"]},
+                ~", and ",
+                {a, [{href, ~"/cloud"}, az_navigate], [~"asobi.dev/cloud"]},
+                ~" is the waitlist for the managed version when it's ready."
+            ]},
+            {p, [], [
+                ~"""
+                A backend built for indies, on a runtime built for nine-nines telecom. It's a strange pairing. It's also the reason it works.
+                """
+            ]}
+        ]}
+    ).
 
 -spec post_why_erlang(az:bindings()) -> az:template().
 post_why_erlang(_Bindings) ->
