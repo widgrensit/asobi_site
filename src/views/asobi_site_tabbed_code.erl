@@ -34,7 +34,17 @@ render(Bindings) ->
     Indexed = lists:zip(lists:seq(1, length(Tabs)), Tabs),
     ?html(
         {'div', [{class, ~"tabbed-code"}], [
-            ?each(fun({N, _Tab}) -> radio(Id, N) end, Indexed),
+            ?each(
+                fun({N, _Tab}) ->
+                    {input, [
+                        {type, ~"radio"},
+                        {name, Id},
+                        {id, input_id(Id, N)},
+                        {checked, N =:= 1}
+                    ]}
+                end,
+                Indexed
+            ),
             {'div', [{class, ~"tabbed-code-labels"}, {role, ~"tablist"}], [
                 ?each(
                     fun({N, #{label := Label}}) ->
@@ -55,26 +65,6 @@ render(Bindings) ->
             ]}
         ]}
     ).
-
-%% The first radio is checked by default so one tab is visible before
-%% any user interaction.
-radio(Id, 1) ->
-    {input,
-        [
-            {type, ~"radio"},
-            {name, Id},
-            {id, input_id(Id, 1)},
-            {checked, ~"checked"}
-        ],
-        []};
-radio(Id, N) ->
-    {input,
-        [
-            {type, ~"radio"},
-            {name, Id},
-            {id, input_id(Id, N)}
-        ],
-        []}.
 
 input_id(Id, N) ->
     iolist_to_binary([Id, $-, integer_to_binary(N)]).
