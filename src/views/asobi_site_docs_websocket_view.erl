@@ -149,13 +149,76 @@ render(Bindings) ->
             ),
 
             {h2, [], [~"Chat"]},
+
+            {h3, [], [~"Channel id namespacing"]},
+            {p, [], [~"Every channel id must start with one of these prefixes:"]},
+            {pre, [], [
+                {code, [], [
+                    ~"""
+ Prefix    | Used for                                    | Membership rule
+-----------|---------------------------------------------|-------------------------------------------------
+ dm:       | Direct messages                             | Both participants only.
+ world:    | World-wide chat                             | Players currently joined to the world.
+ zone:     | A specific zone within a world              | Players currently inside that zone.
+ prox:     | Proximity chat (radius around a position)   | Players within the configured radius.
+ room:     | Group / lobby / custom rooms                | Group members or open join (per-room policy).
+"""
+                ]}
+            ]},
+            {p, [], [
+                ~"A frame with a channel id missing or not matching one of these prefixes is rejected with ",
+                {code, [], [~"channel_id_invalid"]},
+                ~". This shape lets the runtime route messages and enforce membership without a registry lookup per frame."
+            ]},
+
+            {h3, [], [~"Per-connection cap"]},
+            {p, [], [
+                ~"A single WS connection may join at most ",
+                {strong, [], [~"32 channels simultaneously"]},
+                ~". Attempts to join a 33rd are rejected with ",
+                {code, [], [~"too_many_channels"]},
+                ~". Idle channels with zero members stop after 60 s; rejoining is cheap."
+            ]},
+
+            {h3, [], [~"History access"]},
+            {p, [], [
+                ~"Fetching history (",
+                {code, [], [~"GET /api/v1/chat/:channel_id/history"]},
+                ~") requires membership: DM participants for ",
+                {code, [], [~"dm:"]},
+                ~", world joiners for ",
+                {code, [], [~"world:"]},
+                ~"/",
+                {code, [], [~"zone:"]},
+                ~"/",
+                {code, [], [~"prox:"]},
+                ~", group members for ",
+                {code, [], [~"room:"]},
+                ~". Non-members get ",
+                {code, [], [~"403"]},
+                ~"; ",
+                {code, [], [~"?limit"]},
+                ~" is clamped to 200."
+            ]},
+
+            {h3, [], [~"DM size cap"]},
+            {p, [], [
+                ~"DM ",
+                {code, [], [~"content"]},
+                ~" is capped at 2000 bytes; non-binary or empty content rejected with ",
+                {code, [], [~"content_empty"]},
+                ~" / ",
+                {code, [], [~"content_too_large"]},
+                ~"."
+            ]},
+
             msg(
                 ~"chat.join / chat.leave",
                 ~"client",
-                ~"Join/leave a channel.",
+                ~"Join/leave a channel. Channel id must be namespaced.",
                 ~"""
-{"type": "chat.join",  "payload": {"channel_id": "lobby"}}
-{"type": "chat.leave", "payload": {"channel_id": "lobby"}}
+{"type": "chat.join",  "payload": {"channel_id": "world:abc123"}}
+{"type": "chat.leave", "payload": {"channel_id": "world:abc123"}}
 """
             ),
             msg(

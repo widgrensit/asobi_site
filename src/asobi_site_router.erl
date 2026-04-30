@@ -46,6 +46,24 @@ routes(_Environment) ->
                 docs(~"/docs/configuration", asobi_site_docs_configuration_view),
                 docs(~"/docs/performance", asobi_site_docs_performance_view),
                 docs(~"/docs/lua/bots", asobi_site_docs_lua_bots_view),
+                docs(~"/docs/errors", asobi_site_docs_errors_view),
+                docs(~"/docs/security", asobi_site_docs_security_view),
+                docs(~"/docs/security/threat-model", asobi_site_docs_security_threat_model_view),
+                docs(~"/docs/security/auth", asobi_site_docs_security_auth_view),
+                docs(
+                    ~"/docs/security/known-limitations",
+                    asobi_site_docs_security_known_limits_view
+                ),
+                docs(~"/docs/security/lua-sandbox", asobi_site_docs_security_lua_sandbox_view),
+                docs(~"/docs/security/lua-trust-model", asobi_site_docs_security_lua_trust_view),
+                docs(
+                    ~"/docs/security/lua-known-limitations",
+                    asobi_site_docs_security_lua_known_limits_view
+                ),
+                docs(~"/docs/quickstart/unity", asobi_site_docs_quickstart_unity_view),
+                docs(~"/docs/quickstart/godot", asobi_site_docs_quickstart_godot_view),
+                docs(~"/docs/quickstart/defold", asobi_site_docs_quickstart_defold_view),
+                docs(~"/docs/tutorials/hot-reload", asobi_site_docs_tutorial_hot_reload_view),
                 live(~"/privacy", asobi_site_privacy_view, none),
                 live(~"/terms", asobi_site_terms_view, none),
                 live(~"/dpa", asobi_site_dpa_view, none),
