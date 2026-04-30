@@ -233,24 +233,83 @@ spec:
                 ]}
             ]},
 
-            {h2, [], [~"Security checklist"]},
+            {h2, [], [~"Rate limits"]},
+            {p, [], [
+                ~"Asobi ships with three Seki limiter groups out of the box. Defaults are tuned for a single internet-facing node:"
+            ]},
+            {pre, [], [
+                {code, [], [
+                    ~"""
+ Path prefix       | Limiter             | Default (req/sec/IP)
+-------------------|---------------------|-----------------------
+ /api/v1/auth/*    | asobi_auth_limiter  | 5
+ /api/v1/iap/*     | asobi_iap_limiter   | 10
+ everything else   | asobi_api_limiter   | 300
+"""
+                ]}
+            ]},
+            {p, [], [
+                ~"Override per environment via the ",
+                {code, [], [~"asobi, rate_limits"]},
+                ~" env \x{2014} see the ",
+                {a, [{href, ~"/docs/configuration#rate-limits"}, az_navigate], [
+                    ~"Configuration page"
+                ]},
+                ~"."
+            ]},
+
+            {h2, [], [~"Operator hygiene"]},
+            {p, [], [
+                ~"Recommended deploy posture beyond the obvious \"rotate the cookie, terminate TLS at the proxy\":"
+            ]},
             {ul, [], [
-                {li, [], [~"Rotate the Erlang cookie. Never use a default value."]},
                 {li, [], [
-                    ~"Set ",
-                    {code, [], [~"verify_peer"]},
-                    ~" for any outbound HTTPS (already the default in asobi)."
+                    {strong, [], [~"Mount the game dir read-only. "]},
+                    ~"The runtime supports hot reload via filesystem polls; it does not need write access to ",
+                    {code, [], [~"/app/game"]},
+                    ~". ",
+                    {code, [], [~"docker run -v ./game:/app/game:ro --read-only --tmpfs /tmp"]},
+                    ~"."
                 ]},
                 {li, [], [
-                    ~"Enable TLS in the reverse proxy; don't expose the raw ",
-                    {code, [], [~"8080"]},
-                    ~" port to the public internet."
+                    {strong, [], [~"Bind distributed Erlang to localhost. "]},
+                    ~"For single-node deploys, uncomment the ",
+                    {code, [], [~"-kernel inet_dist_use_interface"]},
+                    ~" line in ",
+                    {code, [], [~"vm.args.src"]},
+                    ~" so EPMD and the dist port range are unreachable from the public internet."
                 ]},
-                {li, [], [~"Enable Postgres SSL for connections from other hosts."]},
                 {li, [], [
-                    ~"Run the engine as a non-root user (the Docker image does this; bare metal should too)."
+                    {strong, [], [~"Use TLS for distribution if you cluster. "]},
+                    ~"Set an explicit dist port range plus ",
+                    {code, [], [~"-proto_dist inet_tls"]},
+                    ~"; the cookie alone is not sufficient on a public network."
                 ]},
-                {li, [], [~"Treat deploy keys like passwords. Rotate on employee offboarding."]}
+                {li, [], [
+                    {strong, [], [~"Ship the Apple root CA in a known location. "]},
+                    ~"Default is ",
+                    {code, [], [~"priv/apple_root_ca.pem"]},
+                    ~" inside the asobi app; override via ",
+                    {code, [], [~"apple_root_ca_path"]},
+                    ~" if you mount it elsewhere."
+                ]},
+                {li, [], [
+                    {strong, [], [~"Run the engine as non-root. "]},
+                    ~"The shipped Dockerfile already does this; bare metal should too."
+                ]},
+                {li, [], [
+                    {strong, [], [~"Enable Postgres SSL for cross-host connections. "]},
+                    ~"Required for any deploy that does not co-locate Postgres on the same machine."
+                ]},
+                {li, [], [
+                    {strong, [], [~"Treat deploy keys like passwords. "]},
+                    ~"Rotate on employee offboarding; never commit them to your game repo."
+                ]}
+            ]},
+            {p, [], [
+                ~"For the full threat model and the audit findings these recommendations come from, see the ",
+                {a, [{href, ~"/docs/security"}, az_navigate], [~"Security section"]},
+                ~"."
             ]},
 
             {h2, [], [~"Upgrades"]},

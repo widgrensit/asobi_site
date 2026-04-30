@@ -8,11 +8,15 @@ render(Bindings) ->
     Sections = [
         {~"Get started", [
             {~"/docs", ~"Overview"},
-            {~"/docs/quickstart", ~"Quick start"},
+            {~"/docs/quickstart", ~"Quick start (server)"},
+            {~"/docs/quickstart/unity", ~"Quick start \x{2014} Unity"},
+            {~"/docs/quickstart/godot", ~"Quick start \x{2014} Godot"},
+            {~"/docs/quickstart/defold", ~"Quick start \x{2014} Defold"},
             {~"/docs/concepts", ~"Core concepts"}
         ]},
         {~"Tutorials", [
-            {~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe (Lua + Erlang)"}
+            {~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe (Lua + Erlang)"},
+            {~"/docs/tutorials/hot-reload", ~"Live-edit your game (hot reload)"}
         ]},
         {~"Protocols & auth", [
             {~"/docs/protocols/websocket", ~"WebSocket"},
@@ -42,7 +46,17 @@ render(Bindings) ->
             {~"/docs/configuration", ~"Configuration"},
             {~"/docs/clustering", ~"Clustering"},
             {~"/docs/performance", ~"Performance"},
+            {~"/docs/errors", ~"Errors & status codes"},
             {~"/docs/cloud", ~"Cloud (coming soon)"}
+        ]},
+        {~"Security", [
+            {~"/docs/security", ~"Overview"},
+            {~"/docs/security/threat-model", ~"Threat model"},
+            {~"/docs/security/auth", ~"Auth & rate limiting"},
+            {~"/docs/security/known-limitations", ~"Known limitations"},
+            {~"/docs/security/lua-sandbox", ~"Lua sandbox"},
+            {~"/docs/security/lua-trust-model", ~"Lua trust model"},
+            {~"/docs/security/lua-known-limitations", ~"Lua known limitations"}
         ]}
     ],
     ?html(

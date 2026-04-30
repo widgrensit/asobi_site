@@ -159,10 +159,101 @@ render(Bindings) ->
     {steam_api_key, ~"..."},
     {steam_app_id,  ~"..."},
     {apple_bundle_id,    ~"com.example.game"},
-    {google_package_name, ~"com.example.game"}
+    {google_package_name, ~"com.example.game"},
+    %% Apple StoreKit 2 receipt verification — root CA used for x5c chain validation.
+    %% Defaults to priv/apple_root_ca.pem inside the asobi app.
+    {apple_root_ca_path, ~"/etc/asobi/apple_root_ca.pem"}
 ]}
 """
             ),
+
+            {h2, [], [~"Rate limits"]},
+            {p, [], [
+                ~"Per-route limits enforced by ",
+                {code, [], [~"asobi_rate_limit_plugin"]},
+                ~". Defaults: 5 req/sec/IP on auth, 10 on IAP, 300 elsewhere. The auth limiter is the brute-force gate \x{2014} a 5/sec cap plus the bcrypt cost on login makes online password guessing infeasible at internet scale."
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+{asobi, [
+    {rate_limits, #{
+        auth => #{limit => 5,   window => 1000},
+        iap  => #{limit => 10,  window => 1000},
+        api  => #{limit => 300, window => 1000}
+    }}
+]}
+"""
+            ),
+            {p, [], [
+                ~"The dev/test sys config bumps all three to 1000 because CT bursts register/login calls against ",
+                {code, [], [~"127.0.0.1"]},
+                ~"."
+            ]},
+
+            {h2, [], [~"World capacity"]},
+            {p, [], [
+                ~"Caps on persistent worlds (",
+                {a, [{href, ~"/docs/world-server"}, az_navigate], [~"world server"]},
+                ~"). When a player tries to create a world beyond the per-player cap, the API returns ",
+                {code, [], [~"429"]},
+                ~"; when the global cap is hit, ",
+                {code, [], [~"503"]},
+                ~"."
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+{asobi, [
+    {world_max_per_player, 5},     %% default 5
+    {world_max,            1000}   %% default 1000
+]}
+"""
+            ),
+
+            {h2, [], [~"Terrain provider allowlist (asobi_lua only)"]},
+            {p, [], [
+                ~"A Lua script returning ",
+                {code, [], [~"{ module = \"<some_atom>\", ... }"]},
+                ~" from ",
+                {code, [], [~"terrain_provider/1"]},
+                ~" must name a module on this allowlist. Defaults to the two built-in providers; widen explicitly if you ship a custom one."
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+{asobi_lua, [
+    {terrain_providers, [asobi_terrain_flat, asobi_terrain_perlin]}
+]}
+"""
+            ),
+
+            {h2, [], [~"Per-call upper bounds"]},
+            {p, [], [
+                ~"These limits exist to bound the cost of a single hostile request and are not currently runtime-tunable. See the ",
+                {a, [{href, ~"/docs/security/auth"}, az_navigate], [
+                    ~"security guide"
+                ]},
+                ~" for the rationale."
+            ]},
+            {pre, [], [
+                {code, [], [
+                    ~"""
+ Endpoint / surface          | Limit
+-----------------------------|------------------------------------------------
+ Cloud save body             | 256 KB
+ Cloud save slots / player   | 10
+ Inventory consume quantity  | 1 .. 1_000_000
+ Leaderboard top ?limit      | 1 .. 100
+ Leaderboard around ?range   | 1 .. 50
+ Chat history ?limit         | 1 .. 200
+ DM content                  | 2000 bytes
+ WS chat channels / conn     | 32
+ Idle channel timeout        | 60 s
+ Lua decode depth            | 64 levels
+"""
+                ]}
+            ]},
 
             {h2, [], [~"Leaderboards"]},
             {p, [], [
@@ -241,6 +332,10 @@ render(Bindings) ->
                 {li, [], [{a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]}]},
                 {li, [], [
                     {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]}
+                ]},
+                {li, [], [
+                    {a, [{href, ~"/docs/security"}, az_navigate], [~"Security"]},
+                    ~" \x{2014} threat model and the rationale behind the caps above."
                 ]}
             ]}
         ]}
