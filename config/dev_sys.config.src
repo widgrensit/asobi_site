@@ -20,13 +20,13 @@
         }},
         {dev_mode, true},
         {bootstrap_application, asobi_site},
-        {json_lib, json},
-        {use_sessions, false}
+        {json_lib, json}
     ]},
     {arizona_nova, [
         {live_reload, true}
     ]},
     {asobi_site, [
-        {nova_apps, [arizona_nova]}
+        {nova_apps, [arizona_nova]},
+        {use_sessions, false}
     ]}
 ].
