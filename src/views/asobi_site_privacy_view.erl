@@ -15,7 +15,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Privacy Policy"]},
                     {p, [], [
-                        ~"Last updated: 15 April 2026. This page tells you exactly what ",
+                        ~"Last updated: 5 May 2026. This page tells you exactly what ",
                         {code, [], [~"asobi.dev"]},
                         ~" collects, why, where the data lives, and what you can ask us to do with it."
                     ]}
