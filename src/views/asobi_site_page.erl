@@ -1,10 +1,10 @@
 -module(asobi_site_page).
--include_lib("arizona/include/arizona_stateful.hrl").
+-include_lib("arizona/include/arizona_view.hrl").
 
--export([mount/1, render/1, handle_info/2]).
+-export([mount/2, render/1, handle_info/2]).
 
--spec mount(az:bindings()) -> az:mount_ret().
-mount(Bindings) ->
+-spec mount(az:bindings(), az:request()) -> az:mount_ret().
+mount(Bindings, _Req) ->
     ?connected andalso ?send(connected),
     {Bindings, #{}}.
 
