@@ -71,13 +71,72 @@ render(Bindings) ->
                 ]}
             ]},
 
+            %% Hot-reload demo — matches the project headline. Video first,
+            %% then docker compose snippet so visitors can run it locally.
+            {section, [{id, ~"demo"}, {class, ~"section section-dark"}], [
+                {'div', [{class, ~"section-inner"}], [
+                    {p, [{class, ~"section-marker"}], [~"02 / Demo"]},
+                    {h2, [{class, ~"section-title"}], [
+                        ~"Edit. Save. ",
+                        {em, [], [~"Live."]}
+                    ]},
+                    {p, [{class, ~"section-subtitle"}], [
+                        ~"Edit your match logic in Lua. The running match picks up the change on the next tick. No restart, no reconnect, no kicked players."
+                    ]},
+                    {'div', [{class, ~"demo-video-wrap"}], [
+                        {video,
+                            [
+                                {autoplay, ~"autoplay"},
+                                {muted, ~"muted"},
+                                {loop, ~"loop"},
+                                {playsinline, ~"playsinline"},
+                                {preload, ~"auto"},
+                                {class, ~"demo-video"},
+                                {poster, ~"/assets/media/hotreload-demo.gif"}
+                            ],
+                            [
+                                {source,
+                                    [
+                                        {src, ~"/assets/media/hotreload-demo.mp4"},
+                                        {type, ~"video/mp4"}
+                                    ],
+                                    []},
+                                {img,
+                                    [
+                                        {src, ~"/assets/media/hotreload-demo.gif"},
+                                        {alt,
+                                            ~"Editing match.lua — the cube changes color while connected"}
+                                    ],
+                                    []}
+                            ]}
+                    ]},
+                    {'div', [{class, ~"demo-run"}], [
+                        {p, [{class, ~"demo-run-label"}], [~"Run it locally:"]},
+                        {'div', [{class, ~"code-block"}], [
+                            {pre, [], [
+                                {code, [], [
+                                    ~"git clone https://github.com/widgrensit/asobi\ncd asobi/examples/hotreload-demo\ndocker compose up"
+                                ]}
+                            ]}
+                        ]},
+                        {p, [{class, ~"demo-run-foot"}], [
+                            ~"About 90 seconds. Open ",
+                            {code, [], [~"http://localhost:3000"]},
+                            ~", drive a cube with WASD, then edit ",
+                            {code, [], [~"lua/match.lua"]},
+                            ~" and save."
+                        ]}
+                    ]}
+                ]}
+            ]},
+
             %% Tabbed canonical connect snippet — "same server, any engine".
             %% All 7 snippets come from asobi_site_snippets (single source of
             %% truth, CI-enforced). Rendering is delegated to the reusable
             %% asobi_site_tabbed_code component.
             {section, [{id, ~"connect"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"02 / Client"]},
+                    {p, [{class, ~"section-marker"}], [~"03 / Client"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Same server, ",
                         {em, [], [~"any"]},
@@ -105,7 +164,7 @@ render(Bindings) ->
             %% Competitors generally offer one or the other; asobi has both.
             {section, [{id, ~"sessions-vs-worlds"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"03 / Models"]},
+                    {p, [{class, ~"section-marker"}], [~"04 / Models"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Sessions ",
                         {em, [], [~"or"]},
@@ -168,7 +227,7 @@ render(Bindings) ->
             %% Why BEAM
             {section, [{id, ~"why-beam"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"04 / Runtime"]},
+                    {p, [{class, ~"section-marker"}], [~"05 / Runtime"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Built on the ",
                         {em, [], [~"BEAM"]}
@@ -301,7 +360,7 @@ render(Bindings) ->
             %% Features
             {section, [{id, ~"features"}, {class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"05 / Kit"]},
+                    {p, [{class, ~"section-marker"}], [~"06 / Kit"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Everything you ",
                         {em, [], [~"need"]}
@@ -357,7 +416,7 @@ render(Bindings) ->
             %% SDKs
             {section, [{id, ~"sdks"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"06 / Clients"]},
+                    {p, [{class, ~"section-marker"}], [~"07 / Clients"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"SDKs for ",
                         {em, [], [~"every"]},
@@ -433,7 +492,7 @@ render(Bindings) ->
             %% Code example
             {section, [{class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"07 / Contract"]},
+                    {p, [{class, ~"section-marker"}], [~"08 / Contract"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Define your ",
                         {em, [], [~"game logic"]}
@@ -452,7 +511,7 @@ render(Bindings) ->
             %% Comparison
             {section, [{class, ~"section"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"08 / Position"]},
+                    {p, [{class, ~"section-marker"}], [~"09 / Position"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"How Asobi ",
                         {em, [], [~"compares"]}
@@ -530,7 +589,7 @@ render(Bindings) ->
             %% Getting started
             {section, [{id, ~"get-started"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"09 / Start"]},
+                    {p, [{class, ~"section-marker"}], [~"10 / Start"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Get started in ",
                         {em, [], [~"minutes"]}
@@ -586,7 +645,7 @@ render(Bindings) ->
             %% Community
             {section, [{id, ~"community"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner community-section"}], [
-                    {p, [{class, ~"section-marker"}], [~"10 / People"]},
+                    {p, [{class, ~"section-marker"}], [~"11 / People"]},
                     {h2, [{class, ~"section-title"}], [
                         ~"Join the ",
                         {em, [], [~"community"]}
