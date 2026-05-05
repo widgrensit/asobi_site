@@ -19,7 +19,8 @@
             ip => {0, 0, 0, 0}
         }},
         {bootstrap_application, asobi_site},
-        {json_lib, json}
+        {json_lib, json},
+        {use_sessions, false}
     ]},
     {arizona_nova, [
         {live_reload, false}
