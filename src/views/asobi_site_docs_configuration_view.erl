@@ -42,6 +42,7 @@ render(Bindings) ->
                 ~"""
 {kura, [
     {repo,     asobi_repo},
+    {backend,  kura_backend_postgres},
     {host,     "localhost"},
     {port,     5432},
     {database, "asobi"},
@@ -51,6 +52,19 @@ render(Bindings) ->
 ]}
 """
             ),
+            {p, [], [
+                ~"Asobi runs on ",
+                {a, [{href, ~"https://github.com/Taure/kura"}], [~"Kura"]},
+                ~" 2.x with pluggable backends. Add ",
+                {code, [], [~"kura_postgres"]},
+                ~" to your ",
+                {code, [], [~"rebar.config"]},
+                ~" deps and the ",
+                {code, [], [~"backend"]},
+                ~" key tells Kura which one to use. Swap to ",
+                {code, [], [~"kura_backend_sqlite"]},
+                ~" for an embedded setup."
+            ]},
             {p, [], [
                 ~"Environment variables (consumed via ",
                 {code, [], [~"sys.config.src"]},
