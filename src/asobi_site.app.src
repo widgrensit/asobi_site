@@ -8,9 +8,7 @@
     {applications, [
         kernel,
         stdlib,
-        nova,
-        arizona,
-        arizona_nova
+        nova
     ]},
     {env, []},
     {modules, []},

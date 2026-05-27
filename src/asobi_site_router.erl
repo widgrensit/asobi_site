@@ -10,20 +10,20 @@ routes(_Environment) ->
             prefix => ~"",
             security => false,
             routes => [
-                live(~"/", asobi_site_home_view, home),
-                live(~"/cloud", asobi_site_cloud_view, cloud),
-                live(~"/unreal", asobi_site_unreal_view, sdks),
-                live(~"/unity", asobi_site_unity_view, sdks),
-                live(~"/godot", asobi_site_godot_view, sdks),
-                live(~"/defold", asobi_site_defold_view, sdks),
-                live(~"/dart", asobi_site_dart_view, sdks),
-                live(~"/js", asobi_site_js_view, sdks),
-                live(~"/lua", asobi_site_lua_view, sdks),
-                live(~"/migrate-from-hathora", asobi_site_migrate_hathora_view, none),
-                live(~"/demo", asobi_site_demo_view, demo),
-                live(~"/blog", asobi_site_blog_view, blog),
+                page(~"/", asobi_site_home_view, home),
+                page(~"/cloud", asobi_site_cloud_view, cloud),
+                page(~"/unreal", asobi_site_unreal_view, sdks),
+                page(~"/unity", asobi_site_unity_view, sdks),
+                page(~"/godot", asobi_site_godot_view, sdks),
+                page(~"/defold", asobi_site_defold_view, sdks),
+                page(~"/dart", asobi_site_dart_view, sdks),
+                page(~"/js", asobi_site_js_view, sdks),
+                page(~"/lua", asobi_site_lua_view, sdks),
+                page(~"/migrate-from-hathora", asobi_site_migrate_hathora_view, none),
+                page(~"/demo", asobi_site_demo_view, demo),
+                page(~"/blog", asobi_site_blog_view, blog),
                 {~"/blog/rss.xml", fun asobi_site_controller:blog_rss/1, #{methods => [get]}},
-                live(~"/blog/:slug", asobi_site_blog_post_view, blog),
+                page(~"/blog/:slug", asobi_site_blog_post_view, blog),
                 docs(~"/docs", asobi_site_docs_view),
                 docs(~"/docs/quickstart", asobi_site_docs_quickstart_view),
                 docs(~"/docs/concepts", asobi_site_docs_concepts_view),
@@ -64,36 +64,28 @@ routes(_Environment) ->
                 docs(~"/docs/quickstart/godot", asobi_site_docs_quickstart_godot_view),
                 docs(~"/docs/quickstart/defold", asobi_site_docs_quickstart_defold_view),
                 docs(~"/docs/tutorials/hot-reload", asobi_site_docs_tutorial_hot_reload_view),
-                live(~"/privacy", asobi_site_privacy_view, none),
-                live(~"/terms", asobi_site_terms_view, none),
-                live(~"/dpa", asobi_site_dpa_view, none),
+                page(~"/privacy", asobi_site_privacy_view, none),
+                page(~"/terms", asobi_site_terms_view, none),
+                page(~"/dpa", asobi_site_dpa_view, none),
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
             ]
         }
     ].
 
-live(Path, View, Active) ->
-    arizona_nova_live:route(Path, asobi_site_page, #{
-        layouts => [{asobi_site_layout, render}],
-        bindings => #{
-            id => ~"page",
-            view => View,
-            view_id => atom_to_binary(View),
-            active => Active
-        }
-    }).
+page(Path, View, Active) ->
+    {Path, fun(Req) -> asobi_site_controller:page(Req, #{view => View, active => Active}) end, #{
+        methods => [get]
+    }}.
 
 docs(Path, DocView) ->
-    arizona_nova_live:route(Path, asobi_site_page, #{
-        layouts => [{asobi_site_layout, render}],
-        bindings => #{
-            id => ~"page",
-            view => asobi_site_docs_page,
-            view_id => ~"docs-page",
-            active => docs,
-            doc_view => DocView,
-            doc_view_id => atom_to_binary(DocView),
-            active_path => Path
-        }
-    }).
+    {Path,
+        fun(Req) ->
+            asobi_site_controller:page(Req, #{
+                view => asobi_site_docs_page,
+                active => docs,
+                doc_view => DocView,
+                active_path => Path
+            })
+        end,
+        #{methods => [get]}}.

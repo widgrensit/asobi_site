@@ -1,12 +1,12 @@
 -module(asobi_site_nav).
--include_lib("arizona/include/arizona_stateless.hrl").
+-include("asobi_site_view.hrl").
 
 -export([render/1]).
 
 -type active() :: home | features | sdks | demo | docs | blog | cloud | none.
 -type bindings() :: #{active := active()}.
 
--spec render(bindings()) -> az:template().
+-spec render(bindings()) -> asobi_site_html:html().
 render(Bindings) ->
     Links = [
         {~"/#features", ~"Features", {active, features}, true},
