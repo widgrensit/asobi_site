@@ -5,6 +5,8 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
 
 COPY rebar.config rebar.lock ./
+COPY scripts/strip-release-plugins.escript ./scripts/
+RUN escript scripts/strip-release-plugins.escript rebar.config
 RUN rebar3 compile --deps_only
 
 COPY config ./config
