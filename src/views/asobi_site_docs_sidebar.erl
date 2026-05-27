@@ -1,9 +1,9 @@
 -module(asobi_site_docs_sidebar).
--include_lib("arizona/include/arizona_stateless.hrl").
+-include("asobi_site_view.hrl").
 
 -export([render/1]).
 
--spec render(az:bindings()) -> az:template().
+-spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
     Sections = [
         {~"Get started", [

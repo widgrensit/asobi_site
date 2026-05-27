@@ -1,13 +1,13 @@
 -module(asobi_site_blog_view).
--include_lib("arizona/include/arizona_stateful.hrl").
+-include("asobi_site_view.hrl").
 
 -export([mount/1, render/1]).
 
--spec mount(az:bindings()) -> az:mount_ret().
+-spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
     {Bindings, #{}}.
 
--spec render(az:bindings()) -> az:template().
+-spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
     ?html(
         {'div', [{id, ?get(id)}], [

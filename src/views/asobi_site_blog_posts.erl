@@ -1,5 +1,5 @@
 -module(asobi_site_blog_posts).
--include_lib("arizona/include/arizona_stateless.hrl").
+-include("asobi_site_view.hrl").
 
 %% Blog post registry. Each post is a map with metadata; the body is a
 %% function returning an arizona template so posts can use the same
@@ -14,7 +14,7 @@
     date := binary(),
     tags := [binary()],
     reading_time := binary(),
-    body := fun((az:bindings()) -> az:template())
+    body := fun((map()) -> asobi_site_html:html())
 }.
 
 -export_type([post/0]).
@@ -72,7 +72,7 @@ by_slug(Slug) ->
 %% Post bodies
 %%----------------------------------------------------------------------
 
--spec post_meet_asobi_indie_multiplayer(az:bindings()) -> az:template().
+-spec post_meet_asobi_indie_multiplayer(map()) -> asobi_site_html:html().
 post_meet_asobi_indie_multiplayer(_Bindings) ->
     ?html(
         {'div', [], [
@@ -148,7 +148,7 @@ post_meet_asobi_indie_multiplayer(_Bindings) ->
         ]}
     ).
 
--spec post_why_erlang(az:bindings()) -> az:template().
+-spec post_why_erlang(map()) -> asobi_site_html:html().
 post_why_erlang(_Bindings) ->
     ?html(
         {'div', [], [
@@ -260,7 +260,7 @@ post_why_erlang(_Bindings) ->
         ]}
     ).
 
--spec post_migrating_from_hathora(az:bindings()) -> az:template().
+-spec post_migrating_from_hathora(map()) -> asobi_site_html:html().
 post_migrating_from_hathora(_Bindings) ->
     ?html(
         {'div', [], [

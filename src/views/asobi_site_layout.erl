@@ -1,14 +1,12 @@
 -module(asobi_site_layout).
--include_lib("arizona/include/arizona_stateless.hrl").
+-include("asobi_site_view.hrl").
 
 -export([render/1]).
 
--spec render(az:bindings()) -> az:template().
+-spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
-    Prefix = arizona_nova:prefix(),
-    ?html([
-        ~"<!DOCTYPE html>",
-        {html, [{lang, ~"en"}, az_nodiff], [
+    ?html(
+        {html, [{lang, ~"en"}], [
             {head, [], [
                 {meta, [{charset, ~"UTF-8"}], []},
                 {meta, [{name, ~"viewport"}, {content, ~"width=device-width, initial-scale=1.0"}],
@@ -72,65 +70,7 @@ render(Bindings) ->
             {body, [], [
                 ?inner_content,
                 ?stateless(asobi_site_footer, render, #{}),
-                {script, [{type, ~"module"}], [
-                    ~"import { hooks, connect } from '",
-                    Prefix,
-                    ~"""
-                    /assets/js/arizona.min.js';
-                    hooks.PreserveScroll = {
-                        mounted() {
-                            const key = 'az-scroll:' + (this.el.dataset.scrollKey || this.el.id || 'default');
-                            const saved = sessionStorage.getItem(key);
-                            if (saved !== null) this.el.scrollTop = parseInt(saved, 10) || 0;
-                            this._key = key;
-                        },
-                        destroyed() {
-                            if (this._key) sessionStorage.setItem(this._key, this.el.scrollTop.toString());
-                        },
-                    };
-                    hooks.Scrollspy = {
-                        mounted() {
-                            const nav = this.el;
-                            const links = new Map();
-                            nav.querySelectorAll('a[href^="/#"]').forEach(a => {
-                                const id = a.getAttribute('href').slice(2);
-                                if (id) links.set(id, a);
-                            });
-                            if (links.size === 0) return;
-                            this._active = null;
-                            const setActive = id => {
-                                if (this._active === id) return;
-                                if (this._active) links.get(this._active)?.classList.remove('nav-active');
-                                this._active = id;
-                                if (id) links.get(id)?.classList.add('nav-active');
-                            };
-                            const visible = new Map();
-                            this._observer = new IntersectionObserver(entries => {
-                                for (const e of entries) {
-                                    const id = e.target.id;
-                                    if (e.isIntersecting) visible.set(id, e.intersectionRatio);
-                                    else visible.delete(id);
-                                }
-                                let best = null, bestRatio = 0;
-                                for (const [id, ratio] of visible) {
-                                    if (ratio > bestRatio) { best = id; bestRatio = ratio; }
-                                }
-                                setActive(best);
-                            }, { threshold: [0, 0.25, 0.5, 0.75, 1] });
-                            for (const id of links.keys()) {
-                                const section = document.getElementById(id);
-                                if (section) this._observer.observe(section);
-                            }
-                        },
-                        destroyed() {
-                            this._observer?.disconnect();
-                        },
-                    };
-                    connect('
-                    """,
-                    Prefix,
-                    ~"/ws');"
-                ]}
+                {script, [{src, ~"/assets/js/app.js"}, {defer, true}], []}
             ]}
         ]}
-    ]).
+    ).

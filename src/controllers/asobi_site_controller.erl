@@ -1,6 +1,39 @@
 -module(asobi_site_controller).
 
--export([heartbeat/1, blog_rss/1]).
+-export([page/2, heartbeat/1, blog_rss/1]).
+
+-spec page(cowboy_req:req(), map()) -> {status, 200, map(), iodata()}.
+page(Req, Spec) ->
+    View = maps:get(view, Spec),
+    DocView = maps:get(doc_view, Spec, undefined),
+    Bindings = #{
+        id => ~"page",
+        view => View,
+        view_id => atom_to_binary(View, utf8),
+        active => maps:get(active, Spec, none),
+        slug => slug(Req),
+        doc_view => DocView,
+        doc_view_id => doc_view_id(DocView),
+        active_path => maps:get(active_path, Spec, ~"")
+    },
+    Content = asobi_site_page:render(Bindings),
+    Document = asobi_site_layout:render(#{title => page_title(Bindings), inner_content => Content}),
+    Headers = #{~"content-type" => ~"text/html; charset=utf-8"},
+    {status, 200, Headers, asobi_site_html:document(Document)}.
+
+slug(Req) ->
+    maps:get(~"slug", maps:get(bindings, Req, #{}), ~"").
+
+doc_view_id(undefined) -> ~"";
+doc_view_id(DocView) -> atom_to_binary(DocView, utf8).
+
+page_title(#{slug := Slug}) when Slug =/= ~"" ->
+    case asobi_site_blog_posts:by_slug(Slug) of
+        {ok, #{title := Title}} -> <<Title/binary, " - Asobi">>;
+        _ -> ~"Asobi"
+    end;
+page_title(_Bindings) ->
+    ~"Asobi".
 
 -spec heartbeat(cowboy_req:req()) -> {status, integer()}.
 heartbeat(_Req) ->

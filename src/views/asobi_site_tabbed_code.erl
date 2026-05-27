@@ -18,14 +18,14 @@
 %% Up to 7 tabs are styled by `.tabbed-code' CSS (enough for the 7-SDK
 %% homepage hero). Add more rules in `app.css' if more are needed.
 -module(asobi_site_tabbed_code).
--include_lib("arizona/include/arizona_stateless.hrl").
+-include("asobi_site_view.hrl").
 
 -export([render/1, lua_erlang/3]).
 
 -type tab() :: #{label := binary(), lang := binary(), body := binary()}.
 -type bindings() :: #{id := binary(), tabs := [tab(), ...]}.
 
--spec render(bindings()) -> az:template().
+-spec render(bindings()) -> asobi_site_html:html().
 render(Bindings) ->
     Id = ?get(id),
     Tabs = ?get(tabs),
@@ -73,7 +73,7 @@ input_id(Id, N) ->
 %% the `/docs/*' pages. Returns a stateless descriptor that views can
 %% drop directly into their `?html/1' tree.
 -spec lua_erlang(Id :: binary(), LuaBody :: binary(), ErlBody :: binary()) ->
-    arizona_template:stateless_descriptor().
+    asobi_site_html:html().
 lua_erlang(Id, LuaBody, ErlBody) ->
     ?stateless(?MODULE, render, #{
         id => Id,

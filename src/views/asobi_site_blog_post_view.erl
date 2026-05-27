@@ -1,16 +1,15 @@
 -module(asobi_site_blog_post_view).
--include_lib("arizona/include/arizona_stateful.hrl").
+-include("asobi_site_view.hrl").
 
--export([mount/1, render/1, handle_info/2]).
+-export([mount/1, render/1]).
 
--spec mount(az:bindings()) -> az:mount_ret().
+-spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
-    ?connected andalso ?send(connected),
     Slug = maps:get(slug, Bindings, ~""),
     Post = asobi_site_blog_posts:by_slug(Slug),
     {Bindings#{post => Post}, #{}}.
 
--spec render(az:bindings()) -> az:template().
+-spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
     ?html(
         {'div', [{id, ?get(id)}], [
@@ -22,15 +21,6 @@ render(Bindings) ->
             ]}
         ]}
     ).
-
--spec handle_info(connected, az:bindings()) -> az:handle_info_ret().
-handle_info(connected, Bindings) ->
-    case Bindings of
-        #{post := {ok, #{title := Title}}} ->
-            {Bindings, #{}, [arizona_js:set_title(Title)]};
-        #{} ->
-            {Bindings, #{}, []}
-    end.
 
 post_body(#{
     title := Title,
