@@ -67,7 +67,6 @@ routes(_Environment) ->
                 live(~"/privacy", asobi_site_privacy_view, none),
                 live(~"/terms", asobi_site_terms_view, none),
                 live(~"/dpa", asobi_site_dpa_view, none),
-                {~"/ws", arizona_nova_ws, #{protocol => ws}},
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
             ]

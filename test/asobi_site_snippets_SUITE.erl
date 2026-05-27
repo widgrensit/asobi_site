@@ -26,7 +26,7 @@ coverage(_Config) ->
         {F, S}
      || F <- Flows,
         S <- SDKs,
-        not is_binary(catch asobi_site_snippets:get(F, S))
+        not is_binary(safe(fun() -> asobi_site_snippets:get(F, S) end))
     ],
     ?assertEqual([], Missing, "snippet coverage gap").
 
@@ -57,7 +57,8 @@ required_keywords(_Config) ->
 label_coverage(_Config) ->
     Missing = [
         S
-     || S <- asobi_site_snippets:sdks(), not is_binary(catch asobi_site_snippets:sdk_label(S))
+     || S <- asobi_site_snippets:sdks(),
+        not is_binary(safe(fun() -> asobi_site_snippets:sdk_label(S) end))
     ],
     ?assertEqual([], Missing, "SDK label missing").
 
@@ -76,3 +77,10 @@ keywords_for(_) ->
 
 contains(Bin, Needle) when is_binary(Bin), is_binary(Needle) ->
     binary:match(string:lowercase(Bin), string:lowercase(Needle)) =/= nomatch.
+
+safe(F) ->
+    try
+        F()
+    catch
+        _:_ -> error
+    end.
