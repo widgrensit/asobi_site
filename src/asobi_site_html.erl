@@ -48,6 +48,7 @@ render(List) when is_list(List) ->
 
 -spec render_view(module(), map()) -> html().
 render_view(Mod, Props) ->
+    _ = code:ensure_loaded(Mod),
     Bindings =
         case erlang:function_exported(Mod, mount, 1) of
             true ->
