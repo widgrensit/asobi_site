@@ -10,6 +10,7 @@ RUN escript scripts/strip-release-plugins.escript rebar.config
 RUN rebar3 compile --deps_only
 
 COPY config ./config
+COPY include ./include
 COPY src ./src
 COPY priv ./priv
 
