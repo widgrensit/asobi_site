@@ -1,8 +1,10 @@
 # Deploying asobi_site to Clever Cloud
 
-The site is a Nova + Arizona Erlang release packaged as a Docker image.
+The site is a Nova Erlang release (server-rendered, no Arizona) packaged as a Docker image.
 
-We build the image in GitHub Actions (7 GB RAM, no OOM risk) from `Dockerfile.build` and push to GHCR. Clever Cloud then builds a 1-line passthrough `Dockerfile` (`FROM ghcr.io/widgrensit/asobi_site:latest`) — which is effectively just a registry pull, no compilation. This avoids the OOM kills we hit on Clever's builder during the `erlfmt` compile step.
+**Clever Cloud source-builds the multi-stage `Dockerfile` from the repo** on each deploy: it compiles the release in the `erlang:28` builder stage and copies it into a slim runtime image. The `Dockerfile` must `COPY include` (the views' shared `asobi_site_view.hrl` lives there) or the release build fails with "can't find include file".
+
+GitHub Actions (`.github/workflows/docker-publish.yml`) also builds and pushes the same image to GHCR on every push to `main`. That GHCR image is an artifact mirror; it is **not** what Clever serves (Clever builds from source). The builder stage peaks ~600 MB RAM; if Clever OOMs, bump the build instance one RAM tier.
 
 ## Image publishing
 
@@ -23,7 +25,7 @@ No extra secrets needed; the workflow uses the default `GITHUB_TOKEN` with `pack
    - Instance size: `XS` (per-second billing, ~€7-10/mo)
    - Name: `asobi-site`
 
-2. Leave the app as a normal Docker app linked to the GitHub repo. The `Dockerfile` at the repo root is a 1-line passthrough that pulls the prebuilt image — Clever treats it as a Docker build, but the "build" is just a registry pull and takes ~20 seconds.
+2. Leave the app as a normal Docker app linked to the GitHub repo. Clever builds the repo-root multi-stage `Dockerfile` from source on each deploy (~2-4 min).
 
 3. **(Recommended) Turn off Clever's GitHub auto-deploy** and trigger via webhook from GHCR instead, so Clever only pulls after the image is actually published:
    - Clever Console → your app → **Information** → **Automatic deployment** → toggle off.
@@ -50,13 +52,13 @@ No extra secrets needed; the workflow uses the default `GITHUB_TOKEN` with `pack
 
 ## Deploying
 
-1. Push to `main`. GitHub Actions builds + pushes the image (~3-5 min first build, ~1-2 min with cache).
-2. In Clever Console → Activity, click **Redeploy** — or schedule auto-pulls via a deploy hook (see below).
+1. Push to `main` (GitHub Actions runs CI and publishes the GHCR mirror).
+2. In Clever Console → Activity, click **Redeploy** — Clever rebuilds from source. Or wire the deploy hook (see below) so it triggers automatically.
 
 To deploy from CLI instead:
 
 ```bash
-clever restart --force   # re-pulls :latest
+clever restart --force   # rebuilds from source
 ```
 
 ### Auto-redeploy on image push (optional)
