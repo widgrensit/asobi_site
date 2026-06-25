@@ -101,9 +101,17 @@ docker compose up -d
             {p, [], [
                 ~"Asobi is now running on ",
                 {code, [], [~"http://localhost:8080"]},
-                ~". Deploy your game with ",
-                {code, [], [~"asobi deploy ./game"]},
-                ~" and you're live."
+                ~". Put your game's Lua scripts in the ",
+                {code, [], [~"./game"]},
+                ~" directory next to your ",
+                {code, [], [~"docker-compose.yml"]},
+                ~". At minimum you need a ",
+                {code, [], [~"match.lua"]},
+                ~" (or a ",
+                {code, [], [~"config.lua"]},
+                ~" manifest for multiple modes); Asobi loads it on startup. After editing your scripts, reload them with ",
+                {code, [], [~"docker compose restart asobi"]},
+                ~"."
             ]},
 
             {h2, [{id, ~"single-server"}], [~"Single VPS"]},
