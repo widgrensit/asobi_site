@@ -60,9 +60,7 @@ render(Bindings) ->
                 ~"ttt-state",
                 ~"""
 -- game/ttt.lua
-local game = {}
-
-function game.init(_config)
+function init(_config)
     return {
         board   = { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         turn    = "x",
@@ -102,7 +100,7 @@ init(_Config) ->
             asobi_site_tabbed_code:lua_erlang(
                 ~"ttt-join",
                 ~"""
-function game.join(player_id, state)
+function join(player_id, state)
     if state.started then
         return nil, "match_full"
     end
@@ -147,7 +145,7 @@ join(PlayerId, #{players := P} = State) ->
             asobi_site_tabbed_code:lua_erlang(
                 ~"ttt-input",
                 ~"""
-function game.handle_input(player_id, input, state)
+function handle_input(player_id, input, state)
     if not state.started or state.result then return state end
 
     local mark = state.players[player_id]
@@ -220,7 +218,7 @@ local function is_full(board)
     return true
 end
 
-function game.tick(state)
+function tick(state)
     if state._finished or not state.started then return state end
     local w = winner(state.board)
     if w then
@@ -279,7 +277,7 @@ finish(Result, State) ->
             asobi_site_tabbed_code:lua_erlang(
                 ~"ttt-getstate",
                 ~"""
-function game.get_state(player_id, state)
+function get_state(player_id, state)
     return {
         board     = state.board,
         turn      = state.turn,
@@ -289,7 +287,7 @@ function game.get_state(player_id, state)
     }
 end
 
-function game.leave(player_id, state)
+function leave(player_id, state)
     state.players[player_id] = nil
     if state.started and not state._finished then
         state._finished = true

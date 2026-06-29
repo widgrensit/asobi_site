@@ -81,20 +81,18 @@ docker run --rm -it --name asobi \
                 ~"lua",
                 ~"""
 -- game/hello.lua
-local game = {}
-
-function game.init(config)
+function init(config)
     return { hits = 0 }
 end
 
-function game.join(player_id, state)
+function join(player_id, state)
     game.send(player_id, { kind = "welcome", msg = "hi " .. player_id })
     return state
 end
 
-function game.leave(_player_id, state) return state end
+function leave(_player_id, state) return state end
 
-function game.handle_input(_player_id, input, state)
+function handle_input(_player_id, input, state)
     if input.action == "click" then
         state.hits = state.hits + 1
         game.broadcast("update", { hits = state.hits })
@@ -102,10 +100,8 @@ function game.handle_input(_player_id, input, state)
     return state
 end
 
-function game.tick(state) return state end
-function game.get_state(_player_id, state) return { hits = state.hits } end
-
-return game
+function tick(state) return state end
+function get_state(_player_id, state) return { hits = state.hits } end
 """
             ),
 

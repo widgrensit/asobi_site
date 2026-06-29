@@ -234,7 +234,7 @@ render(Bindings) ->
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"The same virtual machine that powers WhatsApp, Discord, and RabbitMQ. ",
-                        ~"Designed for millions of concurrent connections with predictable latency."
+                        ~"Built for massive concurrency with predictable latency."
                     ]},
 
                     %% Process-isolation metaphor — 20x4 dot grid. Two dots
@@ -343,7 +343,7 @@ render(Bindings) ->
                             {'div', [{class, ~"beam-card-icon"}], [<<16#1F4C8/utf8>>]},
                             {h3, [], [~"100K+ Connections"]},
                             {p, [], [
-                                ~"Lightweight processes and efficient I/O multiplexing. Handle half a million concurrent WebSocket connections per node."
+                                ~"Lightweight processes and efficient I/O multiplexing. Handle 100K+ concurrent WebSocket connections per node."
                             ]}
                         ]},
                         {'div', [{class, ~"beam-card"}], [
