@@ -309,11 +309,93 @@ end
 
             {h3, [], [~"Terrain"]},
             {p, [], [
-                ~"Terrain chunks are bytes (compressed tile arrays) served via ",
+                ~"Asobi does not define what terrain is. You implement a provider that returns the bytes of the chunk at an ",
+                {code, [], [~"{X, Y}"]},
+                ~" coordinate; ",
                 {code, [], [~"asobi_terrain_store"]},
-                ~". Providers load from disk, procedural generation, or a tile DB. Clients receive chunk blobs on zone entry; servers can fetch via ",
+                ~" caches that blob and ships it to clients on zone entry, verbatim. The payload is whatever your provider produces - the data Asobi chunks is the data you hand back, and the client decodes it."
+            ]},
+            {p, [], [
+                ~"A provider implements the ",
+                {code, [], [~"asobi_terrain_provider"]},
+                ~" behaviour:"
+            ]},
+            {ul, [], [
+                {li, [], [
+                    {code, [], [~"init(Args)"]},
+                    ~" - once at startup; returns the provider state."
+                ]},
+                {li, [], [
+                    {code, [], [~"load_chunk({X, Y}, State)"]},
+                    ~" - a stored chunk, or ",
+                    {code, [], [~"{error, not_found}"]},
+                    ~" to fall back to generation."
+                ]},
+                {li, [], [
+                    {code, [], [~"generate_chunk({X, Y}, Seed, State)"]},
+                    ~" - optional; build the chunk procedurally."
+                ]}
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+-module(my_terrain).
+-behaviour(asobi_terrain_provider).
+-export([init/1, load_chunk/2, generate_chunk/3]).
+
+init(Config) -> {ok, Config}.
+
+load_chunk(_Coords, _State) ->
+    {error, not_found}.
+
+generate_chunk({CX, CY}, Seed, State) ->
+    Tiles = #{{0, 0} => {tile_id(CX, CY, Seed), 0, 0}},
+    Bin = asobi_terrain:compress_chunk(asobi_terrain:encode_chunk(Tiles)),
+    {ok, Bin, State}.
+"""
+            ),
+            {p, [], [
+                ~"The ",
+                {code, [], [~"asobi_terrain"]},
+                ~" helpers give you a compact tile format (each tile ",
+                {code, [], [~"{TileId, Flags, Elevation}"]},
+                ~", 4 bytes, zlib-compressed), but any binary your client can decode works. Wire the provider to a world by returning it from ",
+                {code, [], [~"terrain_provider/1"]},
+                ~":"
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+terrain_provider(_Config) ->
+    {my_terrain, #{seed => 42}}.
+"""
+            ),
+            {p, [], [
+                ~"From Lua you can only name an ",
+                {strong, [], [~"allowlisted"]},
+                ~" Erlang provider module (terrain logic cannot be written in Lua):"
+            ]},
+            code(
+                ~"lua",
+                ~"""
+function terrain_provider(config)
+    return { module = "my_terrain", args = {} }
+end
+"""
+            ),
+            {p, [], [
+                ~"A complete runnable provider lives in ",
+                {a,
+                    [
+                        {href,
+                            ~"https://github.com/widgrensit/asobi/tree/main/examples/world-terrain"}
+                    ],
+                    [
+                        ~"examples/world-terrain"
+                    ]},
+                ~". Servers that need to reason about terrain can read it back via ",
                 {code, [], [~"asobi_terrain_store:get_chunk/2"]},
-                ~" when they need to reason about terrain."
+                ~"."
             ]},
             {h2, [], [~"World config"]},
             {p, [], [
