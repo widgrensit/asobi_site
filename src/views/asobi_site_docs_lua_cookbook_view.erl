@@ -44,7 +44,7 @@ end
             recipe(
                 ~"Reject an input with an error echo",
                 ~"""
-function game.handle_input(player_id, input, state)
+function handle_input(player_id, input, state)
     if input.action == "buy" and not can_afford(player_id, input.item, state) then
         game.send(player_id, { kind = "error", code = "too_poor", item = input.item })
         return state
@@ -59,13 +59,13 @@ end
                 ~"Per-player scoped persistence",
                 ~"""
 -- save on leave, restore on join
-function game.join(player_id, state)
+function join(player_id, state)
     local saved = game.storage.player_get(player_id, "inv", "backpack") or {}
     state.inventories[player_id] = saved
     return state
 end
 
-function game.leave(player_id, state)
+function leave(player_id, state)
     game.storage.player_set(player_id,
         "inv", "backpack",
         state.inventories[player_id] or {})
@@ -79,7 +79,7 @@ end
                 ~"Ticking AI without blowing the budget",
                 ~"""
 -- Only step a fraction of NPCs per tick to spread work.
-function game.tick(state)
+function tick(state)
     state.cursor = (state.cursor or 0) + 1
     local total = #state.npcs
     local batch = math.max(1, math.floor(total / 10))  -- 10% per tick
@@ -153,7 +153,7 @@ game.broadcast("boss_spawned", {
                 ~"""
 -- NOTE: Lua phases only fire in WORLD mode (large session games).
 -- Lua match games should model phases inside tick(state) instead.
-function game.phases(_config)
+function phases(_config)
     return {
         { name = "lobby",   duration = 30000 },
         { name = "active",  duration = 300000 },
@@ -161,7 +161,7 @@ function game.phases(_config)
     }
 end
 
-function game.on_phase_started(name, state)
+function on_phase_started(name, state)
     if name == "active" then
         state.active_at = os.time()
         game.broadcast("go", {})
@@ -177,7 +177,7 @@ end
                 ~"In-match vote with short-circuit on majority",
                 ~"""
 -- Offer a boon pick every time a wave clears.
-function game.vote_requested(state)
+function vote_requested(state)
     if state.wave_cleared then
         state.wave_cleared = false
         return {
@@ -191,7 +191,7 @@ function game.vote_requested(state)
     return nil
 end
 
-function game.vote_resolved(_template, result, state)
+function vote_resolved(_template, result, state)
     apply_boon(result.winner, state)
     game.broadcast("boon_picked", { boon = result.winner })
     return state
@@ -203,7 +203,7 @@ end
                 ~"Reconnect-friendly ephemeral state",
                 ~"""
 -- Keep minimal authoritative data in state; derive view via get_state.
-function game.get_state(player_id, state)
+function get_state(player_id, state)
     -- On reconnect the client gets this fresh snapshot.
     return {
         you     = state.players[player_id] or {},

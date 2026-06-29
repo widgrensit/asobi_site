@@ -136,24 +136,22 @@ post_tick(_TickN, State) ->
             code(
                 ~"lua",
                 ~"""
-local game = {}
-
-function game.init(_cfg)
+function init(_cfg)
     return { dungeon_level = 1, boss_hp = 10000 }
 end
 
-function game.spawn_position(_player_id, _state)
+function spawn_position(_player_id, _state)
     return { x = 50 + math.random() * 100, y = 50 + math.random() * 100 }
 end
 
-function game.zone_tick(entities, zone_state)
+function zone_tick(entities, zone_state)
     for id, e in pairs(entities) do
         if e.type == "goblin" then ai_wander(e) end
     end
     return entities, zone_state
 end
 
-function game.handle_input(player_id, input, entities)
+function handle_input(player_id, input, entities)
     if input.action == "move" then
         entities[player_id].x = input.x
         entities[player_id].y = input.y
@@ -161,7 +159,7 @@ function game.handle_input(player_id, input, entities)
     return entities
 end
 
-function game.post_tick(tick_n, state)
+function post_tick(tick_n, state)
     -- Signal vote/finish by setting reserved keys on state and returning it.
     if state.boss_hp <= 0 then
         state._vote = {
@@ -317,17 +315,26 @@ end
                 {code, [], [~"asobi_terrain_store:get_chunk/2"]},
                 ~" when they need to reason about terrain."
             ]},
+            {h2, [], [~"World config"]},
+            {p, [], [
+                ~"World options are not application env. In Lua they are top-level globals in your world script; in Erlang the same keys go in the ",
+                {code, [], [~"Config"]},
+                ~" map passed to ",
+                {code, [], [~"asobi_world_lobby:create_world/1"]},
+                ~". Terrain is wired through the ",
+                {code, [], [~"terrain_provider/1"]},
+                ~" game-module callback, not a static key."
+            ]},
             code(
-                ~"erlang",
+                ~"lua",
                 ~"""
-{asobi, [
-    {world, #{
-        zone_size       => 256,      %% units per side
-        lazy_zones      => true,
-        zone_idle_ms    => 60000,
-        terrain_provider => my_terrain_module
-    }}
-]}
+game_type         = "world"
+zone_size         = 256      -- world units per zone (default 200)
+grid_size         = 10       -- zones per dimension (default 10)
+view_radius       = 1        -- zone radius a player subscribes to (default 1)
+tick_rate         = 50       -- ms per tick (default 50 = 20 Hz)
+zone_idle_timeout = 60000    -- ms before an idle zone is reaped (default 30000)
+empty_grace_ms    = 60000    -- ms to keep an empty world alive (default 60000)
 """
             ),
 

@@ -57,7 +57,7 @@ render(Bindings) ->
             asobi_site_tabbed_code:lua_erlang(
                 ~"concepts-tick",
                 ~"""
-function game.tick(state)
+function tick(state)
     state.elapsed = state.elapsed + 0.1
     if state.elapsed >= 60 then
         state._finished = true
@@ -170,7 +170,7 @@ local nearby = game.spatial.query_radius(g.x, g.y, 50)
                 ~"concepts-phases",
                 ~"""
 -- Lua: world mode only
-function game.phases(_config)
+function phases(_config)
     return {
         { name = "lobby",   duration = 30000 },
         { name = "active",  duration = 300000 },

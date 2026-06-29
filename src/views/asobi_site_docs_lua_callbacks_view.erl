@@ -83,7 +83,7 @@ render(Bindings) ->
             ]},
             callback_pair(
                 ~"""
-function game.init(config)
+function init(config)
     return {
         board    = { 0, 0, 0, 0, 0, 0, 0, 0, 0 },
         turn     = "x",
@@ -116,7 +116,7 @@ init(_Config) ->
             ]},
             callback_pair(
                 ~"""
-function game.join(player_id, state)
+function join(player_id, state)
     if state.started then
         return nil, "match_in_progress"
     end
@@ -145,7 +145,7 @@ join(PlayerId, #{players := P} = State) ->
             ]},
             callback_pair(
                 ~"""
-function game.leave(player_id, state)
+function leave(player_id, state)
     state.players[player_id] = nil
     if state.started then
         state._finished = true
@@ -171,7 +171,7 @@ leave(PlayerId, #{players := P, started := Started} = State) ->
             ]},
             callback_pair(
                 ~"""
-function game.handle_input(player_id, input, state)
+function handle_input(player_id, input, state)
     local mark = state.players[player_id]
     if not mark or mark ~= state.turn then return state end
     local cell = tonumber(input.cell)
@@ -212,7 +212,7 @@ handle_input(PlayerId, #{<<"cell">> := Cell},
             ]},
             callback_pair(
                 ~"""
-function game.tick(state)
+function tick(state)
     local w = winner(state.board)
     if w then
         state._finished = true
@@ -243,7 +243,7 @@ tick(#{board := Board} = State) ->
             ]},
             callback_pair(
                 ~"""
-function game.get_state(player_id, state)
+function get_state(player_id, state)
     return {
         board    = state.board,
         turn     = state.turn,
@@ -298,7 +298,7 @@ on_phase_ended(_Name, State) -> {ok, State}.
             ]},
             callback_pair(
                 ~"""
-function game.vote_requested(state)
+function vote_requested(state)
     if state.offer_boons then
         return {
             template  = "boon_pick",
@@ -309,7 +309,7 @@ function game.vote_requested(state)
     return nil
 end
 
-function game.vote_resolved(_template, result, state)
+function vote_resolved(_template, result, state)
     state.picked_boon = result.winner
     return state
 end
@@ -329,6 +329,69 @@ vote_resolved(_Template, #{winner := W}, State) ->
     {ok, State#{picked_boon => W}}.
 """
             ),
+
+            {h2, [], [~"World-mode callbacks"]},
+            {p, [], [
+                ~"A game with ",
+                {code, [], [~"game_type = \"world\""]},
+                ~" runs on the world server and implements a different callback set. ",
+                {code, [], [~"init"]},
+                ~", ",
+                {code, [], [~"join"]},
+                ~", ",
+                {code, [], [~"leave"]},
+                ~", ",
+                {code, [], [~"get_state"]},
+                ~", ",
+                {code, [], [~"phases"]},
+                ~" and the ",
+                {code, [], [~"on_phase_*"]},
+                ~" hooks carry over; the rest are world-specific. Worked examples live on the ",
+                {a, [{href, ~"/docs/world-server"}, az_navigate], [~"world server"]},
+                ~" page."
+            ]},
+            {ul, [], [
+                {li, [], [
+                    {code, [], [~"generate_world(seed, config)"]},
+                    ~" - return the initial per-zone state map, keyed by ",
+                    {code, [], [~"\"x,y\""]},
+                    ~"."
+                ]},
+                {li, [], [
+                    {code, [], [~"spawn_templates(config)"]},
+                    ~" - declare the entity templates ",
+                    {code, [], [~"game.zone.spawn"]},
+                    ~" draws from."
+                ]},
+                {li, [], [
+                    {code, [], [~"spawn_position(player_id, state)"]},
+                    ~" - where a joining player enters the world."
+                ]},
+                {li, [], [
+                    {code, [], [~"zone_tick(entities, zone_state)"]},
+                    ~" - per-zone simulation step; return ",
+                    {code, [], [~"entities, zone_state"]},
+                    ~". Replaces ",
+                    {code, [], [~"tick"]},
+                    ~"."
+                ]},
+                {li, [], [
+                    {code, [], [~"handle_input(player_id, input, entities)"]},
+                    ~" - apply a player action; return the entities table."
+                ]},
+                {li, [], [
+                    {code, [], [~"post_tick(tick_n, state)"]},
+                    ~" - world-level step after all zones tick (boss phases, votes, finish)."
+                ]},
+                {li, [], [
+                    {code, [], [~"on_world_recovered(snapshots, state)"]},
+                    ~", ",
+                    {code, [], [~"on_zone_loaded(cx, cy, state)"]},
+                    ~", ",
+                    {code, [], [~"on_zone_unloaded(cx, cy, state)"]},
+                    ~" - lazy-zone and snapshot lifecycle hooks."
+                ]}
+            ]},
 
             {h2, [], [~"Pattern: minimum viable game"]},
             {p, [], [

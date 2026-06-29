@@ -119,8 +119,8 @@ render(Bindings) ->
                         {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"French-sovereign by default"]},
                             {p, [], [
-                                ~"Hosted on Clever Cloud (Nantes, France). ",
-                                ~"SecNumCloud partner. Explicit CLOUD Act protection in contract."
+                                ~"Hosted on Scaleway, a French cloud provider, in EU regions. ",
+                                ~"Explicit CLOUD Act protection in contract."
                             ]}
                         ]},
                         {'div', [{class, ~"feature-card"}], [

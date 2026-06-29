@@ -78,9 +78,7 @@ render(Bindings) ->
                     {code, [], [~"print"]},
                     ~", ",
                     {code, [], [~"eprint"]},
-                    ~" \x{2014} Luerl's defaults bypass the structured logger and write straight to BEAM stdout. Scripts that need to log should go through the asobi-side ",
-                    {code, [], [~"game.log"]},
-                    ~" API."
+                    ~" \x{2014} Luerl's defaults bypass the structured logger and write straight to BEAM stdout. There is currently no in-script logging API; surface diagnostics through game state or broadcast events instead."
                 ]}
             ]},
             {p, [], [

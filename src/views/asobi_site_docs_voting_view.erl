@@ -49,7 +49,7 @@ render(Bindings) ->
                 ~"voting-start",
                 ~"""
 -- Lua: automatic
-function game.vote_requested(state)
+function vote_requested(state)
     if state.phase == "vote_pending" then
         return {
             template    = "path_choice",
@@ -231,7 +231,7 @@ asobi_match_sup:start_match(#{
             asobi_site_tabbed_code:lua_erlang(
                 ~"voting-resolved",
                 ~"""
-function game.vote_resolved(template, result, state)
+function vote_resolved(template, result, state)
     if template == "path_choice" then
         state.current_path = result.winner
     elseif template == "item_pick" then

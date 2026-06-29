@@ -293,19 +293,26 @@ end
 
             api(
                 ~"game.zone.spawn(template_id, x, y, overrides?)",
-                ~"Spawn an entity from a template at (x, y). Overrides merge onto the template.",
+                ~"Spawn an entity from a template at (x, y); overrides shallow-merge onto the template. The spawn is async and returns true, not a handle. The entity gets a server-assigned id that appears in the entities table on the next zone_tick.",
                 ~"lua",
                 ~"""
-local goblin = game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
+game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
 """
             ),
 
             api(
                 ~"game.zone.despawn(entity_id)",
-                ~"Remove an entity from the zone.",
+                ~"Remove an entity from the zone by id. Ids come from the entities table passed to zone_tick (keyed by entity_id), not from the spawn call.",
                 ~"lua",
                 ~"""
-game.zone.despawn(goblin.id)
+function zone_tick(entities, zone_state)
+    for id, e in pairs(entities) do
+        if e.type == "goblin_warrior" and e.hp <= 0 then
+            game.zone.despawn(id)
+        end
+    end
+    return entities, zone_state
+end
 """
             ),
 
