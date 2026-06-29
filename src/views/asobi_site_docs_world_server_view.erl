@@ -180,6 +180,119 @@ end
 """
             ),
 
+            {h2, [], [~"Defining spawn templates"]},
+            {p, [], [
+                ~"A zone spawns entities from named ",
+                {strong, [], [~"templates"]},
+                ~". Declare them with the optional ",
+                {code, [], [~"spawn_templates/1"]},
+                ~" callback, which returns a registry keyed by template id. Each template carries a ",
+                {code, [], [~"type"]},
+                ~", a ",
+                {code, [], [~"base_state"]},
+                ~" map copied onto every spawned entity, and an optional ",
+                {code, [], [~"respawn"]},
+                ~" rule."
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+spawn_templates(_Config) ->
+    #{
+        <<"goblin">> => #{
+            template_id => <<"goblin">>,
+            type        => <<"npc">>,
+            base_state  => #{health => 100, ai => <<"patrol">>},
+            respawn     => #{strategy => timer, delay => 5000, jitter => 1000}
+        },
+        <<"ore">> => #{
+            template_id => <<"ore">>,
+            type        => <<"resource">>,
+            base_state  => #{quantity => 5},
+            respawn     => #{strategy => timer, delay => 3000, max_respawns => 2}
+        },
+        <<"chest">> => #{
+            template_id => <<"chest">>,
+            type        => <<"object">>,
+            base_state  => #{loot => <<"common">>}
+        }
+    }.
+"""
+            ),
+            {p, [], [
+                ~"In Lua the table key is the template id and ",
+                {code, [], [~"strategy"]},
+                ~" is always ",
+                {code, [], [~"timer"]},
+                ~", so you omit both:"
+            ]},
+            code(
+                ~"lua",
+                ~"""
+function spawn_templates(config)
+    return {
+        goblin = { type = "npc",      base_state = { health = 100, ai = "patrol" }, respawn = { delay = 5000, jitter = 1000 } },
+        ore    = { type = "resource", base_state = { quantity = 5 },                respawn = { delay = 3000, max_respawns = 2 } },
+        chest  = { type = "object",   base_state = { loot = "common" } },
+    }
+end
+"""
+            ),
+            {p, [], [
+                ~"Spawn from any zone callback by template id. A fourth argument shallow-merges overrides onto ",
+                {code, [], [~"base_state"]},
+                ~":"
+            ]},
+            code(
+                ~"lua",
+                ~"""
+function zone_tick(entities, zone_state)
+    if not zone_state.seeded then
+        game.zone.spawn("goblin", 500, 500)
+        game.zone.spawn("ore", 700, 650)
+        game.zone.spawn("chest", 620, 600, { loot = "rare" })
+        zone_state.seeded = true
+    end
+    return entities, zone_state
+end
+"""
+            ),
+            {ul, [], [
+                {li, [], [
+                    {code, [], [~"type"]},
+                    ~" - entity category string, echoed in delta ",
+                    {code, [], [~"a"]},
+                    ~" (added) updates."
+                ]},
+                {li, [], [
+                    {code, [], [~"base_state"]},
+                    ~" - fields copied onto each spawned entity."
+                ]},
+                {li, [], [
+                    {code, [], [~"respawn"]},
+                    ~" - omit for one-shot. With it, a removed entity respawns after ",
+                    {code, [], [~"delay"]},
+                    ~" ms (plus up to ",
+                    {code, [], [~"jitter"]},
+                    ~"), capped by ",
+                    {code, [], [~"max_respawns"]},
+                    ~" (default unlimited)."
+                ]},
+                {li, [], [
+                    {code, [], [~"persistent"]},
+                    ~" - Lua default ",
+                    {code, [], [~"true"]},
+                    ~"; set ",
+                    {code, [], [~"false"]},
+                    ~" to keep an entity out of zone snapshots."
+                ]}
+            ]},
+            {p, [], [
+                ~"A complete runnable world lives in ",
+                {code, [], [~"examples/world-spawns"]},
+                ~" in the asobi repo."
+            ]},
+
             {h2, [], [~"Large worlds"]},
             {p, [], [
                 ~"For 10K+ zones (128K\x{00D7}128K tile maps, persistent planets), zones lazy-spawn on first access and reap when empty. ",
