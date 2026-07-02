@@ -15,6 +15,7 @@ render(Bindings) ->
         {~"/docs", ~"Docs", {active, docs}, true},
         {~"/blog", ~"Blog", {active, blog}, true},
         {~"/cloud", ~"Cloud", {active, cloud}, true},
+        {~"https://console.asobi.dev", ~"Sign in", {fixed, ~"nav-link-btn"}, false},
         {~"https://discord.gg/vYSfYYyXpu", ~"Discord", {fixed, ~"nav-link-btn"}, false},
         {~"https://github.com/widgrensit/asobi", ~"GitHub", {fixed, ~"nav-github"}, false}
     ],

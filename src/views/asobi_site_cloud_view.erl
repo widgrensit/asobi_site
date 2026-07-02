@@ -11,53 +11,10 @@ mount(Bindings) ->
 render(Bindings) ->
     ?html(
         {'div', [{id, ?get(id)}], [
-            %% Post-submit success banner (toggled by JS below when ?submitted=1).
-            {'div',
-                [
-                    {id, ~"beta-success-banner"},
-                    {class, ~"success-banner"},
-                    {style, ~"display:none"},
-                    {role, ~"status"},
-                    {'aria-live', ~"polite"}
-                ],
-                [
-                    {'div', [{class, ~"success-banner-inner"}], [
-                        {span, [{class, ~"success-banner-icon"}], [~"\x{2713}"]},
-                        {'div', [{class, ~"success-banner-text"}], [
-                            {strong, [], [~"Thanks \x{2014} we've got your request."]},
-                            {span, [], [
-                                ~" We'll reply personally within a day. ",
-                                ~"In the meantime, ",
-                                {a, [{href, ~"https://github.com/widgrensit/asobi"}], [
-                                    ~"star the repo"
-                                ]},
-                                ~" or ",
-                                {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"join Discord"]},
-                                ~"."
-                            ]}
-                        ]},
-                        {button,
-                            [
-                                {type, ~"button"},
-                                {class, ~"success-banner-close"},
-                                {'aria-label', ~"Dismiss"},
-                                {onclick,
-                                    ~"document.getElementById('beta-success-banner').style.display='none'"}
-                            ],
-                            [~"\x{00D7}"]}
-                    ]}
-                ]},
-            {script, [], [
-                ~"if (new URLSearchParams(window.location.search).has('submitted')) {",
-                ~"var b = document.getElementById('beta-success-banner');",
-                ~"if (b) b.style.display = 'block';",
-                ~"}"
-            ]},
-
             %% Hero
             {section, [{class, ~"hero"}], [
                 {'div', [{class, ~"hero-inner"}], [
-                    {span, [{class, ~"hero-badge"}], [~"Closed beta \x{2014} Q3 2026"]},
+                    {span, [{class, ~"hero-badge"}], [~"Live \x{00B7} console.asobi.dev"]},
                     {p, [{class, ~"hero-eyebrow"}], [
                         {span, [{class, ~"marker"}], [~"\x{00A7} Cloud"]},
                         ~" \x{2002}EU-sovereign managed Asobi"
@@ -72,7 +29,7 @@ render(Bindings) ->
                     {p, [{class, ~"hero-subtitle"}], [
                         ~"Managed Asobi, hosted in the EU. ",
                         ~"Open-source core so you can self-host the day we disappoint you. ",
-                        ~"From \x{20AC}9/month."
+                        ~"Create your environment and deploy in minutes."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
                         ~"Hathora shut down on 5 May 2026. Stormgate, Splitgate 2 and ",
@@ -80,8 +37,8 @@ render(Bindings) ->
                         ~"If your backend vanishes tomorrow, what is your plan B?"
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
-                        {a, [{href, ~"https://tally.so/r/0QJ44Z"}, {class, ~"btn btn-primary"}], [
-                            ~"Request beta access",
+                        {a, [{href, ~"https://console.asobi.dev"}, {class, ~"btn btn-primary"}], [
+                            ~"Create your environment",
                             {span, [{class, ~"arrow"}], [~" \x{2192}"]}
                         ]},
                         {a,
@@ -134,9 +91,10 @@ render(Bindings) ->
                         {'div', [{class, ~"feature-card"}], [
                             {h3, [], [~"Built for indies, priced for indies"]},
                             {p, [], [
-                                ~"From \x{20AC}9/month for Indie (10k MAU, 200 CCU). ",
-                                ~"\x{20AC}29 for Studio. \x{20AC}79 for Pro. ",
-                                ~"No per-seat surprises."
+                                ~"Flat per-environment pricing, no per-seat surprises. ",
+                                ~"See current plans on ",
+                                {a, [{href, ~"https://console.asobi.dev"}], [~"the console"]},
+                                ~"."
                             ]}
                         ]},
                         {'div', [{class, ~"feature-card"}], [
@@ -199,30 +157,32 @@ render(Bindings) ->
                 ]}
             ]},
 
-            %% Beta signup
+            %% Get started
             {section, [{id, ~"beta"}, {class, ~"section section-dark"}], [
                 {'div', [{class, ~"section-inner"}], [
-                    {p, [{class, ~"section-marker"}], [~"03 / Access"]},
+                    {p, [{class, ~"section-marker"}], [~"03 / Start"]},
                     {h2, [{class, ~"section-title"}], [
-                        ~"Want to ",
-                        {em, [], [~"try it"]},
+                        ~"Ready to ",
+                        {em, [], [~"ship"]},
                         ~"?"
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
-                        ~"We\x{2019}re onboarding our first studios in Q3 2026. ",
-                        ~"Leave your email and tell us which engine you use. ",
-                        ~"We reply personally within a day."
+                        ~"Sign up on the console, create an environment, and deploy your Lua ",
+                        ~"with the ",
+                        {code, [], [~"asobi"]},
+                        ~" CLI. New to Asobi? The quick start walks you through it end to end."
                     ]},
                     {'div', [{class, ~"beta-cta"}], [
                         {a,
                             [
-                                {href, ~"https://tally.so/r/0QJ44Z"},
+                                {href, ~"https://console.asobi.dev"},
                                 {class, ~"btn btn-primary btn-lg"}
                             ],
-                            [~"Request beta access \x{2192}"]},
+                            [~"Create your environment \x{2192}"]},
                         {p, [{class, ~"beta-cta-note"}], [
-                            ~"Takes under a minute. No credit card, no sales call. ",
-                            ~"We reply within a day."
+                            ~"Then follow the ",
+                            {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"quick start"]},
+                            ~" to deploy your first game."
                         ]}
                     ]}
                 ]}

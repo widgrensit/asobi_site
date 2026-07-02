@@ -9,7 +9,6 @@ mount(Bindings) ->
 
 -spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
-    DepSnippet = ~"{asobi, \"~> 0.1\"}",
     UnrealSnippet = asobi_site_snippets:get(hero_connect, unreal),
     UnitySnippet = asobi_site_snippets:get(hero_connect, unity),
     GodotSnippet = asobi_site_snippets:get(hero_connect, godot),
@@ -57,16 +56,17 @@ render(Bindings) ->
                         ~"and help shape the future of game backends on the BEAM."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
-                        {a, [{href, ~"#get-started"}, {class, ~"btn btn-primary"}], [
-                            ~"Get started",
-                            {span, [{class, ~"arrow"}], [~" \x{2192}"]}
-                        ]},
+                        {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}, az_navigate],
+                            [
+                                ~"Get started",
+                                {span, [{class, ~"arrow"}], [~" \x{2192}"]}
+                            ]},
                         {a,
                             [
-                                {href, ~"https://github.com/widgrensit/asobi"},
+                                {href, ~"https://console.asobi.dev"},
                                 {class, ~"btn btn-secondary"}
                             ],
-                            [~"View on GitHub"]}
+                            [~"Sign in to Console"]}
                     ]}
                 ]}
             ]},
@@ -595,49 +595,46 @@ render(Bindings) ->
                         {em, [], [~"minutes"]}
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
-                        ~"Four commands between you and a running multiplayer game."
+                        ~"Sign up on the console, then four commands to a live game."
                     ]},
                     {'div', [{class, ~"steps"}], [
                         {'div', [{class, ~"step"}], [
                             {'div', [{class, ~"step-number"}], [~"1"]},
                             {'div', [{class, ~"step-content"}], [
-                                {h3, [], [~"Create a new project"]},
-                                {p, [], [{code, [], [~"rebar3 nova new my_game fullstack"]}]}
+                                {h3, [], [~"Sign up on the console"]},
+                                {p, [], [{code, [], [~"console.asobi.dev"]}]}
                             ]}
                         ]},
                         {'div', [{class, ~"step"}], [
                             {'div', [{class, ~"step-number"}], [~"2"]},
                             {'div', [{class, ~"step-content"}], [
-                                {h3, [], [~"Add asobi as a dependency"]},
-                                {p, [], [{code, [], [DepSnippet]}]}
+                                {h3, [], [~"Authenticate the CLI"]},
+                                {p, [], [{code, [], [~"asobi login"]}]}
                             ]}
                         ]},
                         {'div', [{class, ~"step"}], [
                             {'div', [{class, ~"step-number"}], [~"3"]},
                             {'div', [{class, ~"step-content"}], [
-                                {h3, [], [~"Implement your match logic"]},
-                                {p, [], [
-                                    ~"Define a module with the ",
-                                    {code, [], [~"asobi_match"]},
-                                    ~" behaviour"
-                                ]}
+                                {h3, [], [~"Create an environment"]},
+                                {p, [], [{code, [], [~"asobi create prod"]}]}
                             ]}
                         ]},
                         {'div', [{class, ~"step"}], [
                             {'div', [{class, ~"step-number"}], [~"4"]},
                             {'div', [{class, ~"step-content"}], [
-                                {h3, [], [~"Run it"]},
-                                {p, [], [{code, [], [~"rebar3 nova serve"]}]}
+                                {h3, [], [~"Deploy your Lua"]},
+                                {p, [], [{code, [], [~"asobi deploy prod game/"]}]}
                             ]}
                         ]}
                     ]},
                     {'div', [{class, ~"steps-cta"}], [
                         {a,
                             [
-                                {href, ~"https://github.com/widgrensit/asobi"},
-                                {class, ~"btn btn-primary"}
+                                {href, ~"/docs/quickstart"},
+                                {class, ~"btn btn-primary"},
+                                az_navigate
                             ],
-                            [~"Read the Docs"]}
+                            [~"Read the docs"]}
                     ]}
                 ]}
             ]},

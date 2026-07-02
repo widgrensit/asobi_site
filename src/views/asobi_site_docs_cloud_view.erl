@@ -20,22 +20,34 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Cloud hosting"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Managed Asobi is in private beta. Join the waitlist for early access, pricing, and the hosting-specific docs that will live here."
+                ~"Managed Asobi is live at ",
+                {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
+                ~". Sign up, create an environment, and deploy your Lua with the ",
+                {code, [], [~"asobi"]},
+                ~" CLI. EU-hosted, open-source core so you can self-host any time."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
-                    {strong, [], [~"Not ready yet. "]},
-                    ~"These docs cover deployment, environments, scaling, and billing \x{2014} all of which will land alongside the beta."
+                    {strong, [], [~"The golden path. "]},
+                    ~"Sign in on the console, run ",
+                    {code, [], [~"asobi login"]},
+                    ~", then ",
+                    {code, [], [~"asobi create prod"]},
+                    ~" and ",
+                    {code, [], [~"asobi deploy prod game/"]},
+                    ~". See the ",
+                    {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"quick start"]},
+                    ~" for the full walk-through."
                 ]}
             ]},
 
             {'div', [{class, ~"docs-cta-row"}], [
-                {a, [{href, ~"/cloud"}, {class, ~"btn btn-primary"}, az_navigate], [
-                    ~"Join the waitlist \x{2192}"
+                {a, [{href, ~"https://console.asobi.dev"}, {class, ~"btn btn-primary"}], [
+                    ~"Open the console \x{2192}"
                 ]},
                 {a, [{href, ~"/docs/self-host"}, {class, ~"btn btn-secondary"}, az_navigate], [
-                    ~"Self-host in the meantime"
+                    ~"Or self-host"
                 ]}
             ]}
         ]}
