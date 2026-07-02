@@ -33,13 +33,19 @@ render(Bindings) ->
             {p, [], [
                 ~"Open ",
                 {strong, [], [~"game.project \x{2192} Project \x{2192} Dependencies"]},
-                ~" and add:"
+                ~" and add both the SDK (pinned to a release tag) and the WebSocket extension it needs:"
             ]},
             code(
-                ~"text", ~"https://github.com/widgrensit/asobi-defold/archive/refs/heads/main.zip"
+                ~"text",
+                ~"""
+https://github.com/widgrensit/asobi-defold/archive/refs/tags/v1.1.0.zip
+https://github.com/defold/extension-websocket/archive/refs/tags/4.2.2.zip
+"""
             ),
             {p, [], [
-                ~"Then ",
+                ~"Pin to a tag - ",
+                {code, [], [~"main"]},
+                ~" is unstable. Then ",
                 {strong, [], [~"Project \x{2192} Fetch Libraries"]},
                 ~". The SDK shows up as ",
                 {code, [], [~"asobi"]},
@@ -48,35 +54,55 @@ render(Bindings) ->
 
             {h2, [], [~"2. Bootstrap"]},
             {p, [], [
-                ~"Add a bootstrap script (",
+                ~"Register WebSocket callbacks from a ",
+                {code, [], [~".script"]},
+                ~" that lives for the whole app (a script in ",
+                {code, [], [~"main.collection"]},
+                ~"), not a ",
+                {code, [], [~"gui_script"]},
+                ~". Add ",
                 {code, [], [~"main/boot.script"]},
-                ~") and assign it to a game object in your main collection:"
+                ~" and assign it to a game object in your main collection:"
             ]},
             code(
                 ~"lua",
                 ~"""
 local asobi = require("asobi.client")
 
-local HOST = "localhost"
-local PORT = 8080
-
 function init(self)
-    self.client = asobi.new(HOST, PORT, false)  -- use_ssl = false
+    -- Local engine: host, port, use_ssl = false
+    self.client = asobi.create("localhost", 8080, false)
 end
 """
             ),
+            {p, [], [
+                {strong, [], [~"Connect to your hosted environment. "]},
+                ~"Deployed on ",
+                {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
+                ~"? Point the client at your environment over SSL on port 443:"
+            ]},
+            code(
+                ~"lua", ~"self.client = asobi.create(\"<env>.asobi.dev\", 443, true)"
+            ),
 
             {h2, [], [~"3. Authenticate"]},
+            {p, [], [
+                ~"The client is the first argument to every API call. ",
+                ~"The callback receives ",
+                {code, [], [~"(data, err)"]},
+                ~":"
+            ]},
             code(
                 ~"lua",
                 ~"""
-self.client.auth.register("player1", "secret123", "Player One", function(err, result)
-    if err then
-        print("auth failed: " .. err)
-        return
-    end
-    print("logged in as " .. self.client.player_id)
-end)
+self.client.auth.register(self.client, "player1", "secret123", nil,
+    function(data, err)
+        if err then
+            print("auth failed: " .. err)
+            return
+        end
+        print("logged in as " .. self.client.player_id)
+    end)
 """
             ),
             {p, [], [
@@ -86,23 +112,28 @@ end)
             ]},
 
             {h2, [], [~"4. Open the WebSocket and queue"]},
+            {p, [], [
+                ~"Realtime is a colon-style event emitter. Register handlers with ",
+                {code, [], [~"realtime:on(event, cb)"]},
+                ~", then connect:"
+            ]},
             code(
                 ~"lua",
                 ~"""
-self.client.realtime.on_connected(function()
+self.client.realtime:on("connected", function()
     print("ws connected")
-    self.client.realtime.add_to_matchmaker("arena")
+    self.client.realtime:add_to_matchmaker("arena")
 end)
 
-self.client.realtime.on_matched(function(data)
-    print("matched: " .. data.match_id)
+self.client.realtime:on("match_matched", function(payload)
+    self.client.realtime:join_match(payload.match_id)
 end)
 
-self.client.realtime.on_match_state(function(state)
-    -- update game world from server tick
+self.client.realtime:on("match_state", function(state)
+    -- update game world from the server's authoritative tick
 end)
 
-self.client.realtime.connect()
+self.client.realtime:connect()
 """
             ),
 
@@ -110,15 +141,13 @@ self.client.realtime.connect()
             code(
                 ~"lua",
                 ~"""
-self.client.realtime.send_match_input(json.encode({
-    action = "move", x = 1, y = 0
-}))
+self.client.realtime:send_match_input({action = "move", x = 1, y = 0})
 """
             ),
             {p, [], [
                 ~"Input is fire-and-forget. The next ",
-                {code, [], [~"on_match_state"]},
-                ~" callback will reflect the server's authoritative response."
+                {code, [], [~"match_state"]},
+                ~" event will reflect the server's authoritative response."
             ]},
 
             {h2, [], [~"What's next"]},

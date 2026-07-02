@@ -154,24 +154,63 @@ get_state(_PlayerId, #{hits := H}) -> #{hits => H}.
 
             {h3, [], [~"Option A \x{2014} Lua"]},
             {p, [], [
-                ~"Install the ",
+                ~"Build the ",
                 {code, [], [~"asobi"]},
-                ~" CLI once, then push the bundle to the engine:"
+                ~" CLI once (Go 1.26+):"
             ]},
             code(
                 ~"bash",
                 ~"""
-go install github.com/widgrensit/asobi-cli/cmd/asobi@latest
-
-asobi config set url http://localhost:8080
-asobi config set api_key dev
-asobi deploy ./game
+git clone https://github.com/widgrensit/asobi-cli
+cd asobi-cli
+go build -o bin/asobi ./cmd/asobi
+ln -s $(pwd)/bin/asobi ~/bin/asobi
 """
             ),
             {p, [], [
-                ~"The engine hot-loads your Lua. No restart, no dropped connections. You'll see ",
-                {code, [], [~"\"Deployed 1 script successfully\""]},
-                ~"."
+                ~"Point it at your local engine and deploy the ",
+                {code, [], [~"game/"]},
+                ~" directory to an environment named ",
+                {code, [], [~"prod"]},
+                ~":"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+asobi config set url http://localhost:8080
+asobi config set api_key ak_your_key_here
+asobi deploy prod ./game
+"""
+            ),
+            {p, [], [
+                ~"The ",
+                {code, [], [~"ak_..."]},
+                ~" key is the engine API key from your self-hosted setup. The engine hot-loads your Lua - no restart, no dropped connections."
+            ]},
+
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Hosted (asobi.dev). "]},
+                    ~"On managed Asobi you skip the manual config - sign in on ",
+                    {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
+                    ~", then authenticate the CLI over the browser device-code flow and deploy:"
+                ]}
+            ]},
+            code(
+                ~"bash",
+                ~"""
+asobi login
+asobi create prod
+asobi deploy prod game/
+"""
+            ),
+            {p, [], [
+                {code, [], [~"asobi login"]},
+                ~" opens the console to approve the session; ",
+                {code, [], [~"asobi create prod"]},
+                ~" provisions the environment; ",
+                {code, [], [~"asobi deploy prod game/"]},
+                ~" ships your Lua to it."
             ]},
 
             {h3, [], [~"Option B \x{2014} Erlang"]},
