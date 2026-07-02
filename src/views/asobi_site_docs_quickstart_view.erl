@@ -154,9 +154,18 @@ get_state(_PlayerId, #{hits := H}) -> #{hits => H}.
 
             {h3, [], [~"Option A \x{2014} Lua"]},
             {p, [], [
-                ~"Build the ",
+                ~"Install the ",
                 {code, [], [~"asobi"]},
-                ~" CLI once (Go 1.26+):"
+                ~" CLI with the one-line installer:"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+curl -fsSL https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.sh | sh
+"""
+            ),
+            {p, [], [
+                ~"Or build from source with Go 1.26+:"
             ]},
             code(
                 ~"bash",

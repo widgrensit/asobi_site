@@ -24,20 +24,20 @@ render(Bindings) ->
                 {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
                 ~". This walkthrough takes you from nothing to a running game: install the ",
                 {code, [], [~"asobi"]},
-                ~" CLI, log in, create an environment, deploy your Lua, and point your client at it. ",
+                ~" CLI, log in, pick your game, scaffold and edit your Lua, create an environment, deploy, and point your client at it. ",
                 ~"EU-hosted, and the core is open source, so you can self-host any time."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Before you start. "]},
-                    ~"You need a game's server-side Lua (at minimum a ",
-                    {code, [], [~"match.lua"]},
-                    ~") and a browser signed in to ",
+                    ~"You need a browser signed in to ",
                     {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
-                    ~". No Lua yet? Follow the ",
+                    ~". No server-side Lua yet? ",
+                    {code, [], [~"asobi init"]},
+                    ~" scaffolds a working starter match for you below, and the ",
                     {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"server Lua guide"]},
-                    ~" to write your first match module, then come back here to ship it."
+                    ~" explains the callbacks when you want to go deeper."
                 ]}
             ]},
 
@@ -45,7 +45,16 @@ render(Bindings) ->
             {p, [], [
                 ~"The ",
                 {code, [], [~"asobi"]},
-                ~" CLI is a single Go binary. Build it from source (Go 1.26+):"
+                ~" CLI is a single binary. Install the latest release with the one-line installer:"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+curl -fsSL https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.sh | sh
+"""
+            ),
+            {p, [], [
+                ~"Prefer to build from source? With Go 1.26+:"
             ]},
             code(
                 ~"bash",
@@ -79,7 +88,7 @@ asobi login
             {p, [], [
                 ~"It opens the approval page at ",
                 {code, [], [~"console.asobi.dev/dashboard/cli/login"]},
-                ~", where you are already signed in. Approve the session there and pick your tenant, game, and environment. ",
+                ~", where you are already signed in. Approve the session there and pick your tenant. ",
                 ~"The CLI stores its credentials in ",
                 {code, [], [~"~/.asobi/credentials.json"]},
                 ~" (owner-only permissions) and you are ready to go."
@@ -94,7 +103,62 @@ asobi whoami
 """
             ),
 
-            {h2, [], [~"3. Create an environment"]},
+            {h2, [], [~"3. Select your game"]},
+            {p, [], [
+                ~"Your CLI token is scoped to your tenant, which can hold several games, so you pick an active game the way ",
+                {code, [], [~"gcloud"]},
+                ~" picks a project. List the games in your tenant:"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+asobi games
+"""
+            ),
+            {p, [], [
+                ~"Each row shows a slug and a name. Set the active game by its slug (stored in ",
+                {code, [], [~"~/.asobi"]},
+                ~"):"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+asobi use my-game
+"""
+            ),
+            {p, [], [
+                ~"Every later command then targets that game. Override it for a single command with ",
+                {code, [], [~"--game <slug>"]},
+                ~", and check the active game any time with ",
+                {code, [], [~"asobi whoami"]},
+                ~"."
+            ]},
+
+            {h2, [], [~"4. Scaffold your game"]},
+            {p, [], [
+                ~"No Lua yet? ",
+                {code, [], [~"asobi init"]},
+                ~" writes a working starter game into a directory: a real minimal ",
+                {code, [], [~"lua/match.lua"]},
+                ~" plus a README to get you moving."
+            ]},
+            code(
+                ~"bash",
+                ~"""
+asobi init mygame
+"""
+            ),
+            {p, [], [
+                ~"Open ",
+                {code, [], [~"mygame/lua/match.lua"]},
+                ~" and edit the match callbacks to build your game. See the ",
+                {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"server Lua guide"]},
+                ~" and the ",
+                {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* API reference"]},
+                ~" for the full callback set."
+            ]},
+
+            {h2, [], [~"5. Create an environment"]},
             {p, [], [
                 ~"An environment is your own isolated engine with its own database. Create one named ",
                 {code, [], [~"prod"]},
@@ -126,23 +190,29 @@ asobi create prod --size s
 """
             ),
 
-            {h2, [], [~"4. Deploy your Lua"]},
+            {h2, [], [~"6. Deploy your Lua"]},
             {p, [], [
-                ~"Point the CLI at the directory holding your ",
-                {code, [], [~".lua"]},
-                ~" files and deploy them to the environment. The directory argument defaults to the current directory:"
+                ~"With the ",
+                {code, [], [~"asobi init"]},
+                ~" scaffold your Lua lives in ",
+                {code, [], [~"lua/"]},
+                ~", so deploy that directory to the environment. The deploy is scoped to the active game you set with ",
+                {code, [], [~"asobi use"]},
+                ~" (or a ",
+                {code, [], [~"--game"]},
+                ~" override):"
             ]},
             code(
                 ~"bash",
                 ~"""
-asobi deploy prod game/
+asobi deploy prod lua
 """
             ),
             {p, [], [
                 ~"The CLI zips your Lua, uploads it, and returns a generation number and a ",
                 {code, [], [~"sha256"]},
                 ~". The running engine hot-reloads the new code into the live game: no restart, no dropped connections. Edit a file, run ",
-                {code, [], [~"asobi deploy prod game/"]},
+                {code, [], [~"asobi deploy prod lua"]},
                 ~" again, and the next match picks up the change while in-flight matches finish on the old code."
             ]},
             {'div', [{class, ~"docs-callout"}], [
@@ -166,7 +236,7 @@ asobi deploy prod game/
                 ]}
             ]},
 
-            {h2, [], [~"5. Manage your environments"]},
+            {h2, [], [~"7. Manage your environments"]},
             {p, [], [
                 ~"List everything you have, with each environment's status and endpoint:"
             ]},
@@ -194,7 +264,7 @@ asobi delete prod
                 ~" checks the engine is reachable."
             ]},
 
-            {h2, [], [~"6. Connect your client"]},
+            {h2, [], [~"8. Connect your client"]},
             {p, [], [
                 ~"Once an environment is started it has a public endpoint of the form ",
                 {code, [], [~"<game-slug>-<env-name>.<tenant-slug>.asobi.dev"]},
