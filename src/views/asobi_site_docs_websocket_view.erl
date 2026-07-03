@@ -97,14 +97,6 @@ render(Bindings) ->
 """
             ),
             msg(
-                ~"match.started",
-                ~"server",
-                ~"Match has begun.",
-                ~"""
-{"type": "match.started", "payload": {"match_id": "...", "players": [...]}}
-"""
-            ),
-            msg(
                 ~"match.state",
                 ~"server",
                 ~"Broadcast state update (shape is game-specific, returned by your get_state callback).",
@@ -129,6 +121,14 @@ render(Bindings) ->
                 ~"""
 {"type": "matchmaker.add",
  "payload": {"mode": "arena", "properties": {"skill": 1200}}}
+"""
+            ),
+            msg(
+                ~"matchmaker.queued",
+                ~"server",
+                ~"Reply to matchmaker.add: you are in the queue.",
+                ~"""
+{"type": "matchmaker.queued", "payload": {"ticket_id": "..."}}
 """
             ),
             msg(
@@ -330,11 +330,11 @@ render(Bindings) ->
 """
             ),
             msg(
-                ~"presence.changed",
+                ~"presence.updated",
                 ~"server",
-                ~"A friend's presence changed.",
+                ~"Acknowledges your presence status change.",
                 ~"""
-{"type": "presence.changed", "payload": {"player_id": "...", "status": "online"}}
+{"type": "presence.updated", "payload": {"status": "online"}}
 """
             ),
             msg(

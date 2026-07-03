@@ -24,9 +24,9 @@ render(Bindings) ->
             {h1, [], [~"Tic-tac-toe tutorial"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Build a complete two-player tic-tac-toe game end to end: state, inputs, win detection, broadcasting, and reconnect. ",
-                ~"Every step is shown in ",
-                {strong, [], [~"both Lua and Erlang"]},
-                ~" so you can pick either path."
+                ~"Written in ",
+                {strong, [], [~"Lua"]},
+                ~"; each step has an Erlang tab too, if you prefer the native behaviour."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
@@ -319,25 +319,28 @@ leave(PlayerId, #{players := P} = State) ->
 
             {h2, [], [~"6. Deploy and play"]},
             {p, [], [
-                ~"Lua path \x{2014} drop the file in your bundle and deploy:"
+                ~"Your game is the Lua in the server's ",
+                {code, [], [~"/app/game"]},
+                ~". Self-hosted, restart to load it:"
             ]},
             code(
                 ~"bash",
                 ~"""
-asobi deploy ./game
+docker compose restart asobi
+"""
+            ),
+            {p, [], [~"On managed cloud, ship it to an environment instead:"]},
+            code(
+                ~"bash",
+                ~"""
+asobi deploy prod lua
 """
             ),
             {p, [], [
-                ~"Erlang path \x{2014} compile and restart your release (or use ",
+                ~"(Writing this in Erlang? Rebuild and restart the release, or ",
                 {code, [], [~"rebar3 shell"]},
-                ~" during development):"
+                ~" hot-loads it in development.)"
             ]},
-            code(
-                ~"bash",
-                ~"""
-rebar3 compile
-"""
-            ),
             {p, [], [
                 ~"Then start two WebSocket clients and matchmake into a game:"
             ]},

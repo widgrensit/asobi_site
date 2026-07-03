@@ -197,7 +197,8 @@ game.leaderboard.submit("arena:weekly", player_id, kills)
                 ~"lua",
                 ~"""
 for _, entry in ipairs(game.leaderboard.top("arena:weekly", 10)) do
-  print(entry.rank, entry.player_id, entry.score)
+  -- entry.rank, entry.player_id, entry.score
+  game.broadcast("leaderboard_row", entry)
 end
 """
             ),
