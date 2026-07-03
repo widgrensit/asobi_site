@@ -86,7 +86,7 @@ render(Bindings) ->
                                 ~"# Connect signals\n",
                                 ~"asobi.realtime.connected.connect(_on_connected)\n",
                                 ~"asobi.realtime.match_state.connect(_on_match_state)\n",
-                                ~"asobi.realtime.matchmaker_matched.connect(_on_matched)\n\n",
+                                ~"asobi.realtime.match_matched.connect(_on_matched)\n\n",
                                 ~"# Connect to server\n",
                                 ~"asobi.realtime.connect_to_server()\n\n",
                                 ~"func _on_connected():\n",
