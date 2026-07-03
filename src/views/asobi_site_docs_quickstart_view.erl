@@ -5,7 +5,7 @@
 
 -spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
-    {maps:merge(#{id => ~"docs-quickstart", title => ~"Quick start — Asobi docs"}, Bindings), #{}}.
+    {maps:merge(#{id => ~"docs-quickstart", title => ~"Quick start - Asobi docs"}, Bindings), #{}}.
 
 -spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
@@ -17,70 +17,45 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Quick start"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Install Asobi, run the engine, ship a tiny game, and connect a test client. ",
-                ~"About 15 minutes. Each step is shown in ",
-                {strong, [], [~"both Lua and Erlang"]},
-                ~" \x{2014} pick whichever your team writes."
+                ~"Write a tiny game in Lua, run the Asobi server, and connect a client. ",
+                ~"About 10 minutes. You host the server yourself, or run it on managed Asobi ",
+                ~"(cloud) - the game and the client code are identical either way."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
-                    {strong, [], [~"Which should I use? "]},
-                    ~"Lua is the fastest path to shipping (hot reload, no rebar3, smaller mental model). ",
-                    ~"Erlang gives you full behaviour-level control and better performance on CPU-heavy loops. ",
-                    ~"You can mix: a mostly-Lua game can drop into Erlang for one hot module."
+                    {strong, [], [~"Asobi games are written in Lua. "]},
+                    ~"The engine is an Erlang/OTP application underneath. If you would rather ",
+                    ~"embed it directly in your own OTP app instead of writing Lua, see the ",
+                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
+                    ~" - the rest of this page is the Lua path."
                 ]}
             ]},
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Prerequisites: "]},
-                    ~"Erlang/OTP 28+, rebar3, Docker (for Postgres), and a terminal."
+                    ~"Docker and a terminal. Nothing else - you do not need Erlang or rebar3 to write and run a Lua game."
                 ]}
             ]},
 
-            {h2, [], [~"1. Run the engine"]},
+            {h2, [], [~"1. Write the game"]},
             {p, [], [
-                ~"Start Postgres, then the Asobi engine. Same one-liner regardless of which language you write your game in \x{2014} the engine loads both."
-            ]},
-            code(
-                ~"bash",
-                ~"""
-docker run -d --name asobi-postgres \
-  -e POSTGRES_PASSWORD=postgres \
-  -p 5432:5432 postgres:17
-
-docker run --rm -it --name asobi \
-  -p 8080:8080 \
-  -e ASOBI_DB_HOST=host.docker.internal \
-  -e ERLANG_COOKIE=$(openssl rand -hex 32) \
-  ghcr.io/widgrensit/asobi_lua:latest
-"""
-            ),
-            {p, [], [
-                ~"You should see a ",
-                {code, [], [~"Nova application started"]},
-                ~" log line. Port 8080 is the WebSocket endpoint for clients; the HTTP API lives on the same port."
-            ]},
-
-            {h2, [], [~"2. Write the game"]},
-            {p, [], [
-                ~"We'll build a ",
+                ~"Your game is Lua that the server loads from a directory. Create ",
+                {code, [], [~"game/match.lua"]},
+                ~". We will build a ",
                 {em, [], [~"click counter"]},
                 ~": every player who sends a ",
                 {code, [], [~"click"]},
                 ~" input increments a shared counter, broadcast to everyone."
             ]},
-
-            {h3, [], [~"Option A \x{2014} Lua"]},
-            {p, [], [
-                ~"Create ",
-                {code, [], [~"game/hello.lua"]},
-                ~":"
-            ]},
             code(
                 ~"lua",
                 ~"""
--- game/hello.lua
+-- game/match.lua
+match_size = 2
+max_players = 2
+strategy = "fill"
+
 function init(config)
     return { hits = 0 }
 end
@@ -104,144 +79,108 @@ function tick(state) return state end
 function get_state(_player_id, state) return { hits = state.hits } end
 """
             ),
-
-            {h3, [], [~"Option B \x{2014} Erlang"]},
-            {p, [], [
-                ~"Create ",
-                {code, [], [~"src/hello_game.erl"]},
-                ~" in a rebar3 project that depends on ",
-                {code, [], [~"asobi"]},
-                ~":"
-            ]},
-            code(
-                ~"erlang",
-                ~"""
--module(hello_game).
--behaviour(asobi_match).
-
--export([init/1, join/2, leave/2, handle_input/3, tick/1, get_state/2]).
-
-init(_Config) ->
-    {ok, #{hits => 0}}.
-
-join(_PlayerId, State) ->
-    %% Per-player messages have no Erlang helper; project the welcome
-    %% into get_state/2 instead, or use Lua's game.send from a Lua match.
-    {ok, State}.
-
-leave(_PlayerId, State) ->
-    {ok, State}.
-
-handle_input(_PlayerId, #{action := <<"click">>}, #{hits := H} = State) ->
-    NewState = State#{hits := H + 1},
-    asobi_match_server:broadcast_event(self(), <<"update">>, #{hits => H + 1}),
-    {ok, NewState};
-handle_input(_PlayerId, _Input, State) ->
-    {ok, State}.
-
-tick(State) -> {ok, State}.
-
-get_state(_PlayerId, #{hits := H}) -> #{hits => H}.
-"""
-            ),
-            {p, [], [
-                ~"Both versions implement the same ",
-                {code, [], [~"asobi_match"]},
-                ~" contract. The Lua runtime translates each callback into the Erlang equivalent at the edge \x{2014} there's no semantic difference."
-            ]},
-
-            {h2, [], [~"3. Deploy the game"]},
-
-            {h3, [], [~"Option A \x{2014} Lua"]},
-            {p, [], [
-                ~"Install the ",
-                {code, [], [~"asobi"]},
-                ~" CLI with the one-line installer:"
-            ]},
-            code(
-                ~"bash",
-                ~"""
-curl -fsSL https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.sh | sh
-"""
-            ),
-            {p, [], [
-                ~"Or build from source with Go 1.26+:"
-            ]},
-            code(
-                ~"bash",
-                ~"""
-git clone https://github.com/widgrensit/asobi-cli
-cd asobi-cli
-go build -o bin/asobi ./cmd/asobi
-ln -s $(pwd)/bin/asobi ~/bin/asobi
-"""
-            ),
-            {p, [], [
-                ~"Point it at your local engine and deploy the ",
-                {code, [], [~"game/"]},
-                ~" directory to an environment named ",
-                {code, [], [~"prod"]},
-                ~":"
-            ]},
-            code(
-                ~"bash",
-                ~"""
-asobi config set url http://localhost:8080
-asobi config set api_key ak_your_key_here
-asobi deploy prod ./game
-"""
-            ),
             {p, [], [
                 ~"The ",
-                {code, [], [~"ak_..."]},
-                ~" key is the engine API key from your self-hosted setup. The engine hot-loads your Lua - no restart, no dropped connections."
+                {code, [], [~"match_size"]},
+                ~" / ",
+                {code, [], [~"max_players"]},
+                ~" / ",
+                {code, [], [~"strategy"]},
+                ~" globals configure matchmaking; the functions are the match lifecycle. Every ",
+                {code, [], [~"game.*"]},
+                ~" call is documented in the ",
+                {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
+                ~"."
             ]},
 
-            {'div', [{class, ~"docs-callout"}], [
-                {p, [], [
-                    {strong, [], [~"Hosted (asobi.dev). "]},
-                    ~"On managed Asobi you skip the manual config - sign in on ",
-                    {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
-                    ~", then authenticate the CLI over the browser device-code flow and deploy:"
-                ]}
+            {h2, [], [~"2. Run the server"]},
+            {p, [], [
+                ~"The server is the ",
+                {code, [], [~"asobi_lua"]},
+                ~" runtime image plus Postgres. It loads your Lua from ",
+                {code, [], [~"/app/game"]},
+                ~", so mount the ",
+                {code, [], [~"game/"]},
+                ~" directory you just created there. Save this as ",
+                {code, [], [~"docker-compose.yml"]},
+                ~" next to ",
+                {code, [], [~"game/"]},
+                ~":"
+            ]},
+            code(
+                ~"yaml",
+                ~"""
+services:
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: asobi
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      retries: 5
+
+  asobi:
+    image: ghcr.io/widgrensit/asobi_lua:latest
+    depends_on:
+      postgres:
+        condition: service_healthy
+    ports:
+      - "8084:8084"
+    volumes:
+      - ./game:/app/game:ro
+    environment:
+      ASOBI_PORT: "8084"
+      ASOBI_NODE_HOST: "127.0.0.1"
+      ERLANG_COOKIE: dev_cookie
+      ASOBI_DB_HOST: postgres
+      ASOBI_DB_NAME: asobi
+      ASOBI_DB_USER: postgres
+      ASOBI_DB_PASSWORD: postgres
+"""
+            ),
+            code(
+                ~"bash",
+                ~"""
+docker compose up -d
+"""
+            ),
+            {p, [], [
+                ~"The server is now on ",
+                {code, [], [~"http://localhost:8084"]},
+                ~" - the HTTP API and the WebSocket endpoint (",
+                {code, [], [~"/ws"]},
+                ~") share the port. Prefer a ready-made server to copy from? The ",
+                {a, [{href, ~"https://github.com/widgrensit/sdk_demo_backend"}], [
+                    ~"sdk_demo_backend"
+                ]},
+                ~" repo is exactly this compose with a sample game already in ",
+                {code, [], [~"./lua"]},
+                ~"."
+            ]},
+
+            {h2, [], [~"3. Connect a client"]},
+            {p, [], [
+                ~"Players authenticate with a username and password; the server returns an ",
+                {code, [], [~"access"]},
+                ~" / ",
+                {code, [], [~"refresh"]},
+                ~" token pair. There is no API key on the client. Register one over REST:"
             ]},
             code(
                 ~"bash",
                 ~"""
-asobi login
-asobi create prod
-asobi deploy prod game/
+curl -sX POST http://localhost:8084/api/v1/auth/register \
+  -H 'content-type: application/json' \
+  -d '{"username":"player1","password":"secret123"}'
+# => {"player_id":"...","access_token":"...","refresh_token":"..."}
 """
             ),
             {p, [], [
-                {code, [], [~"asobi login"]},
-                ~" opens the console to approve the session; ",
-                {code, [], [~"asobi create prod"]},
-                ~" provisions the environment; ",
-                {code, [], [~"asobi deploy prod game/"]},
-                ~" ships your Lua to it."
-            ]},
-
-            {h3, [], [~"Option B \x{2014} Erlang"]},
-            {p, [], [
-                ~"Erlang game modules rebuild and hot-load from ",
-                {code, [], [~"rebar3 shell"]},
-                ~" during development; for releases, rebuild and restart. From your project root:"
-            ]},
-            code(
-                ~"bash",
-                ~"""
-rebar3 compile
-# from a running rebar3 shell: r3:compile() (or l(hello_game) to reload)
-"""
-            ),
-            {p, [], [
-                ~"In-flight matches keep running on the old module version; new matches pick up the new one. Same guarantee as the Lua path."
-            ]},
-
-            {h2, [], [~"4. Connect a client"]},
-            {p, [], [
-                ~"Any WebSocket client works. Quick test with ",
+                ~"An SDK does this for you and attaches the token to every REST and WebSocket call, refreshing it automatically. For a raw test, connect with the ",
+                {code, [], [~"access_token"]},
+                ~" using ",
                 {code, [], [~"wscat"]},
                 ~":"
             ]},
@@ -249,21 +188,18 @@ rebar3 compile
                 ~"bash",
                 ~"""
 npm install -g wscat
-wscat -c ws://localhost:8080/ws
-> {"type":"session.connect","payload":{"token":"dev-token"}}
-> {"type":"matchmaker.add","payload":{"mode":"hello"}}
+wscat -c ws://localhost:8084/ws
+> {"type":"session.connect","payload":{"token":"<access_token>"}}
+> {"type":"matchmaker.add","payload":{"mode":"match"}}
 # server replies with matchmaker.matched { match_id: "<id>" }
 > {"type":"match.join","payload":{"match_id":"<id>"}}
 > {"type":"match.input","payload":{"action":"click"}}
 """
             ),
             {p, [], [
-                ~"You'll see ",
+                ~"You will see ",
                 {code, [], [~"{\"type\":\"match.state\",\"payload\":{\"hits\":1}}"]},
-                ~" \x{2014} every click increments the counter."
-            ]},
-            {p, [], [
-                ~"For a real client, use an SDK: ",
+                ~" - every click increments the counter. For a real client, use an SDK: ",
                 {a, [{href, ~"/defold"}, az_navigate], [~"Defold"]},
                 ~", ",
                 {a, [{href, ~"/unity"}, az_navigate], [~"Unity"]},
@@ -274,16 +210,69 @@ wscat -c ws://localhost:8080/ws
                 ~"."
             ]},
 
-            {h2, [], [~"5. Iterate with hot reload"]},
+            {h2, [], [~"4. Deploy changes"]},
             {p, [], [
-                ~"Edit the game file, re-deploy, watch changes take effect without disconnecting anyone. ",
-                ~"This is the BEAM's killer feature and Asobi's biggest differentiator \x{2014} any non-BEAM backend will drop connections on deploy."
+                ~"Deploying is shipping new Lua to the server. How you do it is the one thing that differs between hosting your own server and running on managed Asobi."
+            ]},
+
+            {h3, [], [~"Self-hosted"]},
+            {p, [], [
+                ~"Your game is the Lua in ",
+                {code, [], [~"./game"]},
+                ~", mounted at ",
+                {code, [], [~"/app/game"]},
+                ~". Edit a file and restart the container to load it:"
+            ]},
+            code(
+                ~"bash",
+                ~"""
+docker compose restart asobi
+"""
+            ),
+            {p, [], [
+                ~"For production, bake the game into your own image instead of mounting it, and run that:"
+            ]},
+            code(
+                ~"docker",
+                ~"""
+FROM ghcr.io/widgrensit/asobi_lua:latest
+COPY game/ /app/game
+"""
+            ),
+            {p, [], [
+                ~"No API key is involved anywhere: a self-hosted server authenticates players directly (step 3), and there is nothing to register with. You own the database, the TLS, and the restart."
+            ]},
+
+            {h3, [], [~"Cloud (managed Asobi)"]},
+            {p, [], [
+                ~"On ",
+                {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
+                ~" you get a hosted environment with an endpoint URL and hot-reload deploys through the CLI - new Lua loads with no dropped connections."
+            ]},
+            code(
+                ~"bash",
+                ~"""
+curl -fsSL https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.sh | sh
+asobi login
+asobi use <your-game>
+asobi deploy prod lua
+"""
+            ),
+            {p, [], [
+                {code, [], [~"asobi login"]},
+                ~" approves the CLI over a browser device-code flow; ",
+                {code, [], [~"asobi use"]},
+                ~" selects your game; ",
+                {code, [], [~"asobi deploy"]},
+                ~" ships and hot-loads your Lua. The CLI signs in for you - you never handle a key. Point your client SDK at the environment's endpoint URL instead of ",
+                {code, [], [~"localhost:8084"]},
+                ~"."
             ]},
 
             {'div', [{class, ~"docs-callout docs-callout-success"}], [
                 {p, [], [
                     {strong, [], [~"That's it. "]},
-                    ~"You have a live Asobi server running a bilingual-capable game with hot-reload deploys."
+                    ~"You have a live Asobi server running a Lua game, with a client talking to it."
                 ]}
             ]},
 
@@ -291,21 +280,21 @@ wscat -c ws://localhost:8080/ws
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
-                    ~" \x{2014} matches, worlds, zones, voting, phases \x{2014} each with Lua + Erlang snippets."
+                    ~" - matches, worlds, zones, voting, phases."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
-                    ~" \x{2014} every ",
+                    ~" - every ",
                     {code, [], [~"game.*"]},
                     ~" function."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
-                    ~" \x{2014} the behaviours and modules that power it all."
+                    {a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]},
+                    ~" - run Asobi on your own infrastructure for real."
                 ]},
                 {li, [], [
-                    {a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]},
-                    ~" \x{2014} deploy Asobi to your own infrastructure."
+                    {a, [{href, ~"/docs/cloud"}, az_navigate], [~"Cloud"]},
+                    ~" - environments, deploys, and billing on managed Asobi."
                 ]}
             ]}
         ]}
