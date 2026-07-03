@@ -37,13 +37,13 @@ render(Bindings) ->
             ]},
 
             {p, [], [
-                ~"The Erlang API reference lives with the source: every public module carries ",
+                ~"The full Erlang API reference is published on HexDocs: every public module carries ",
                 {code, [], [~"-moduledoc"]},
                 ~"/",
                 {code, [], [~"-doc"]},
-                ~" attributes, and the full generated docs come from ",
-                {code, [], [~"rebar3 ex_doc"]},
-                ~". Read them on the ",
+                ~" attributes, rendered at ",
+                {a, [{href, ~"https://hexdocs.pm/asobi"}], [~"hexdocs.pm/asobi"]},
+                ~". The source lives on the ",
                 {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"asobi repository"]},
                 ~"."
             ]},
