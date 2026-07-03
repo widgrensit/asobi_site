@@ -87,7 +87,7 @@ POST /api/v1/inventory/consume         Consume an item
 
             {h2, [], [~"Store"]},
             {p, [], [
-                ~"Listings bind an item definition to a currency and price. Purchases are atomic \x{2014} wallet debit and inventory grant run in one DB transaction via Kura Multi."
+                ~"Listings bind an item definition to a currency and price. Purchases are atomic - wallet debit and inventory grant run in one DB transaction via Kura Multi."
             ]},
             code(
                 ~"bash",
@@ -132,7 +132,7 @@ asobi_economy:debit(PlayerId, <<"gold">>, 50, #{reason => <<"respawn_fee">>}).
             {p, [], [
                 ~"Server-side receipt validation for Apple App Store and Google Play. ",
                 {strong, [], [~"Always validate on the server"]},
-                ~" \x{2014} client receipts can be spoofed. Grant currency/items only after validation returns ",
+                ~" - client receipts can be spoofed. Grant currency/items only after validation returns ",
                 {code, [], [~"valid: true"]},
                 ~"."
             ]},

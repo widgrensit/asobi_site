@@ -24,7 +24,7 @@ render(Bindings) ->
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Prefer managed? "]},
-                    ~"Asobi Cloud is coming \x{2014} fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
+                    ~"Asobi Cloud is coming - fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
                     {a, [{href, ~"/cloud"}, az_navigate], [
                         ~"Join the waitlist at asobi.dev/cloud."
                     ]}
@@ -116,7 +116,7 @@ docker compose up -d
 
             {h2, [{id, ~"single-server"}], [~"Single VPS"]},
             {p, [], [
-                ~"For production on a single machine \x{2014} a Hetzner AX41 (\x{20AC}40/mo) comfortably handles hundreds of concurrent players. ",
+                ~"For production on a single machine - a Hetzner AX41 (\x{20AC}40/mo) comfortably handles hundreds of concurrent players. ",
                 ~"Build a release from the Asobi source:"
             ]},
             code(
@@ -134,7 +134,7 @@ bin/asobi daemon
             {p, [], [
                 ~"Configure the release via ",
                 {code, [], [~"config/prod_sys.config.src"]},
-                ~" \x{2014} environment variables, database credentials, and TLS settings are all there. See ",
+                ~" - environment variables, database credentials, and TLS settings are all there. See ",
                 {a, [{href, ~"https://github.com/widgrensit/asobi/tree/main/config"}], [
                     ~"the config directory"
                 ]},
@@ -175,7 +175,7 @@ game.example.com {
             ),
             {p, [], [
                 ~"Caddy auto-issues TLS certs and handles WebSocket upgrades without config. ",
-                ~"Nginx works equally well \x{2014} make sure ",
+                ~"Nginx works equally well - make sure ",
                 {code, [], [~"proxy_set_header Upgrade $http_upgrade"]},
                 ~" is set."
             ]},
@@ -259,7 +259,7 @@ spec:
             {p, [], [
                 ~"Override per environment via the ",
                 {code, [], [~"asobi, rate_limits"]},
-                ~" env \x{2014} see the ",
+                ~" env - see the ",
                 {a, [{href, ~"/docs/configuration#rate-limits"}, az_navigate], [
                     ~"Configuration page"
                 ]},
@@ -332,15 +332,15 @@ spec:
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/concepts"}, az_navigate], [~"Core concepts"]},
-                    ~" \x{2014} understand what the engine runs."
+                    ~" - understand what the engine runs."
                 ]},
                 {li, [], [
                     {a, [{href, ~"https://github.com/widgrensit/asobi-infra"}], [~"asobi-infra"]},
-                    ~" \x{2014} reference Helm stack for managed k8s."
+                    ~" - reference Helm stack for managed k8s."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/cloud"}, az_navigate], [~"Asobi Cloud"]},
-                    ~" \x{2014} managed hosting, coming soon."
+                    ~" - managed hosting, coming soon."
                 ]}
             ]}
         ]}

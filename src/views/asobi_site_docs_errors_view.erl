@@ -61,19 +61,19 @@ render(Bindings) ->
                     {code, [], [~"401"]},
                     ~" + ",
                     {code, [], [~"invalid_credentials"]},
-                    ~" \x{2014} login failed. Rate-limited at 5 req/sec/IP."
+                    ~" - login failed. Rate-limited at 5 req/sec/IP."
                 ]},
                 {li, [], [
                     {code, [], [~"409"]},
                     ~" + ",
                     {code, [], [~"username_taken"]},
-                    ~" \x{2014} register against an existing username."
+                    ~" - register against an existing username."
                 ]},
                 {li, [], [
                     {code, [], [~"403"]},
                     ~" + ",
                     {code, [], [~"last_auth_method"]},
-                    ~" \x{2014} unlinking the only remaining auth method (would lock the player out)."
+                    ~" - unlinking the only remaining auth method (would lock the player out)."
                 ]}
             ]},
 
@@ -83,13 +83,13 @@ render(Bindings) ->
                     {code, [], [~"400"]},
                     ~" + ",
                     {code, [], [~"invalid_jws"]},
-                    ~" \x{2014} Apple receipt failed any of header alg, x5c chain, or signature checks. Reason atom is sanitised; full detail stays in server logs."
+                    ~" - Apple receipt failed any of header alg, x5c chain, or signature checks. Reason atom is sanitised; full detail stays in server logs."
                 ]},
                 {li, [], [
                     {code, [], [~"400"]},
                     ~" + ",
                     {code, [], [~"invalid_ticket_format"]},
-                    ~" \x{2014} Steam ticket failed hex/length validation."
+                    ~" - Steam ticket failed hex/length validation."
                 ]}
             ]},
 
@@ -99,7 +99,7 @@ render(Bindings) ->
                     {code, [], [~"429"]},
                     ~" + ",
                     {code, [], [~"world_cap_exceeded"]},
-                    ~" \x{2014} player already owns ",
+                    ~" - player already owns ",
                     {code, [], [~"world_max_per_player"]},
                     ~" worlds (default 5)."
                 ]},
@@ -107,7 +107,7 @@ render(Bindings) ->
                     {code, [], [~"503"]},
                     ~" + ",
                     {code, [], [~"world_global_cap"]},
-                    ~" \x{2014} global ",
+                    ~" - global ",
                     {code, [], [~"world_max"]},
                     ~" hit (default 1000). Operators should raise this and possibly add nodes."
                 ]}
@@ -119,19 +119,19 @@ render(Bindings) ->
                     {code, [], [~"413"]},
                     ~" + ",
                     {code, [], [~"save_too_large"]},
-                    ~" \x{2014} save body > 256 KB."
+                    ~" - save body > 256 KB."
                 ]},
                 {li, [], [
                     {code, [], [~"400"]},
                     ~" + ",
                     {code, [], [~"slot_cap"]},
-                    ~" \x{2014} player already has 10 slots."
+                    ~" - player already has 10 slots."
                 ]},
                 {li, [], [
                     {code, [], [~"400"]},
                     ~" + ",
                     {code, [], [~"invalid_perm"]},
-                    ~" \x{2014} ",
+                    ~" - ",
                     {code, [], [~"read_perm"]},
                     ~"/",
                     {code, [], [~"write_perm"]},
@@ -149,7 +149,7 @@ render(Bindings) ->
                     {code, [], [~"400"]},
                     ~" + ",
                     {code, [], [~"channel_id_invalid"]},
-                    ~" \x{2014} channel id must start with one of ",
+                    ~" - channel id must start with one of ",
                     {code, [], [~"dm:"]},
                     ~", ",
                     {code, [], [~"world:"]},
@@ -165,19 +165,19 @@ render(Bindings) ->
                     {code, [], [~"403"]},
                     ~" + ",
                     {code, [], [~"not_member"]},
-                    ~" \x{2014} fetching history for a channel you don't belong to."
+                    ~" - fetching history for a channel you don't belong to."
                 ]},
                 {li, [], [
                     {code, [], [~"413"]},
                     ~" + ",
                     {code, [], [~"content_too_large"]},
-                    ~" \x{2014} DM content > 2000 bytes."
+                    ~" - DM content > 2000 bytes."
                 ]},
                 {li, [], [
                     {code, [], [~"400"]},
                     ~" + ",
                     {code, [], [~"too_many_channels"]},
-                    ~" \x{2014} more than 32 channels joined on one WS connection."
+                    ~" - more than 32 channels joined on one WS connection."
                 ]}
             ]},
 
@@ -187,7 +187,7 @@ render(Bindings) ->
                     {code, [], [~"403"]},
                     ~" + ",
                     {code, [], [~"not_owner"]},
-                    ~" \x{2014} fetching or cancelling a ticket the caller didn't create. Ticket reads / cancellations require ownership."
+                    ~" - fetching or cancelling a ticket the caller didn't create. Ticket reads / cancellations require ownership."
                 ]}
             ]},
 
@@ -197,7 +197,7 @@ render(Bindings) ->
                     {code, [], [~"403"]},
                     ~" + ",
                     {code, [], [~"not_match_participant"]},
-                    ~" \x{2014} the caller is not in the match they are trying to vote in."
+                    ~" - the caller is not in the match they are trying to vote in."
                 ]}
             ]},
 
@@ -218,7 +218,7 @@ render(Bindings) ->
             {ul, [], [
                 {li, [], [
                     {code, [], [~"unauthenticated"]},
-                    ~" \x{2014} sent a non-",
+                    ~" - sent a non-",
                     {code, [], [~"session.connect"]},
                     ~" frame as the first message."
                 ]},
@@ -228,11 +228,11 @@ render(Bindings) ->
                     {code, [], [~"too_many_channels"]},
                     ~", ",
                     {code, [], [~"not_member"]},
-                    ~" \x{2014} chat-related, mirror the REST shapes above."
+                    ~" - chat-related, mirror the REST shapes above."
                 ]},
                 {li, [], [
                     {code, [], [~"unknown_type"]},
-                    ~" \x{2014} message type the runtime does not recognise; safe to ignore client-side."
+                    ~" - message type the runtime does not recognise; safe to ignore client-side."
                 ]}
             ]},
 
@@ -242,7 +242,7 @@ render(Bindings) ->
                     {a, [{href, ~"/docs/security/auth"}, az_navigate], [
                         ~"Auth & rate limiting"
                     ]},
-                    ~" \x{2014} the rationale and tunables for the codes above."
+                    ~" - the rationale and tunables for the codes above."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API reference"]}

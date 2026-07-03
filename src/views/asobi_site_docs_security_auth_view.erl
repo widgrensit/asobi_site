@@ -40,7 +40,7 @@ render(Bindings) ->
                 {code, [], [~"nova_auth_refresh:generate_pair/2"]},
                 ~" (an access token plus a single-use rotating refresh token) after a successful register/login/refresh/OAuth flow. The plugin attaches ",
                 {code, [], [~"auth_data => #{player_id => Id, ...}"]},
-                ~" to the request map \x{2014} controllers should pattern-match on that rather than parsing the header themselves."
+                ~" to the request map - controllers should pattern-match on that rather than parsing the header themselves."
             ]},
             {p, [], [
                 ~"Tokens are stored in ",
@@ -166,13 +166,13 @@ render(Bindings) ->
                     {strong, [], [~"Cloud saves "]},
                     ~"(",
                     {code, [], [~"/saves/:slot"]},
-                    ~") \x{2014} body capped at 256 KB; per-player slot count capped at 10."
+                    ~") - body capped at 256 KB; per-player slot count capped at 10."
                 ]},
                 {li, [], [
                     {strong, [], [~"Storage "]},
                     ~"(",
                     {code, [], [~"/storage/:collection/:key"]},
-                    ~") \x{2014} ",
+                    ~") - ",
                     {code, [], [~"read_perm"]},
                     ~" / ",
                     {code, [], [~"write_perm"]},
@@ -182,7 +182,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {strong, [], [~"Inventory consume "]},
-                    ~"\x{2014} quantity range ",
+                    ~"- quantity range ",
                     {code, [], [~"[1, 1_000_000]"]},
                     ~"."
                 ]},
@@ -191,7 +191,7 @@ render(Bindings) ->
                     {code, [], [~"top"]},
                     ~" / ",
                     {code, [], [~"around"]},
-                    ~" \x{2014} ",
+                    ~" - ",
                     {code, [], [~"?limit"]},
                     ~" clamped to 100, ",
                     {code, [], [~"?range"]},
@@ -199,7 +199,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {strong, [], [~"Chat history "]},
-                    ~"\x{2014} ",
+                    ~"- ",
                     {code, [], [~"?limit"]},
                     ~" clamped to ",
                     {code, [], [~"[1, 200]"]},
@@ -207,11 +207,11 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {strong, [], [~"DM send "]},
-                    ~"\x{2014} content capped at 2000 bytes; non-binary or empty content rejected."
+                    ~"- content capped at 2000 bytes; non-binary or empty content rejected."
                 ]},
                 {li, [], [
                     {strong, [], [~"Group chat / WS chat.join "]},
-                    ~"\x{2014} channel id namespaced (",
+                    ~"- channel id namespaced (",
                     {code, [], [~"dm:"]},
                     ~", ",
                     {code, [], [~"world:"]},
@@ -225,7 +225,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {strong, [], [~"Per-player world creation "]},
-                    ~"\x{2014} capped via pg group; default 5 worlds per player, 1000 globally. Tunable via ",
+                    ~"- capped via pg group; default 5 worlds per player, 1000 globally. Tunable via ",
                     {code, [], [~"world_max_per_player"]},
                     ~" / ",
                     {code, [], [~"world_max"]},
@@ -233,7 +233,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {strong, [], [~"Matchmaker "]},
-                    ~"\x{2014} party entries that don't match the requester are silently dropped; ticket reads / cancellations require ownership."
+                    ~"- party entries that don't match the requester are silently dropped; ticket reads / cancellations require ownership."
                 ]}
             ]},
 
@@ -242,23 +242,23 @@ render(Bindings) ->
             {ul, [], [
                 {li, [], [
                     {code, [], [~"asobi_iap_SUITE.erl"]},
-                    ~" \x{2014} Apple JWS happy path + 14 negative cases."
+                    ~" - Apple JWS happy path + 14 negative cases."
                 ]},
                 {li, [], [
                     {code, [], [~"asobi_world_lobby_SUITE.erl"]},
-                    ~" \x{2014} per-player + global world caps."
+                    ~" - per-player + global world caps."
                 ]},
                 {li, [], [
                     {code, [], [~"asobi_matchmaker_api_SUITE.erl"]},
-                    ~" \x{2014} party consent + ticket ownership."
+                    ~" - party consent + ticket ownership."
                 ]},
                 {li, [], [
                     {code, [], [~"asobi_social_api_SUITE.erl"]},
-                    ~" \x{2014} chat history membership."
+                    ~" - chat history membership."
                 ]},
                 {li, [], [
                     {code, [], [~"asobi_dm_tests.erl"]},
-                    ~" \x{2014} DM length cap + empty-content rejection."
+                    ~" - DM length cap + empty-content rejection."
                 ]}
             ]},
             {p, [], [~"Run with ", {code, [], [~"rebar3 ct,eunit"]}, ~"."]}

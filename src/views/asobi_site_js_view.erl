@@ -53,7 +53,7 @@ render(Bindings) ->
                     {p, [], [
                         ~"Use the WebSocket event emitter for world.* events. The ",
                         {code, [], [~"world.terrain"]},
-                        ~" event delivers base64-encoded chunks at specific grid coordinates \x{2014} decode once per chunk and cache."
+                        ~" event delivers base64-encoded chunks at specific grid coordinates - decode once per chunk and cache."
                     ]},
                     {'div', [{class, ~"guide-code"}], [
                         {pre, [], [{code, [], [WorldSnippet]}]}

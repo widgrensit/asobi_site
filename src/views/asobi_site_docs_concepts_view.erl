@@ -27,7 +27,7 @@ render(Bindings) ->
                 ~" is a container: a name, a set of modules, a database schema. ",
                 ~"You register ",
                 {strong, [], [~"game modes"]},
-                ~" within a game \x{2014} each mode is one module implementing the ",
+                ~" within a game - each mode is one module implementing the ",
                 {code, [], [~"asobi_match"]},
                 ~" behaviour. A single game can have many modes (",
                 {code, [], [~"deathmatch"]},
@@ -42,8 +42,8 @@ render(Bindings) ->
             {p, [], [
                 ~"A ",
                 {strong, [], [~"match"]},
-                ~" is one running session of a mode. 2\x{2013}500 players, bounded lifetime, authoritative state. ",
-                ~"Each match is an Erlang process \x{2014} if it crashes, other matches keep running."
+                ~" is one running session of a mode. 2-500 players, bounded lifetime, authoritative state. ",
+                ~"Each match is an Erlang process - if it crashes, other matches keep running."
             ]},
             {p, [], [
                 ~"Each match runs a tick loop (default 10 Hz). Your ",
@@ -76,7 +76,7 @@ tick(#{elapsed := E} = State) ->
 
             {h2, [], [~"Worlds and zones"]},
             {p, [], [
-                ~"For games with shared persistent space \x{2014} MMOs, open-world survival, sandbox \x{2014} use the ",
+                ~"For games with shared persistent space - MMOs, open-world survival, sandbox - use the ",
                 {strong, [], [~"world server"]},
                 ~". A world is divided into a grid of ",
                 {strong, [], [~"zones"]},
@@ -132,14 +132,14 @@ local nearby = game.spatial.query_radius(100, 200, 50)
 
             {h2, [], [~"Voting"]},
             {p, [], [
-                ~"Real-time voting during a match \x{2014} for boon picks, path choices, map votes. Five methods: ",
+                ~"Real-time voting during a match - for boon picks, path choices, map votes. Five methods: ",
                 ~"plurality, approval, weighted, ranked-choice, and spectator-weighted. ",
                 ~"Supports veto tokens, quorum early-resolution, and frustration bonuses for repeatedly losing voters."
             ]},
             {p, [], [
                 ~"From Lua, votes are opened by implementing the ",
                 {code, [], [~"vote_requested(state)"]},
-                ~" callback \x{2014} return a vote config and the match server starts the vote. From Erlang, you can open one directly:"
+                ~" callback - return a vote config and the match server starts the vote. From Erlang, you can open one directly:"
             ]},
             code(
                 ~"erlang",
@@ -193,7 +193,7 @@ phases(_Config) ->
                 ~"Chat channels (world, zone, DM) are server-side and scoped per match/world. ",
                 ~"Presence tracks who's online via ",
                 {code, [], [~"pg"]},
-                ~" \x{2014} cross-node out of the box in a cluster. ",
+                ~" - cross-node out of the box in a cluster. ",
                 ~"Direct messages have their own lifecycle and persistence."
             ]},
             asobi_site_tabbed_code:lua_erlang(
@@ -234,7 +234,7 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
             {h2, [], [~"Hot reload"]},
             {p, [], [
                 ~"Deploy new code and it hot-swaps without disconnecting players. In-flight matches finish on the old code; new matches use the new code. ",
-                ~"Works the same way for Lua bundles and Erlang beam files \x{2014} the BEAM's module system handles both."
+                ~"Works the same way for Lua bundles and Erlang beam files - the BEAM's module system handles both."
             ]},
 
             {h2, [], [~"Where next?"]},
@@ -245,13 +245,13 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
-                    ~" \x{2014} the ",
+                    ~" - the ",
                     {code, [], [~"game.*"]},
                     ~" surface in full."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
-                    ~" \x{2014} behaviours, modules, and specs."
+                    ~" - behaviours, modules, and specs."
                 ]}
             ]}
         ]}

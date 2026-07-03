@@ -29,7 +29,7 @@ render(Bindings) ->
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Asobi is single-node by design for gameplay. "]},
-                    ~"A match lives on one node; the world server's zones live on one node. Clustering is for connection termination, cross-node messaging, and failover \x{2014} not for live cross-node zone migration. Shard at the app level (e.g. route players by region)."
+                    ~"A match lives on one node; the world server's zones live on one node. Clustering is for connection termination, cross-node messaging, and failover - not for live cross-node zone migration. Shard at the app level (e.g. route players by region)."
                 ]}
             ]},
 
@@ -37,7 +37,7 @@ render(Bindings) ->
             {ul, [], [
                 {li, [], [
                     {code, [], [~"pg"]},
-                    ~"-scoped process groups \x{2014} presence, chat channels, world/match whereis lookups work cross-node."
+                    ~"-scoped process groups - presence, chat channels, world/match whereis lookups work cross-node."
                 ]},
                 {li, [], [
                     ~"Player sessions: a session on node A can send to a match on node B (proxied via ",
@@ -63,7 +63,7 @@ render(Bindings) ->
                     ~"ETS caches (zone entity snapshots, rate limits) are per-node. Hot paths assume local access."
                 ]},
                 {li, [], [
-                    ~"Luerl VMs are per-process and per-node \x{2014} no shared script state across nodes."
+                    ~"Luerl VMs are per-process and per-node - no shared script state across nodes."
                 ]}
             ]},
 
@@ -77,7 +77,7 @@ render(Bindings) ->
                 {code, [], [~"ASOBI_DB_*"]},
                 ~", and ",
                 {code, [], [~"ASOBI_CORS_ORIGINS"]},
-                ~" \x{2014} set node name and cookie with the standard ",
+                ~" - set node name and cookie with the standard ",
                 {code, [], [~"-name"]},
                 ~"/",
                 {code, [], [~"-setcookie"]},
@@ -96,7 +96,7 @@ nodes().          %% ['asobi@10.0.0.1']
             {p, [], [
                 ~"Asobi ships a tiny discovery loop (",
                 {code, [], [~"asobi_cluster"]},
-                ~") with two strategies \x{2014} DNS (for Kubernetes headless services) and EPMD (for a static list of hosts). It resolves peer addresses, derives node names by reusing the current node's base name, and pings them periodically."
+                ~") with two strategies - DNS (for Kubernetes headless services) and EPMD (for a static list of hosts). It resolves peer addresses, derives node names by reusing the current node's base name, and pings them periodically."
             ]},
             code(
                 ~"erlang",

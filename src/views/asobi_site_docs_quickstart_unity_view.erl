@@ -19,9 +19,9 @@ render(Bindings) ->
         {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
-                ~" / Quick start \x{2014} Unity"
+                ~" / Quick start - Unity"
             ]},
-            {h1, [], [~"Quick start \x{2014} Unity"]},
+            {h1, [], [~"Quick start - Unity"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Connect a Unity 2021.3+ project to a running Asobi server in about five minutes. ",
                 ~"You'll register a player, open a WebSocket, queue for a match, and receive server-authoritative state. ",
@@ -74,7 +74,7 @@ public class AsobiBoot : MonoBehaviour
 
             {h2, [], [~"3. Authenticate"]},
             {p, [], [
-                ~"For development, register a player by username/password. Production builds should use a platform provider \x{2014} see ",
+                ~"For development, register a player by username/password. Production builds should use a platform provider - see ",
                 {a, [{href, ~"/docs/security/auth"}, az_navigate], [~"Auth & rate limiting"]},
                 ~"."
             ]},
@@ -89,7 +89,7 @@ async void Start()
 """
             ),
             {p, [], [
-                ~"Auth requests are rate-limited at 5/sec per IP \x{2014} bursting will return ",
+                ~"Auth requests are rate-limited at 5/sec per IP - bursting will return ",
                 {code, [], [~"429 rate_limited"]},
                 ~"."
             ]},
@@ -128,23 +128,23 @@ await Client.Realtime.SendMatchInputAsync(
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/unity"}], [~"Full SDK reference"]},
-                    ~" \x{2014} every method on every namespace."
+                    ~" - every method on every namespace."
                 ]},
                 {li, [], [
                     {a, [{href, ~"https://github.com/widgrensit/asobi-unity-demo"}], [
                         ~"asobi-unity-demo"
                     ]},
-                    ~" \x{2014} a working multiplayer arena shooter."
+                    ~" - a working multiplayer arena shooter."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* Lua API"]},
-                    ~" \x{2014} write the server-side gameplay your client connects to."
+                    ~" - write the server-side gameplay your client connects to."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/tutorials/hot-reload"}, az_navigate], [
                         ~"Live-edit your game"
                     ]},
-                    ~" \x{2014} change ",
+                    ~" - change ",
                     {code, [], [~"match.lua"]},
                     ~" without reconnecting the client."
                 ]}

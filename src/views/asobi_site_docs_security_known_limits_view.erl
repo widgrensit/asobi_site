@@ -36,7 +36,7 @@ render(Bindings) ->
                 {code, [], [~"Mod:tick/1"]},
                 ~", ",
                 {code, [], [~"Mod:join/2"]},
-                ~", \x{2026}) run inline in the match gen_server and have full BEAM access. A malicious game module can read public ETS, spawn arbitrary processes, talk to clustered nodes, and crash the lobby. Treat the game-module source as part of the trusted compute base \x{2014} ship code reviews and signed releases the same way you would for the asobi binary itself."
+                ~", \x{2026}) run inline in the match gen_server and have full BEAM access. A malicious game module can read public ETS, spawn arbitrary processes, talk to clustered nodes, and crash the lobby. Treat the game-module source as part of the trusted compute base - ship code reviews and signed releases the same way you would for the asobi binary itself."
             ]},
             {p, [], [
                 ~"For untrusted scripting (community-submitted maps, modder content) use the ",
@@ -50,7 +50,7 @@ render(Bindings) ->
                 {code, [], [~"vm.args.src"]},
                 ~" sets a node name and cookie but does not lock down the dist port range or bind EPMD to localhost. For single-node deploys, uncomment the localhost-bind line in ",
                 {code, [], [~"vm.args.src"]},
-                ~". For clustered deploys, set an explicit port range and enable TLS for distribution \x{2014} see the ",
+                ~". For clustered deploys, set an explicit port range and enable TLS for distribution - see the ",
                 {a, [{href, ~"/docs/security/threat-model"}, az_navigate], [~"threat model"]},
                 ~" for the exact lines."
             ]},

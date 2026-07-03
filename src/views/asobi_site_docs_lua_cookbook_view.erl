@@ -230,11 +230,11 @@ game.notify_many(winners, "tournament_win", "You won the bracket!", {
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* API reference"]},
-                    ~" \x{2014} the full surface these recipes call into."
+                    ~" - the full surface these recipes call into."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]},
-                    ~" \x{2014} what ",
+                    ~" - what ",
                     {em, [], [~"you"]},
                     ~" implement."
                 ]},
@@ -242,7 +242,7 @@ game.notify_many(winners, "tournament_win", "You won the bracket!", {
                     {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
                         ~"Tic-tac-toe tutorial"
                     ]},
-                    ~" \x{2014} everything applied to a concrete game."
+                    ~" - everything applied to a concrete game."
                 ]}
             ]}
         ]}

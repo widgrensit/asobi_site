@@ -140,7 +140,7 @@ join(PlayerId, #{players := P} = State) ->
             {h2, [], [~"3. Validate and apply moves"]},
             {p, [], [
                 ~"Three rules: the player must be in the match, it must be their turn, and the target cell must be empty. ",
-                ~"Anything else is silently ignored \x{2014} never trust the client."
+                ~"Anything else is silently ignored - never trust the client."
             ]},
             asobi_site_tabbed_code:lua_erlang(
                 ~"ttt-input",
@@ -270,7 +270,7 @@ finish(Result, State) ->
 
             {h2, [], [~"5. Hide opponent info (there is none, but...)"]},
             {p, [], [
-                ~"Tic-tac-toe is fully observable \x{2014} both players see the whole board. We still implement ",
+                ~"Tic-tac-toe is fully observable - both players see the whole board. We still implement ",
                 {code, [], [~"get_state"]},
                 ~" so reconnects work: the client can ask the server for the current view at any time."
             ]},
@@ -382,7 +382,7 @@ wscat -c ws://localhost:8084/ws
                     ~"."
                 ]},
                 {li, [], [
-                    ~"Add a per-player move timer \x{2014} forfeit if a player takes longer than 30 seconds."
+                    ~"Add a per-player move timer - forfeit if a player takes longer than 30 seconds."
                 ]},
                 {li, [], [
                     ~"Add a spectator role that can see the board but cannot submit inputs."
@@ -390,9 +390,7 @@ wscat -c ws://localhost:8084/ws
                 {li, [], [
                     ~"Submit the winner to a leaderboard via ",
                     {code, [], [~"game.leaderboard.submit"]},
-                    ~" (Lua) or ",
-                    {code, [], [~"asobi_leaderboard_server:submit/3"]},
-                    ~" (Erlang)."
+                    ~"."
                 ]}
             ]},
 
@@ -400,17 +398,17 @@ wscat -c ws://localhost:8084/ws
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]},
-                    ~" \x{2014} the full shape of what you can hook into."
+                    ~" - the full shape of what you can hook into."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},
                     ~" / ",
                     {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
-                    ~" \x{2014} everything the runtime exposes."
+                    ~" - everything the runtime exposes."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"Cookbook"]},
-                    ~" \x{2014} recipes for more ambitious games."
+                    ~" - recipes for more ambitious games."
                 ]}
             ]}
         ]}

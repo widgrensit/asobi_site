@@ -17,7 +17,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Lua SDK"]},
                     {p, [], [
-                        ~"Server-side game modes written in Lua, hosted by asobi_lua. No client integration \x{2014} your game code runs on the asobi server."
+                        ~"Server-side game modes written in Lua, hosted by asobi_lua. No client integration - your game code runs on the asobi server."
                     ]},
                     {a,
                         [

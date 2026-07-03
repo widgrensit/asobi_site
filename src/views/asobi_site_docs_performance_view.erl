@@ -63,7 +63,7 @@ render(Bindings) ->
             {h2, [], [~"Tuning ticks"]},
             {ul, [], [
                 {li, [], [
-                    ~"Lower the tick rate (10\x{2013}15 Hz) if you don't need 20 Hz visual smoothness."
+                    ~"Lower the tick rate (10-15 Hz) if you don't need 20 Hz visual smoothness."
                 ]},
                 {li, [], [
                     ~"Split heavy per-entity work across frames (round-robin): see the ",
@@ -86,7 +86,7 @@ render(Bindings) ->
                     ~"Too large: one zone dominates a CPU core; fewer parallelism opportunities."
                 ]},
                 {li, [], [
-                    ~"Rule of thumb: target 10\x{2013}50 entities per zone under peak load, grid cell = 2\x{00D7} max interest radius."
+                    ~"Rule of thumb: target 10-50 entities per zone under peak load, grid cell = 2\x{00D7} max interest radius."
                 ]}
             ]},
 
@@ -130,10 +130,10 @@ render(Bindings) ->
             {h2, [], [~"Lua-specific"]},
             {ul, [], [
                 {li, [], [
-                    ~"Luerl is interpreted. Lua callbacks run 3\x{2013}10\x{00D7} slower than equivalent Erlang. For a 10 Hz arena this is fine; for 60 Hz physics, write the hot loop in Erlang and call from Lua."
+                    ~"Luerl is interpreted. Lua callbacks run 3-10\x{00D7} slower than equivalent Erlang. For a 10 Hz arena this is fine; for 60 Hz physics, write the hot loop in Erlang and call from Lua."
                 ]},
                 {li, [], [
-                    ~"Avoid allocating big tables every tick \x{2014} reuse state. Luerl's GC is per-VM and stops the tick."
+                    ~"Avoid allocating big tables every tick - reuse state. Luerl's GC is per-VM and stops the tick."
                 ]},
                 {li, [], [
                     ~"The Lua tick has a hard 500ms timeout; keep callbacks under a few milliseconds and split long-running work across ticks with an explicit state cursor."

@@ -33,15 +33,15 @@ render(Bindings) ->
             {ul, [], [
                 {li, [], [
                     {strong, [], [~"Monotonic"]},
-                    ~" \x{2014} keeps the highest score submitted per player (e.g. \x{201C}best lap\x{201D})."
+                    ~" - keeps the highest score submitted per player (e.g. \x{201C}best lap\x{201D})."
                 ]},
                 {li, [], [
                     {strong, [], [~"Cumulative"]},
-                    ~" \x{2014} sums submissions (e.g. \x{201C}total XP\x{201D})."
+                    ~" - sums submissions (e.g. \x{201C}total XP\x{201D})."
                 ]},
                 {li, [], [
                     {strong, [], [~"Windowed"]},
-                    ~" \x{2014} same as above but with a rolling time window (weekly / monthly) that resets automatically."
+                    ~" - same as above but with a rolling time window (weekly / monthly) that resets automatically."
                 ]}
             ]},
 
@@ -85,7 +85,7 @@ POST /api/v1/leaderboards/:id                  Submit a score
 
             {h2, [], [~"Starting a board"]},
             {p, [], [
-                ~"Boards are lazily spawned on first use \x{2014} the first call to ",
+                ~"Boards are lazily spawned on first use - the first call to ",
                 {code, [], [~"submit"]},
                 ~"/",
                 {code, [], [~"top"]},
@@ -137,7 +137,7 @@ POST /api/v1/tournaments/:id/join      Join a tournament
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]},
-                    ~" \x{2014} prize distribution currencies."
+                    ~" - prize distribution currencies."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API: game.leaderboard.*"]}

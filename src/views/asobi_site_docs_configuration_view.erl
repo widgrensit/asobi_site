@@ -95,7 +95,7 @@ render(Bindings) ->
 
             {h2, [], [~"Game modes (matches and worlds)"]},
             {p, [], [
-                ~"All per-mode config \x{2014} whether a mode is a match or a world, which module implements it, match size, tick rate, bots, spatial config \x{2014} lives under the single ",
+                ~"All per-mode config - whether a mode is a match or a world, which module implements it, match size, tick rate, bots, spatial config - lives under the single ",
                 {code, [], [~"game_modes"]},
                 ~" map."
             ]},
@@ -185,7 +185,7 @@ render(Bindings) ->
             {p, [], [
                 ~"Per-route limits enforced by ",
                 {code, [], [~"asobi_rate_limit_plugin"]},
-                ~". Defaults: 5 req/sec/IP on auth, 10 on IAP, 300 elsewhere. The auth limiter is the brute-force gate \x{2014} a 5/sec cap plus the bcrypt cost on login makes online password guessing infeasible at internet scale."
+                ~". Defaults: 5 req/sec/IP on auth, 10 on IAP, 300 elsewhere. The auth limiter is the brute-force gate - a 5/sec cap plus the bcrypt cost on login makes online password guessing infeasible at internet scale."
             ]},
             code(
                 ~"erlang",
@@ -271,7 +271,7 @@ render(Bindings) ->
 
             {h2, [], [~"Leaderboards"]},
             {p, [], [
-                ~"Leaderboards are spawned per-board on demand \x{2014} there is no config map. Start one eagerly with ",
+                ~"Leaderboards are spawned per-board on demand - there is no config map. Start one eagerly with ",
                 {code, [], [~"asobi_leaderboard_sup:start_board/1"]},
                 ~", or just call ",
                 {code, [], [~"asobi_leaderboard_server:submit/3"]},
@@ -349,7 +349,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/security"}, az_navigate], [~"Security"]},
-                    ~" \x{2014} threat model and the rationale behind the caps above."
+                    ~" - threat model and the rationale behind the caps above."
                 ]}
             ]}
         ]}

@@ -5,7 +5,7 @@
 
 -spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
-    {maps:merge(#{id => ~"privacy", title => ~"Privacy Policy \x{2014} Asobi"}, Bindings), #{}}.
+    {maps:merge(#{id => ~"privacy", title => ~"Privacy Policy - Asobi"}, Bindings), #{}}.
 
 -spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
@@ -43,7 +43,7 @@ render(Bindings) ->
                     ]},
                     {p, [], [
                         {strong, [], [~"Lawful basis: "]},
-                        ~"legitimate interest (Art. 6(1)(f) GDPR) \x{2014} measuring traffic with the least privacy-invasive tool we could find. No cookies means no consent banner is required under the ePrivacy Directive."
+                        ~"legitimate interest (Art. 6(1)(f) GDPR) - measuring traffic with the least privacy-invasive tool we could find. No cookies means no consent banner is required under the ePrivacy Directive."
                     ]},
 
                     {h3, [], [~"Beta signup form"]},
@@ -66,15 +66,15 @@ render(Bindings) ->
                     {ul, [], [
                         {li, [], [
                             {strong, [], [~"Clever Cloud "]},
-                            ~"(France) \x{2014} website hosting."
+                            ~"(France) - website hosting."
                         ]},
                         {li, [], [
                             {strong, [], [~"Plausible Analytics "]},
-                            ~"(Estonia, servers in the EU) \x{2014} aggregate analytics."
+                            ~"(Estonia, servers in the EU) - aggregate analytics."
                         ]},
                         {li, [], [
                             {strong, [], [~"Tally "]},
-                            ~"(Belgium) \x{2014} beta signup form, via link-out (no embed on asobi.dev)."
+                            ~"(Belgium) - beta signup form, via link-out (no embed on asobi.dev)."
                         ]}
                     ]},
                     {p, [], [
@@ -95,7 +95,7 @@ render(Bindings) ->
                     {h2, [], [~"Retention"]},
                     {ul, [], [
                         {li, [], [
-                            ~"Analytics: retained by Plausible for the lifetime of our account (no raw identifiers kept \x{2014} the daily hash cannot be reversed beyond 24 hours)."
+                            ~"Analytics: retained by Plausible for the lifetime of our account (no raw identifiers kept - the daily hash cannot be reversed beyond 24 hours)."
                         ]},
                         {li, [], [
                             ~"Beta form submissions: retained until the Asobi Cloud beta ends, or sooner on request."

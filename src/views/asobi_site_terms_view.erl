@@ -5,7 +5,7 @@
 
 -spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
-    {maps:merge(#{id => ~"terms", title => ~"Terms of Service \x{2014} Asobi"}, Bindings), #{}}.
+    {maps:merge(#{id => ~"terms", title => ~"Terms of Service - Asobi"}, Bindings), #{}}.
 
 -spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->

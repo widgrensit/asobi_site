@@ -23,7 +23,7 @@ render(Bindings) ->
             ]},
             {h1, [], [~"World server"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Spatial partitioning for large-session multiplayer. 1\x{2013}500+ players in a shared continuous space, split into zone processes for parallel tick simulation and interest-based broadcasting. ",
+                ~"Spatial partitioning for large-session multiplayer. 1-500+ players in a shared continuous space, split into zone processes for parallel tick simulation and interest-based broadcasting. ",
                 ~"Use this over the match server when players move through a shared space (co-op dungeons, open worlds, survival)."
             ]},
 
@@ -82,13 +82,13 @@ World (2000x2000 units, 10x10 grid)
 """
             ),
             {ul, [], [
-                {li, [], [{code, [], [~"u"]}, ~" \x{2014} updated (changed fields only)"]},
-                {li, [], [{code, [], [~"a"]}, ~" \x{2014} added (full entity state)"]},
-                {li, [], [{code, [], [~"r"]}, ~" \x{2014} removed"]}
+                {li, [], [{code, [], [~"u"]}, ~" - updated (changed fields only)"]},
+                {li, [], [{code, [], [~"a"]}, ~" - added (full entity state)"]},
+                {li, [], [{code, [], [~"r"]}, ~" - removed"]}
             ]},
 
             {h2, [], [~"Implementing the behaviour"]},
-            {p, [], [~"Implement ", {code, [], [~"asobi_world"]}, ~" \x{2014} six callbacks."]},
+            {p, [], [~"Implement ", {code, [], [~"asobi_world"]}, ~" - six callbacks."]},
             code(
                 ~"erlang",
                 ~"""
@@ -442,11 +442,11 @@ empty_grace_ms    = 60000    -- ms to keep an empty world alive (default 60000)
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/performance"}, az_navigate], [~"Performance tuning"]},
-                    ~" \x{2014} tick budgets, zone sizing."
+                    ~" - tick budgets, zone sizing."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/clustering"}, az_navigate], [~"Clustering"]},
-                    ~" \x{2014} what's cross-node safe."
+                    ~" - what's cross-node safe."
                 ]}
             ]}
         ]}

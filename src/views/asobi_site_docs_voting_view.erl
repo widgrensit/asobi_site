@@ -104,25 +104,25 @@ asobi_match_server:start_vote(MatchPid, #{
             {ul, [], [
                 {li, [], [
                     {strong, [], [~"Plurality"]},
-                    ~" \x{2014} one option each; most votes wins. Ties use ",
+                    ~" - one option each; most votes wins. Ties use ",
                     {code, [], [~"tie_breaker"]},
                     ~"."
                 ]},
                 {li, [], [
                     {strong, [], [~"Approval"]},
-                    ~" \x{2014} submit a list of options you'd accept. Highest total approval wins. Good for \x{201C}avoid the worst\x{201D}."
+                    ~" - submit a list of options you'd accept. Highest total approval wins. Good for \x{201C}avoid the worst\x{201D}."
                 ]},
                 {li, [], [
                     {strong, [], [~"Weighted"]},
-                    ~" \x{2014} votes multiplied by per-voter weight. Defaults to 1 if not listed."
+                    ~" - votes multiplied by per-voter weight. Defaults to 1 if not listed."
                 ]},
                 {li, [], [
                     {strong, [], [~"Ranked"]},
-                    ~" \x{2014} submit a preference list. Iteratively eliminate lowest; transfer to next preference until majority."
+                    ~" - submit a preference list. Iteratively eliminate lowest; transfer to next preference until majority."
                 ]},
                 {li, [], [
                     {strong, [], [~"Spectator-weighted"]},
-                    ~" \x{2014} pass ",
+                    ~" - pass ",
                     {code, [], [~"spectators"]},
                     ~" + ",
                     {code, [], [~"spectator_weight"]},
@@ -155,7 +155,7 @@ asobi_match_server:start_vote(MatchPid, #{
             ]},
 
             {h2, [], [~"Async voting"]},
-            {p, [], [~"For non-real-time games \x{2014} not all players online at once."]},
+            {p, [], [~"For non-real-time games - not all players online at once."]},
             code(
                 ~"erlang",
                 ~"""
@@ -274,7 +274,7 @@ vote_resolved(<<"item_pick">>, #{winner := I}, State) ->
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Late-arriving votes: "]},
-                    ~"a 500ms grace period after the window compensates for network latency \x{2014} casts that arrive just after close are still counted."
+                    ~"a 500ms grace period after the window compensates for network latency - casts that arrive just after close are still counted."
                 ]}
             ]}
         ]}

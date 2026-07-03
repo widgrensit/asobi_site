@@ -21,7 +21,7 @@ render(Bindings) ->
             {h1, [], [~"Lua bots"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Server-side AI players that fill empty slots, drive tutorials, or load-test your game. ",
-                ~"Bots run inside the match alongside humans \x{2014} no network, no WebSocket \x{2014} and share the same ",
+                ~"Bots run inside the match alongside humans - no network, no WebSocket - and share the same ",
                 {code, [], [~"game.*"]},
                 ~" surface as your game logic."
             ]},
@@ -117,13 +117,13 @@ bots = {
             {ul, [], [
                 {li, [], [
                     {code, [], [~"think(bot_id, state)"]},
-                    ~" \x{2014} required. Called each bot tick. Return an input map or ",
+                    ~" - required. Called each bot tick. Return an input map or ",
                     {code, [], [~"{}"]},
                     ~"."
                 ]},
                 {li, [], [
                     {code, [], [~"names"]},
-                    ~" \x{2014} optional top-level table of display-name strings the spawner picks from."
+                    ~" - optional top-level table of display-name strings the spawner picks from."
                 ]}
             ]},
             {p, [], [

@@ -163,7 +163,7 @@ leave(PlayerId, #{players := P, started := Started} = State) ->
 
             {h2, [], [~"handle_input(player_id, input, state)"]},
             {p, [], [
-                ~"A player action arrived over WebSocket. Validate and apply. Inputs are serialised onto the match process \x{2014} ",
+                ~"A player action arrived over WebSocket. Validate and apply. Inputs are serialised onto the match process - ",
                 ~"you can mutate state here without worrying about races."
             ]},
             callback_pair(
@@ -267,7 +267,7 @@ get_state(PlayerId, #{players := P} = State) ->
                 {em, [], [~"match"]},
                 ~" games cannot use ",
                 {code, [], [~"phases/1"]},
-                ~" yet \x{2014} model them inside ",
+                ~" yet - model them inside ",
                 {code, [], [~"tick"]},
                 ~" using explicit state fields."
             ]},
@@ -291,7 +291,7 @@ on_phase_ended(_Name, State) -> {ok, State}.
 
             {h2, [], [~"Optional: voting"]},
             {p, [], [
-                ~"Hook into in-match voting \x{2014} provide vote config on request, react to results."
+                ~"Hook into in-match voting - provide vote config on request, react to results."
             ]},
             callback_pair(
                 ~"""
@@ -404,7 +404,7 @@ vote_resolved(_Template, #{winner := W}, State) ->
                 {code, [], [~"get_state"]},
                 ~". ",
                 {code, [], [~"tick"]},
-                ~" is optional \x{2014} if you don't need a fixed time step, skip it."
+                ~" is optional - if you don't need a fixed time step, skip it."
             ]},
 
             {h2, [], [~"Where next?"]},
@@ -413,17 +413,17 @@ vote_resolved(_Template, #{winner := W}, State) ->
                     {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
                         ~"Tic-tac-toe tutorial"
                     ]},
-                    ~" \x{2014} all the callbacks in context."
+                    ~" - all the callbacks in context."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* API reference"]},
-                    ~" \x{2014} what you call ",
+                    ~" - what you call ",
                     {em, [], [~"from"]},
                     ~" these callbacks."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"Cookbook"]},
-                    ~" \x{2014} recipes for common patterns."
+                    ~" - recipes for common patterns."
                 ]}
             ]}
         ]}
