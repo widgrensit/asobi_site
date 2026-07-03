@@ -50,7 +50,7 @@ render(Bindings) ->
                         {pre, [], [
                             {code, [], [
                                 ~"import 'package:asobi/asobi.dart';\n\n",
-                                ~"final client = AsobiClient('localhost', port: 8080);\n\n",
+                                ~"final client = AsobiClient('localhost', port: 8084);\n\n",
                                 ~"// With SSL\n",
                                 ~"final client = AsobiClient('api.mygame.com', port: 443, useSsl: true);"
                             ]}
@@ -162,7 +162,7 @@ render(Bindings) ->
                                 ~"  late final AsobiClient client;\n\n",
                                 ~"  @override\n",
                                 ~"  Future<void> onLoad() async {\n",
-                                ~"    client = AsobiClient('localhost', port: 8080);\n",
+                                ~"    client = AsobiClient('localhost', port: 8084);\n",
                                 ~"    await client.auth.login('player1', 'secret123');\n",
                                 ~"    await client.realtime.connect();\n\n",
                                 ~"    client.realtime.onMatchState.stream.listen((state) {\n",

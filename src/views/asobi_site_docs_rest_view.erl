@@ -23,7 +23,7 @@ render(Bindings) ->
                 ~"All endpoints are under ",
                 {code, [], [~"/api/v1"]},
                 ~". Requests and responses are JSON. Authenticated endpoints require ",
-                {code, [], [~"Authorization: Bearer <session_token>"]},
+                {code, [], [~"Authorization: Bearer <access_token>"]},
                 ~"."
             ]},
 
@@ -31,8 +31,8 @@ render(Bindings) ->
                 ~"Auth",
                 ~"""
 POST /api/v1/auth/register     Register a new player
-POST /api/v1/auth/login        Login, returns session token
-POST /api/v1/auth/refresh      Refresh session token
+POST /api/v1/auth/login        Login, returns an access + refresh token pair
+POST /api/v1/auth/refresh      Rotate the pair (send refresh_token, get a new pair)
 POST /api/v1/auth/oauth        OAuth / Steam token validation
 POST /api/v1/auth/link         Link a provider to the current account
 DELETE /api/v1/auth/unlink     Unlink a provider (never the last one)
@@ -154,13 +154,13 @@ GET    /api/v1/dm/:player_id/history       DM history with a player
                 ~"bash",
                 ~"""
 # login
-curl -s -X POST http://localhost:8080/api/v1/auth/login \
+curl -s -X POST http://localhost:8084/api/v1/auth/login \
   -H 'Content-Type: application/json' \
   -d '{"username": "player1", "password": "secret123"}' > /tmp/login.json
-TOKEN=$(jq -r .session_token /tmp/login.json)
+TOKEN=$(jq -r .access_token /tmp/login.json)
 
 # submit a matchmaking ticket
-curl -X POST http://localhost:8080/api/v1/matchmaker \
+curl -X POST http://localhost:8084/api/v1/matchmaker \
   -H "Authorization: Bearer $TOKEN" \
   -H 'Content-Type: application/json' \
   -d '{"mode": "arena", "properties": {"skill": 1200}}'

@@ -78,11 +78,11 @@ end
             code(
                 ~"bash",
                 ~"""
-wscat -c ws://localhost:8080/ws
+wscat -c ws://localhost:8084/ws
 
 > {"type":"session.connect","payload":{"token":"<token>"}}
 > {"type":"matchmaker.add","payload":{"mode":"hello"}}
-> # ... matchmaker.matched arrives, then match.state every tick
+> # ... match.matched arrives, then match.state every tick
 """
             ),
             {p, [], [

@@ -144,8 +144,8 @@ asobi_economy:debit(PlayerId, <<"gold">>, 50, #{reason => <<"respawn_fee">>}).
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/iap/apple \
-  -H 'Authorization: Bearer <session_token>' \
+curl -X POST http://localhost:8084/api/v1/iap/apple \
+  -H 'Authorization: Bearer <access_token>' \
   -H 'Content-Type: application/json' \
   -d '{"signed_transaction": "eyJhbGciOi..."}'
 """
@@ -173,8 +173,8 @@ curl -X POST http://localhost:8080/api/v1/iap/apple \
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/iap/google \
-  -H 'Authorization: Bearer <session_token>' \
+curl -X POST http://localhost:8084/api/v1/iap/google \
+  -H 'Authorization: Bearer <access_token>' \
   -H 'Content-Type: application/json' \
   -d '{"product_id": "gems_100", "purchase_token": "..."}'
 """

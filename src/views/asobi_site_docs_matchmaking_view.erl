@@ -59,7 +59,7 @@ render(Bindings) ->
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/matchmaker \
+curl -X POST http://localhost:8084/api/v1/matchmaker \
   -H 'Authorization: Bearer <token>' \
   -H 'Content-Type: application/json' \
   -d '{

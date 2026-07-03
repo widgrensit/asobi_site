@@ -51,7 +51,7 @@ render(Bindings) ->
                 ~"client",
                 ~"First message; authenticates the connection.",
                 ~"""
-{"type": "session.connect", "payload": {"token": "<session_token>"}}
+{"type": "session.connect", "payload": {"token": "<access_token>"}}
 """
             ),
             msg(
@@ -140,11 +140,11 @@ render(Bindings) ->
 """
             ),
             msg(
-                ~"matchmaker.matched",
+                ~"match.matched",
                 ~"server",
                 ~"A match was found.",
                 ~"""
-{"type": "matchmaker.matched", "payload": {"match_id": "...", "players": [...]}}
+{"type": "match.matched", "payload": {"match_id": "...", "players": [...]}}
 """
             ),
 
@@ -360,7 +360,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]},
-                    ~" \x{2014} how to get the session token for ",
+                    ~" \x{2014} how to get the access token for ",
                     {code, [], [~"session.connect"]},
                     ~"."
                 ]},

@@ -117,7 +117,7 @@ local nearby = game.spatial.query_radius(g.x, g.y, 50)
                 ~"Matchmaking is driven by the client over WebSocket (",
                 {code, [], [~"matchmaker.add"]},
                 ~" → server replies with ",
-                {code, [], [~"matchmaker.matched"]},
+                {code, [], [~"match.matched"]},
                 ~"). Server-side, you can also enqueue from Erlang:"
             ]},
             code(
