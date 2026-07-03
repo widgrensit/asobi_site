@@ -74,11 +74,13 @@ input_id(Id, N) ->
 %% drop directly into their `?html/1' tree.
 -spec lua_erlang(Id :: binary(), LuaBody :: binary(), ErlBody :: binary()) ->
     asobi_site_html:html().
-lua_erlang(Id, LuaBody, ErlBody) ->
+lua_erlang(Id, LuaBody, _ErlBody) ->
+    %% Product docs are Lua-first; the Erlang equivalent lives in the
+    %% ex_doc API reference. The ErlBody arg is retained so callers need
+    %% not change, but only the Lua sample is rendered.
     ?stateless(?MODULE, render, #{
         id => Id,
         tabs => [
-            #{label => ~"Lua", lang => ~"lua", body => LuaBody},
-            #{label => ~"Erlang", lang => ~"erlang", body => ErlBody}
+            #{label => ~"Lua", lang => ~"lua", body => LuaBody}
         ]
     }).

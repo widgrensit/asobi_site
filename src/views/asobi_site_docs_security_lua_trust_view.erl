@@ -56,7 +56,7 @@ render(Bindings) ->
                 {code, [], [~"nil"]},
                 ~", which Luerl's ",
                 {code, [], [~"set_table_key_key/4"]},
-                ~" erases the entry from the underlying ttdict \x{2014} the key becomes truly absent, not \"set to nil\". A subsequent ",
+                ~" erases the entry from the underlying ttdict - the key becomes truly absent, not \"set to nil\". A subsequent ",
                 {code, [], [~"__index"]},
                 ~" metatable on ",
                 {code, [], [~"os"]},
@@ -68,7 +68,7 @@ render(Bindings) ->
                 {code, [], [~"os.execute"]},
                 ~", ",
                 {code, [], [~"os.exit"]},
-                ~", etc. are stored exclusively inside the os table dict that was just erased. Once erased there is no Lua-reachable path to those function references \x{2014} they are not stored elsewhere in the Luerl state. So metatable manipulation cannot recover stripped functions."
+                ~", etc. are stored exclusively inside the os table dict that was just erased. Once erased there is no Lua-reachable path to those function references - they are not stored elsewhere in the Luerl state. So metatable manipulation cannot recover stripped functions."
             ]},
 
             {h3, [], [
@@ -92,7 +92,7 @@ render(Bindings) ->
                 {code, [], [~"{ module = \"<some_atom>\", ... }"]},
                 ~" from ",
                 {code, [], [~"terrain_provider/1"]},
-                ~" cannot inflate the atom table \x{2014} the bridge uses ",
+                ~" cannot inflate the atom table - the bridge uses ",
                 {code, [], [~"binary_to_existing_atom/1"]},
                 ~". As of the F-* hardening pass the bridge also requires the target module to be on an explicit allowlist (",
                 {code, [], [~"asobi_terrain_flat"]},

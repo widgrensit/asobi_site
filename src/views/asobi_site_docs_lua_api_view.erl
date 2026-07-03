@@ -22,7 +22,7 @@ render(Bindings) ->
                 ~"The ",
                 {code, [], [~"game"]},
                 ~" global is available in every Lua module loaded by Asobi. ",
-                ~"It gives your scripts controlled access to the engine runtime \x{2014} broadcasting, persistence, leaderboards, spatial queries, and more."
+                ~"It gives your scripts controlled access to the engine runtime - broadcasting, persistence, leaderboards, spatial queries, and more."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
@@ -322,7 +322,7 @@ end
 
             api(
                 ~"game.terrain.get_chunk(cx, cy)",
-                ~"Fetch compressed chunk bytes for the given chunk coordinates. Chunks are served automatically on zone entry \x{2014} use this only if you need the data server-side.",
+                ~"Fetch compressed chunk bytes for the given chunk coordinates. Chunks are served automatically on zone entry - use this only if you need the data server-side.",
                 ~"lua",
                 ~"""
 local bytes = game.terrain.get_chunk(4, 7)
@@ -342,19 +342,19 @@ game.terrain.preload({ {5, 7}, {5, 8}, {6, 7}, {6, 8} })
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Game module callbacks"]},
-                    ~" \x{2014} the functions ",
+                    ~" - the functions ",
                     {em, [], [~"you"]},
                     ~" implement (init, tick, join, leave, etc.)"
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/cookbook"}, az_navigate], [~"Cookbook"]},
-                    ~" \x{2014} short patterns for common tasks."
+                    ~" - short patterns for common tasks."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/tutorials/tic-tac-toe"}, az_navigate], [
                         ~"Tic-tac-toe tutorial"
                     ]},
-                    ~" \x{2014} see the API in context."
+                    ~" - see the API in context."
                 ]}
             ]}
         ]}

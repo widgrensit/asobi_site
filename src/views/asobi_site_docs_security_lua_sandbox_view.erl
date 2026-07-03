@@ -78,7 +78,7 @@ render(Bindings) ->
                     {code, [], [~"print"]},
                     ~", ",
                     {code, [], [~"eprint"]},
-                    ~" \x{2014} Luerl's defaults bypass the structured logger and write straight to BEAM stdout. There is currently no in-script logging API; surface diagnostics through game state or broadcast events instead."
+                    ~" - Luerl's defaults bypass the structured logger and write straight to BEAM stdout. There is currently no in-script logging API; surface diagnostics through game state or broadcast events instead."
                 ]}
             ]},
             {p, [], [
@@ -98,7 +98,7 @@ render(Bindings) ->
                     {strong, [], [{code, [], [~"require/1"]}, ~" "]},
                     ~"is provided by asobi_lua. Names must match ",
                     {code, [], [~"[A-Za-z_][A-Za-z0-9_]*(\\.[A-Za-z_][A-Za-z0-9_]*)*"]},
-                    ~" \x{2014} letters, digits, underscores, with ",
+                    ~" - letters, digits, underscores, with ",
                     {code, [], [~"."]},
                     ~" separating segments. Names like ",
                     {code, [], [~"../foo"]},
@@ -146,7 +146,7 @@ render(Bindings) ->
                 {code, [], [~"think"]},
                 ~") runs in a child process with a wall-clock budget. A runaway script (",
                 {code, [], [~"while true do end"]},
-                ~", deep recursion, huge allocation) is killed when its budget elapses; the parent gen_server logs a warning and continues with the previous state. Limits are tuned per callback \x{2014} init/generate_world get more time, per-tick callbacks get less."
+                ~", deep recursion, huge allocation) is killed when its budget elapses; the parent gen_server logs a warning and continues with the previous state. Limits are tuned per callback - init/generate_world get more time, per-tick callbacks get less."
             ]},
             {p, [], [
                 ~"The same wall-clock wrapper is applied to the initial script body load (",
@@ -160,7 +160,7 @@ render(Bindings) ->
 
             {h2, [], [~"Cross-script isolation"]},
             {p, [], [
-                ~"Each match and each zone gets its own Luerl state. Globals, modules, and the require cache live inside that state \x{2014} there is no shared table reachable from script code that crosses match boundaries."
+                ~"Each match and each zone gets its own Luerl state. Globals, modules, and the require cache live inside that state - there is no shared table reachable from script code that crosses match boundaries."
             ]},
 
             {h2, [], [~"Atom exhaustion"]},

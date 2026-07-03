@@ -44,7 +44,7 @@ render(_Bindings) ->
                 ]}
             ]},
             {'div', [{class, ~"footer-bottom"}], [
-                {p, [], [~"Apache 2.0 \x{2014} Widgrensit AB, Sweden"]}
+                {p, [], [~"Apache 2.0 - Widgrensit AB, Sweden"]}
             ]}
         ]}
     ).

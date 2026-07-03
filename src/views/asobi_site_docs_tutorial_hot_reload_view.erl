@@ -34,7 +34,7 @@ render(Bindings) ->
                 {li, [], [
                     ~"A running Asobi server. The simplest path is the ",
                     {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"server quickstart"]},
-                    ~" \x{2014} Docker Compose, ~2 minutes."
+                    ~" - Docker Compose, ~2 minutes."
                 ]},
                 {li, [], [
                     ~"A terminal with ", {code, [], [~"wscat"]}, ~" or any WebSocket client."
@@ -120,7 +120,7 @@ end
                 {code, [], [~"wscat"]},
                 ~" stream's ",
                 {code, [], [~"message"]},
-                ~" field starts rising with the counter \x{2014} no reconnect, no lost players, no lost score."
+                ~" field starts rising with the counter - no reconnect, no lost players, no lost score."
             ]},
 
             {h2, [], [~"What just happened"]},
@@ -150,7 +150,7 @@ end
                 {li, [], [
                     ~"Mid-callback rollback after a ",
                     {code, [], [~"game.economy.debit"]},
-                    ~" is best-effort \x{2014} see ",
+                    ~" is best-effort - see ",
                     {a, [{href, ~"/docs/security/lua-known-limitations"}, az_navigate], [
                         ~"Lua known limitations"
                     ]},
@@ -174,7 +174,7 @@ end
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Lua callbacks"]},
-                    ~" \x{2014} all the entry points you can hot-reload."
+                    ~" - all the entry points you can hot-reload."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/security/lua-sandbox"}, az_navigate], [~"Lua sandbox"]}

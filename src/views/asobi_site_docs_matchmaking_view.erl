@@ -77,7 +77,7 @@ curl -X POST http://localhost:8084/api/v1/matchmaker \
                     {code, [], [~"properties"]},
                     ~", and ",
                     {code, [], [~"party"]},
-                    ~". A query-language extension (numeric ranges, required keys, auto skill-window expansion) is on the roadmap but not shipped \x{2014} do the filtering inside your strategy module instead."
+                    ~". A query-language extension (numeric ranges, required keys, auto skill-window expansion) is on the roadmap but not shipped - do the filtering inside your strategy module instead."
                 ]}
             ]},
 
@@ -111,7 +111,7 @@ curl -X POST http://localhost:8084/api/v1/matchmaker \
             ),
 
             {h2, [], [~"Parties"]},
-            {p, [], [~"Queue together \x{2014} all party members land in the same match:"]},
+            {p, [], [~"Queue together - all party members land in the same match:"]},
             code(
                 ~"json",
                 ~"""

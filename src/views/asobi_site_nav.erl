@@ -26,7 +26,7 @@ render(Bindings) ->
                     [
                         {href, ~"/"},
                         {class, ~"nav-brand"},
-                        {'aria-label', ~"Asobi \x{2014} home"},
+                        {'aria-label', ~"Asobi - home"},
                         az_navigate
                     ],
                     [

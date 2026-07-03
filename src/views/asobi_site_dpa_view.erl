@@ -5,7 +5,7 @@
 
 -spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
-    {maps:merge(#{id => ~"dpa", title => ~"DPA \x{2014} Asobi"}, Bindings), #{}}.
+    {maps:merge(#{id => ~"dpa", title => ~"DPA - Asobi"}, Bindings), #{}}.
 
 -spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
@@ -29,7 +29,7 @@ render(Bindings) ->
                         ~" (currently in closed beta). At that point you are the controller of your players' personal data; Widgrensit AB is the processor, handling storage and real-time traffic on your behalf."
                     ]},
                     {p, [], [
-                        ~"If you self-host the open-source Asobi library, you remain the sole controller and processor \x{2014} no DPA is needed with us because we never see your data."
+                        ~"If you self-host the open-source Asobi library, you remain the sole controller and processor - no DPA is needed with us because we never see your data."
                     ]}
                 ]},
 
@@ -39,7 +39,7 @@ render(Bindings) ->
                         {li, [], [~"Player accounts, sessions, and identifiers."]},
                         {li, [], [~"Match state, chat, voting, and presence data."]},
                         {li, [], [
-                            ~"Wallet / inventory / IAP receipt metadata (not payment card data \x{2014} IAP is via platform stores; no card data touches Asobi)."
+                            ~"Wallet / inventory / IAP receipt metadata (not payment card data - IAP is via platform stores; no card data touches Asobi)."
                         ]},
                         {li, [], [~"Aggregated telemetry we need to run the service."]}
                     ]}
@@ -53,15 +53,15 @@ render(Bindings) ->
                     {ul, [], [
                         {li, [], [
                             {strong, [], [~"Clever Cloud "]},
-                            ~"(France) \x{2014} compute, managed Postgres, S3-compatible object storage."
+                            ~"(France) - compute, managed Postgres, S3-compatible object storage."
                         ]},
                         {li, [], [
                             {strong, [], [~"Hetzner or equivalent EU provider "]},
-                            ~"(Germany, Finland) \x{2014} fallback compute region if required for capacity."
+                            ~"(Germany, Finland) - fallback compute region if required for capacity."
                         ]},
                         {li, [], [
                             {strong, [], [~"Apple / Google "]},
-                            ~"(US) \x{2014} ",
+                            ~"(US) - ",
                             {em, [], [~"only"]},
                             ~" for in-app purchase receipt validation at the platforms that run your game. This is a lawful necessity for validating purchases; no player PII leaves the EU through this path beyond what Apple/Google already hold for their own billing."
                         ]}
@@ -82,7 +82,7 @@ render(Bindings) ->
                         {li, [], [~"At-rest encryption for Postgres and object storage."]},
                         {li, [], [~"Role-based access for operators; all access logged."]},
                         {li, [], [
-                            ~"Erlang/OTP process isolation \x{2014} one crashed match cannot read another match's state."
+                            ~"Erlang/OTP process isolation - one crashed match cannot read another match's state."
                         ]},
                         {li, [], [
                             ~"Breach notification: within 72 hours of discovery, per GDPR Art. 33."

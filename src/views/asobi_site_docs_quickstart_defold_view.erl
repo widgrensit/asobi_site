@@ -19,9 +19,9 @@ render(Bindings) ->
         {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
-                ~" / Quick start \x{2014} Defold"
+                ~" / Quick start - Defold"
             ]},
-            {h1, [], [~"Quick start \x{2014} Defold"]},
+            {h1, [], [~"Quick start - Defold"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Connect a Defold project to a running Asobi server in about five minutes. ",
                 ~"Don't have a server yet? Run the ",
@@ -106,7 +106,7 @@ self.client.auth.register(self.client, "player1", "secret123", nil,
 """
             ),
             {p, [], [
-                ~"Auth requests are rate-limited at 5/sec per IP. Production builds should use a platform provider \x{2014} see ",
+                ~"Auth requests are rate-limited at 5/sec per IP. Production builds should use a platform provider - see ",
                 {a, [{href, ~"/docs/security/auth"}, az_navigate], [~"Auth & rate limiting"]},
                 ~"."
             ]},
@@ -157,7 +157,7 @@ self.client.realtime:send_match_input({action = "move", x = 1, y = 0})
                     {a, [{href, ~"https://github.com/widgrensit/asobi-defold-demo"}], [
                         ~"asobi-defold-demo"
                     ]},
-                    ~" \x{2014} a working arena demo."
+                    ~" - a working arena demo."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* Lua API"]}

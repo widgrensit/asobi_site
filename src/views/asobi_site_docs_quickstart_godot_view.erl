@@ -19,9 +19,9 @@ render(Bindings) ->
         {'div', [{id, ?get(id)}], [
             {p, [{class, ~"docs-breadcrumb"}], [
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
-                ~" / Quick start \x{2014} Godot"
+                ~" / Quick start - Godot"
             ]},
-            {h1, [], [~"Quick start \x{2014} Godot"]},
+            {h1, [], [~"Quick start - Godot"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Connect a Godot 4.x project to a running Asobi server in about five minutes. ",
                 ~"Don't have a server yet? Run the ",
@@ -73,7 +73,7 @@ func login() -> void:
 """
             ),
             {p, [], [
-                ~"Auth requests are rate-limited at 5/sec per IP. Production builds should use a platform provider \x{2014} see ",
+                ~"Auth requests are rate-limited at 5/sec per IP. Production builds should use a platform provider - see ",
                 {a, [{href, ~"/docs/security/auth"}, az_navigate], [~"Auth & rate limiting"]},
                 ~"."
             ]},
@@ -115,11 +115,11 @@ client.realtime.send_match_input_async(
                     {a, [{href, ~"https://github.com/widgrensit/asobi-godot-demo"}], [
                         ~"asobi-godot-demo"
                     ]},
-                    ~" \x{2014} a working arena demo."
+                    ~" - a working arena demo."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* Lua API"]},
-                    ~" \x{2014} write the server-side gameplay your client connects to."
+                    ~" - write the server-side gameplay your client connects to."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/tutorials/hot-reload"}, az_navigate], [

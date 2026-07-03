@@ -186,7 +186,7 @@ curl -X POST http://localhost:8084/api/v1/auth/link \
 """
             ),
             {p, [], [
-                ~"Token behaviour is provider-agnostic \x{2014} it works the same regardless of which login path produced it."
+                ~"Token behaviour is provider-agnostic - it works the same regardless of which login path produced it."
             ]},
 
             {h2, [], [~"SDK integration"]},
@@ -223,17 +223,17 @@ var response = await asobi.Auth.OAuth("google", idToken);
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API reference"]},
-                    ~" \x{2014} every endpoint, including the auth routes."
+                    ~" - every endpoint, including the auth routes."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
                         ~"WebSocket protocol"
                     ]},
-                    ~" \x{2014} message shapes for real-time flows."
+                    ~" - message shapes for real-time flows."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/economy"}, az_navigate], [~"Economy & IAP"]},
-                    ~" \x{2014} receipt validation for Apple and Google."
+                    ~" - receipt validation for Apple and Google."
                 ]}
             ]}
         ]}

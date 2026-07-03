@@ -356,17 +356,17 @@ render(Bindings) ->
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API"]},
-                    ~" \x{2014} HTTP endpoints for things that don't fit a real-time channel."
+                    ~" - HTTP endpoints for things that don't fit a real-time channel."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]},
-                    ~" \x{2014} how to get the access token for ",
+                    ~" - how to get the access token for ",
                     {code, [], [~"session.connect"]},
                     ~"."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/voting"}, az_navigate], [~"Voting in depth"]},
-                    ~" \x{2014} methods, tie-breakers, weighted, ranked."
+                    ~" - methods, tie-breakers, weighted, ranked."
                 ]}
             ]}
         ]}

@@ -34,7 +34,7 @@ render(Bindings) ->
                     ]}
                 ]},
                 {'div', [{class, ~"hero-inner"}], [
-                    {span, [{class, ~"hero-badge"}], [~"Preview \x{2014} v0.1"]},
+                    {span, [{class, ~"hero-badge"}], [~"Preview - v0.1"]},
                     {p, [{class, ~"hero-eyebrow"}], [
                         {span, [{class, ~"marker"}], [~"\x{00A7} 01"]},
                         ~" \x{2002}Open-source game backend on the BEAM"
@@ -168,7 +168,7 @@ render(Bindings) ->
                     {h2, [{class, ~"section-title"}], [
                         ~"Sessions ",
                         {em, [], [~"or"]},
-                        ~" worlds \x{2014} pick the right shape"
+                        ~" worlds - pick the right shape"
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
                         ~"Your game decides, not the backend. Both models share the same auth, social, economy, and storage."
@@ -182,7 +182,7 @@ render(Bindings) ->
                             ]},
                             {ul, [{class, ~"concept-card-bullets"}], [
                                 {li, [], [~"Matchmaker with skill + party rules"]},
-                                {li, [], [~"Server-authoritative tick (30\x{2013}60 Hz)"]},
+                                {li, [], [~"Server-authoritative tick (30-60 Hz)"]},
                                 {li, [], [~"Auto-cleanup when the match ends"]},
                                 {li, [], [~"In-match voting, DMs, chat"]}
                             ]},

@@ -100,7 +100,7 @@ render(Bindings) ->
             {p, [], [
                 ~"Anything in the same BEAM (game callbacks, plugins) can read, mutate, or delete entries. Asobi treats this as acceptable because all in-VM code is trusted. Sandboxed runtimes layered on top (",
                 {code, [], [~"asobi_lua"]},
-                ~") must keep their sandbox out of these tables \x{2014} Luerl is not given access to ETS."
+                ~") must keep their sandbox out of these tables - Luerl is not given access to ETS."
             ]},
 
             {h2, [], [~"UUIDv7 and timestamp leakage"]},
