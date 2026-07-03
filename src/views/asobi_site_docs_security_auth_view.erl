@@ -37,8 +37,8 @@ render(Bindings) ->
                 ~", which expects an ",
                 {code, [], [~"Authorization: Bearer <token>"]},
                 ~" header. Tokens are issued by ",
-                {code, [], [~"nova_auth_session:generate_session_token/2"]},
-                ~" after a successful register/login/refresh/OAuth flow. The plugin attaches ",
+                {code, [], [~"nova_auth_refresh:generate_pair/2"]},
+                ~" (an access token plus a single-use rotating refresh token) after a successful register/login/refresh/OAuth flow. The plugin attaches ",
                 {code, [], [~"auth_data => #{player_id => Id, ...}"]},
                 ~" to the request map \x{2014} controllers should pattern-match on that rather than parsing the header themselves."
             ]},
@@ -46,7 +46,7 @@ render(Bindings) ->
                 ~"Tokens are stored in ",
                 {code, [], [~"asobi_player_token"]},
                 ~" and revocable via ",
-                {code, [], [~"nova_auth_session:delete_session_token/2"]},
+                {code, [], [~"nova_auth_refresh:delete_access_token/2"]},
                 ~"."
             ]},
 
@@ -74,7 +74,7 @@ render(Bindings) ->
                     ~". Operators ship the root in ",
                     {code, [], [~"priv/apple_root_ca.pem"]},
                     ~" (or override the path via ",
-                    {code, [], [~"application:get_env(asobi, apple_root_ca_path, ...)"]},
+                    {code, [], [~"application:get_env(asobi, apple_root_cert_path, ...)"]},
                     ~")."
                 ]},
                 {li, [], [

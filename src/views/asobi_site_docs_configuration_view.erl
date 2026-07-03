@@ -84,7 +84,7 @@ render(Bindings) ->
                 ~"erlang",
                 ~"""
 {nova, [
-    {cowboy_configuration, #{port => 8080}},
+    {cowboy_configuration, #{port => 8084}},
     {plugins, [
         {pre_request, nova_cors_plugin, #{allow_origins => <<"*">>}}
         %% ... other pre/post request plugins
@@ -176,7 +176,7 @@ render(Bindings) ->
     {google_package_name, ~"com.example.game"},
     %% Apple StoreKit 2 receipt verification — root CA used for x5c chain validation.
     %% Defaults to priv/apple_root_ca.pem inside the asobi app.
-    {apple_root_ca_path, ~"/etc/asobi/apple_root_ca.pem"}
+    {apple_root_cert_path, ~"/etc/asobi/apple_root_ca.pem"}
 ]}
 """
             ),

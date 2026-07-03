@@ -45,7 +45,7 @@ render(Bindings) ->
                         {pre, [], [
                             {code, [], [
                                 ~"using Asobi;\n\n",
-                                ~"var client = new AsobiClient(\"localhost\", 8080);\n\n",
+                                ~"var client = new AsobiClient(\"localhost\", 8084);\n\n",
                                 ~"// Or with SSL\n",
                                 ~"var client = new AsobiClient(\"api.mygame.com\", 443, useSsl: true);"
                             ]}

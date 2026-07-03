@@ -54,7 +54,7 @@ render(Bindings) ->
                                 ~"@onready var asobi: AsobiClient = $AsobiClient\n\n",
                                 ~"# Configure in the inspector or via code:\n",
                                 ~"# host: \"localhost\"\n",
-                                ~"# port: 8080\n",
+                                ~"# port: 8084\n",
                                 ~"# use_ssl: false"
                             ]}
                         ]}

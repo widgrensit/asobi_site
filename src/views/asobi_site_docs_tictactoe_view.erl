@@ -345,14 +345,14 @@ rebar3 compile
                 ~"bash",
                 ~"""
 # terminal 1
-wscat -c ws://localhost:8080/ws
+wscat -c ws://localhost:8084/ws
 > {"type":"session.connect","payload":{"token":"alice-token"}}
 > {"type":"matchmaker.add","payload":{"mode":"ttt"}}
-# server replies with matchmaker.matched { match_id: "<id>" }
+# server replies with match.matched { match_id: "<id>" }
 > {"type":"match.join","payload":{"match_id":"<id>"}}
 
 # terminal 2
-wscat -c ws://localhost:8080/ws
+wscat -c ws://localhost:8084/ws
 > {"type":"session.connect","payload":{"token":"bob-token"}}
 > {"type":"matchmaker.add","payload":{"mode":"ttt"}}
 > {"type":"match.join","payload":{"match_id":"<id>"}}

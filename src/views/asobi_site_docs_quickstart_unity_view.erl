@@ -58,7 +58,7 @@ using UnityEngine;
 public class AsobiBoot : MonoBehaviour
 {
     public string Host = "localhost";
-    public int    Port = 8080;
+    public int    Port = 8084;
     public bool   UseSsl = false;
 
     public AsobiClient Client { get; private set; }

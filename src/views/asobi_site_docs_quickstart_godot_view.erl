@@ -50,7 +50,7 @@ render(Bindings) ->
 extends Node
 
 const HOST := "localhost"
-const PORT := 8080
+const PORT := 8084
 
 var client: AsobiClient
 

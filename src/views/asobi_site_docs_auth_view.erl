@@ -25,11 +25,13 @@ render(Bindings) ->
             ]},
 
             {h2, [], [~"Username & password"]},
-            {p, [], [~"The simplest method. Register to receive a session token:"]},
+            {p, [], [
+                ~"The simplest method. Register to receive an access token and a refresh token:"
+            ]},
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/auth/register \
+curl -X POST http://localhost:8084/api/v1/auth/register \
   -H 'Content-Type: application/json' \
   -d '{"username": "player1", "password": "secret123"}'
 """
@@ -37,17 +39,40 @@ curl -X POST http://localhost:8080/api/v1/auth/register \
             code(
                 ~"json",
                 ~"""
-{"player_id": "...", "session_token": "...", "username": "player1"}
+{"player_id": "...", "access_token": "...", "refresh_token": "...", "username": "player1"}
 """
             ),
-            {p, [], [~"Use the session token in subsequent REST calls:"]},
+            {p, [], [~"Use the access token in subsequent REST calls:"]},
             code(
                 ~"http",
                 ~"""
-Authorization: Bearer <session_token>
+Authorization: Bearer <access_token>
 """
             ),
             {p, [], [~"Login reuses the same shape at ", {code, [], [~"/api/v1/auth/login"]}, ~"."]},
+
+            {h2, [], [~"Refresh & rotation"]},
+            {p, [], [
+                ~"Access tokens are short-lived. When one expires (a ",
+                {code, [], [~"401"]},
+                ~"), exchange the refresh token for a fresh pair at ",
+                {code, [], [~"/api/v1/auth/refresh"]},
+                ~". Rotation is single-use: the server burns the presented refresh token and returns a new access token ",
+                {em, [], [~"and"]},
+                ~" a new refresh token, so always store both from the response."
+            ]},
+            code(
+                ~"bash",
+                ~"""
+curl -X POST http://localhost:8084/api/v1/auth/refresh \
+  -H 'Content-Type: application/json' \
+  -d '{"refresh_token": "<refresh_token>"}'
+# => {"access_token": "...", "refresh_token": "..."}
+"""
+            ),
+            {p, [], [
+                ~"The official SDKs persist the refresh token, attach the access token to every call, and refresh-and-retry on a 401 automatically."
+            ]},
 
             {h2, [], [~"OAuth / social login"]},
             {p, [], [
@@ -56,7 +81,7 @@ Authorization: Bearer <session_token>
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/auth/oauth \
+curl -X POST http://localhost:8084/api/v1/auth/oauth \
   -H 'Content-Type: application/json' \
   -d '{"provider": "google", "token": "eyJhbGciOiJSUzI1NiIs..."}'
 """
@@ -113,7 +138,7 @@ curl -X POST http://localhost:8080/api/v1/auth/oauth \
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/auth/oauth \
+curl -X POST http://localhost:8084/api/v1/auth/oauth \
   -H 'Content-Type: application/json' \
   -d '{"provider": "steam", "token": "14000000..."}'
 """
@@ -136,8 +161,8 @@ curl -X POST http://localhost:8080/api/v1/auth/oauth \
             code(
                 ~"bash",
                 ~"""
-curl -X POST http://localhost:8080/api/v1/auth/link \
-  -H 'Authorization: Bearer <session_token>' \
+curl -X POST http://localhost:8084/api/v1/auth/link \
+  -H 'Authorization: Bearer <access_token>' \
   -H 'Content-Type: application/json' \
   -d '{"provider": "discord", "token": "eyJhbGciOi..."}'
 """
@@ -152,12 +177,12 @@ curl -X POST http://localhost:8080/api/v1/auth/link \
 
             {h2, [], [~"WebSocket authentication"]},
             {p, [], [
-                ~"After obtaining a session token (via any method above), connect to the WebSocket and authenticate as the first message:"
+                ~"After obtaining an access token (via any method above), connect to the WebSocket and authenticate as the first message:"
             ]},
             code(
                 ~"json",
                 ~"""
-{"type": "session.connect", "payload": {"token": "<session_token>"}}
+{"type": "session.connect", "payload": {"token": "<access_token>"}}
 """
             ),
             {p, [], [
@@ -176,7 +201,7 @@ curl -X POST http://localhost:8080/api/v1/auth/link \
 -- Defold (Lua)
 local id_token = google_sign_in.get_id_token()
 asobi.auth.oauth("google", id_token, function(result)
-    -- session token stored internally
+    -- access token stored internally
 end)
 """
                     },
@@ -188,7 +213,7 @@ end)
 // Unity (C#)
 string idToken = googleSignIn.IdToken;
 var response = await asobi.Auth.OAuth("google", idToken);
-// session token stored internally
+// access token stored internally
 """
                     }
                 ]

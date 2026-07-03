@@ -48,7 +48,7 @@ render(Bindings) ->
                             {code, [], [
                                 ~"local asobi = require(\"asobi.client\")\n\n",
                                 ~"function init(self)\n",
-                                ~"    self.client = asobi.create(\"localhost\", 8080)\n",
+                                ~"    self.client = asobi.create(\"localhost\", 8084)\n",
                                 ~"end"
                             ]}
                         ]}
@@ -97,7 +97,7 @@ render(Bindings) ->
                                 ~"self.client.realtime.on(\"match_state\", function(payload)\n",
                                 ~"    -- Update game state\n",
                                 ~"end)\n\n",
-                                ~"self.client.realtime.on(\"matchmaker_matched\", function(payload)\n",
+                                ~"self.client.realtime.on(\"match_matched\", function(payload)\n",
                                 ~"    self.client.realtime.join_match(payload.match_id)\n",
                                 ~"end)\n\n",
                                 ~"-- Connect\n",

@@ -80,7 +80,7 @@ services:
       ASOBI_DB_USER: postgres
       ASOBI_DB_PASSWORD: postgres
       ERLANG_COOKIE: ${ERLANG_COOKIE}
-    ports: ["8080:8080"]
+    ports: ["8084:8084"]
     volumes:
       - ./game:/app/game:ro
 
@@ -100,7 +100,7 @@ docker compose up -d
             ),
             {p, [], [
                 ~"Asobi is now running on ",
-                {code, [], [~"http://localhost:8080"]},
+                {code, [], [~"http://localhost:8084"]},
                 ~". Put your game's Lua scripts in the ",
                 {code, [], [~"./game"]},
                 ~" directory next to your ",
@@ -169,7 +169,7 @@ WantedBy=multi-user.target
                 ~"caddy",
                 ~"""
 game.example.com {
-    reverse_proxy localhost:8080
+    reverse_proxy localhost:8084
 }
 """
             ),
@@ -213,7 +213,7 @@ spec:
               valueFrom:
                 secretKeyRef: { name: erlang-cookie, key: cookie }
           ports:
-            - containerPort: 8080
+            - containerPort: 8084
           resources:
             requests: { cpu: 100m, memory: 256Mi }
             limits:   { cpu: 1000m, memory: 1Gi }
@@ -298,7 +298,7 @@ spec:
                     ~"Default is ",
                     {code, [], [~"priv/apple_root_ca.pem"]},
                     ~" inside the asobi app; override via ",
-                    {code, [], [~"apple_root_ca_path"]},
+                    {code, [], [~"apple_root_cert_path"]},
                     ~" if you mount it elsewhere."
                 ]},
                 {li, [], [
@@ -323,9 +323,9 @@ spec:
             {h2, [], [~"Upgrades"]},
             {p, [], [
                 ~"Asobi releases are hot-code-loadable on the BEAM. For minor version bumps, deploy the new release and existing matches finish on the old code; new matches use the new code. No downtime.",
-                ~" For major version bumps (breaking schema changes), run migrations via ",
-                {code, [], [~"rebar3 kura migrate"]},
-                ~" in a maintenance window."
+                ~" For major version bumps (breaking schema changes), the new release runs its migrations automatically at boot; do it in a maintenance window. Migrations are generated from the schema with ",
+                {code, [], [~"rebar3 kura compile"]},
+                ~", never hand-written."
             ]},
 
             {h2, [], [~"Where next?"]},

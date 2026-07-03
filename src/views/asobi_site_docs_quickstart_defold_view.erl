@@ -71,7 +71,7 @@ local asobi = require("asobi.client")
 
 function init(self)
     -- Local engine: host, port, use_ssl = false
-    self.client = asobi.create("localhost", 8080, false)
+    self.client = asobi.create("localhost", 8084, false)
 end
 """
             ),
