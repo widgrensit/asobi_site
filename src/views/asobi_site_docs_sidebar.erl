@@ -9,13 +9,13 @@ render(Bindings) ->
         {~"Get started", [
             {~"/docs", ~"Overview"},
             {~"/docs/quickstart", ~"Quick start (server)"},
-            {~"/docs/quickstart/unity", ~"Quick start \x{2014} Unity"},
-            {~"/docs/quickstart/godot", ~"Quick start \x{2014} Godot"},
-            {~"/docs/quickstart/defold", ~"Quick start \x{2014} Defold"},
+            {~"/docs/quickstart/unity", ~"Quick start - Unity"},
+            {~"/docs/quickstart/godot", ~"Quick start - Godot"},
+            {~"/docs/quickstart/defold", ~"Quick start - Defold"},
             {~"/docs/concepts", ~"Core concepts"}
         ]},
         {~"Tutorials", [
-            {~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe (Lua + Erlang)"},
+            {~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe"},
             {~"/docs/tutorials/hot-reload", ~"Live-edit your game (hot reload)"}
         ]},
         {~"Protocols & auth", [
@@ -32,14 +32,12 @@ render(Bindings) ->
             {~"/docs/economy", ~"Economy & IAP"},
             {~"/docs/leaderboards", ~"Leaderboards & tournaments"}
         ]},
-        {~"Lua reference", [
+        {~"Reference", [
             {~"/docs/lua/api", ~"game.* API"},
             {~"/docs/lua/callbacks", ~"Callbacks"},
             {~"/docs/lua/cookbook", ~"Cookbook"},
-            {~"/docs/lua/bots", ~"Bots"}
-        ]},
-        {~"Erlang reference", [
-            {~"/docs/erlang/api", ~"Erlang API"}
+            {~"/docs/lua/bots", ~"Bots"},
+            {~"/docs/erlang/api", ~"Erlang API (advanced)"}
         ]},
         {~"Operate", [
             {~"/docs/self-host", ~"Self-host"},
@@ -47,7 +45,7 @@ render(Bindings) ->
             {~"/docs/clustering", ~"Clustering"},
             {~"/docs/performance", ~"Performance"},
             {~"/docs/errors", ~"Errors & status codes"},
-            {~"/docs/cloud", ~"Cloud (coming soon)"}
+            {~"/docs/cloud", ~"Cloud"}
         ]},
         {~"Security", [
             {~"/docs/security", ~"Overview"},

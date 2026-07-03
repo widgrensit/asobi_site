@@ -17,7 +17,7 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Core concepts"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"The primitives Asobi gives you to build multiplayer games. Each concept shows the Lua API side by side with the Erlang equivalent \x{2014} they're the same thing, just different surfaces on the same behaviour."
+                ~"The primitives Asobi gives you to build multiplayer games, shown in Lua. Each example has an Erlang tab too, if you are writing on the native behaviour directly."
             ]},
 
             {h2, [], [~"Games and modes"]},
@@ -92,9 +92,9 @@ tick(#{elapsed := E} = State) ->
             asobi_site_tabbed_code:lua_erlang(
                 ~"concepts-zones",
                 ~"""
--- spawn a goblin and find nearby players
-local g = game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
-local nearby = game.spatial.query_radius(g.x, g.y, 50)
+-- spawn a goblin, then find players near where we placed it
+game.zone.spawn("goblin_warrior", 100, 200, { hp = 150 })
+local nearby = game.spatial.query_radius(100, 200, 50)
 """,
                 ~"""
 %% same, Erlang
@@ -241,7 +241,7 @@ asobi_leaderboard_server:submit(<<"arena:weekly">>, WinnerId, Kills).
             {ul, [], [
                 {li, [], [
                     {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"Quick start"]},
-                    ~" \x{2014} run the engine and ship a first game (Lua or Erlang)."
+                    ~" - run the server and ship a first Lua game."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"Lua API reference"]},

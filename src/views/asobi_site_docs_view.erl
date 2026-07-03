@@ -15,9 +15,9 @@ render(Bindings) ->
             {p, [{class, ~"docs-lede"}], [
                 ~"Asobi is an open-source game backend built on Erlang/OTP. ",
                 ~"Write your game logic in ",
-                {strong, [], [~"Lua or Erlang"]},
-                ~" \x{2014} both are first-class. Hot-reload it without kicking players. ",
-                ~"Self-host it or \x{2014} soon \x{2014} let us host it for you."
+                {strong, [], [~"Lua"]},
+                ~", hot-reload it without kicking players, and run it your way: self-host it, or deploy to managed cloud. ",
+                ~"Prefer the BEAM? Asobi is a plain Erlang library underneath, so you can use it directly too."
             ]},
 
             {'div', [{class, ~"docs-cta-row"}], [
@@ -43,7 +43,7 @@ render(Bindings) ->
                 card(
                     ~"/docs/quickstart",
                     ~"Quick start",
-                    ~"Install Asobi, spin up the engine, deploy a Lua game \x{2014} all in 15 minutes."
+                    ~"Run the server, write a Lua game, connect a client - about 10 minutes."
                 ),
                 card(
                     ~"/docs/concepts",
@@ -62,8 +62,8 @@ render(Bindings) ->
                 ),
                 card(
                     ~"/docs/erlang/api",
-                    ~"Erlang API",
-                    ~"Behaviours, modules, and specs for writing games directly in Erlang."
+                    ~"Erlang API (advanced)",
+                    ~"Embedding Asobi in an OTP app? The native behaviours and modules."
                 ),
                 card(
                     ~"/docs/lua/cookbook",
@@ -80,11 +80,9 @@ render(Bindings) ->
             {h2, [], [~"Why Asobi?"]},
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
-                    ~"Write game logic in ",
+                    ~"You write game logic in ",
                     {strong, [], [~"Lua"]},
-                    ~" (fast iteration, what game devs already know) or ",
-                    {strong, [], [~"Erlang"]},
-                    ~" (behaviour-level control, maximum perf). Both run on the BEAM, giving you:"
+                    ~" - fast iteration, what game devs already know - running on the BEAM, which gives you:"
                 ]},
                 {ul, [], [
                     {li, [], [
@@ -100,8 +98,8 @@ render(Bindings) ->
                         ~"One process per match, one process per zone. Scales to hundreds of thousands on one node."
                     ]},
                     {li, [], [
-                        {strong, [], [~"Mix-and-match. "]},
-                        ~"A mostly-Lua game can drop into Erlang for a hot loop. Both call the same ",
+                        {strong, [], [~"An Erlang escape hatch. "]},
+                        ~"Need behaviour-level control for a hot loop? Drop into Erlang - your Lua and the native path call the same ",
                         {code, [], [~"asobi_match"]},
                         ~" behaviour underneath."
                     ]}
@@ -110,11 +108,11 @@ render(Bindings) ->
 
             {h2, [], [~"Hosting"]},
             {p, [], [
-                ~"Asobi is fully self-hostable today \x{2014} see ",
+                ~"Asobi is fully self-hostable - see ",
                 {a, [{href, ~"/docs/self-host"}, az_navigate], [~"the self-host guide"]},
-                ~". If you'd rather we run it for you, managed cloud hosting is coming at ",
+                ~". If you'd rather we run it for you, managed cloud hosting is live at ",
                 {a, [{href, ~"/cloud"}, az_navigate], [~"asobi.dev/cloud"]},
-                ~" \x{2014} join the waitlist there."
+                ~"."
             ]},
 
             {h2, [], [~"Want something that isn't here?"]},

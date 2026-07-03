@@ -26,9 +26,11 @@ render(Bindings) ->
                 ~"The functions ",
                 {em, [], [~"you"]},
                 ~" write in a game module. Asobi calls them at the right moments in the match lifecycle. ",
-                ~"These mirror the ",
+                ~"If you write in Erlang instead, these map 1:1 to the ",
                 {code, [], [~"asobi_match"]},
-                ~" Erlang behaviour \x{2014} every Lua callback maps to an Erlang callback with the same name and arity."
+                ~" behaviour - see the ",
+                {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API"]},
+                ~"."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
@@ -105,14 +107,9 @@ init(_Config) ->
 
             {h2, [], [~"join(player_id, state)"]},
             {p, [], [
-                ~"A player is entering. Accept and attach them, or reject. ",
-                ~"From Lua, return the new state (or ",
+                ~"A player is entering. Accept and attach them, or reject. Return the new state, or ",
                 {code, [], [~"nil, error"]},
-                ~" to reject). From Erlang, return ",
-                {code, [], [~"{ok, NewState}"]},
-                ~" or ",
-                {code, [], [~"{error, Reason}"]},
-                ~"."
+                ~" to reject."
             ]},
             callback_pair(
                 ~"""
@@ -204,11 +201,11 @@ handle_input(PlayerId, #{<<"cell">> := Cell},
             {h2, [], [~"tick(state)"]},
             {p, [], [
                 ~"Called on a fixed interval (default 10 Hz, configurable per mode). Advance time, resolve AI, check win conditions. ",
-                ~"Return the new state \x{2014} or ",
-                {code, [], [~"{ finished = true, result = ... }"]},
-                ~" (Lua) / ",
-                {code, [], [~"{finished, Result, State}"]},
-                ~" (Erlang) to end the match."
+                ~"Return the new state; to end the match, set ",
+                {code, [], [~"state._finished = true"]},
+                ~" and ",
+                {code, [], [~"state._result"]},
+                ~" first (see the callout above)."
             ]},
             callback_pair(
                 ~"""
@@ -431,19 +428,8 @@ vote_resolved(_Template, #{winner := W}, State) ->
             ]}
         ]}
     ).
-callback_pair(LuaBody, ErlangBody) ->
-    ?html(
-        {'div', [{class, ~"docs-lang-pair"}], [
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Lua"]},
-                code(~"lua", LuaBody)
-            ]},
-            {'div', [{class, ~"docs-lang-block"}], [
-                {h4, [{class, ~"docs-lang-label"}], [~"Erlang"]},
-                code(~"erlang", ErlangBody)
-            ]}
-        ]}
-    ).
+callback_pair(LuaBody, _ErlangBody) ->
+    ?html(code(~"lua", LuaBody)).
 
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).
