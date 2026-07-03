@@ -52,8 +52,8 @@ render(Bindings) ->
                 ~"lua",
                 ~"""
 -- game/match.lua
-match_size = 2
-max_players = 2
+match_size = 1
+max_players = 1
 strategy = "fill"
 
 function init(config)
@@ -190,8 +190,8 @@ curl -sX POST http://localhost:8084/api/v1/auth/register \
 npm install -g wscat
 wscat -c ws://localhost:8084/ws
 > {"type":"session.connect","payload":{"token":"<access_token>"}}
-> {"type":"matchmaker.add","payload":{"mode":"match"}}
-# server replies with matchmaker.matched { match_id: "<id>" }
+> {"type":"matchmaker.add","payload":{"mode":"default"}}
+# server replies with match.matched { match_id: "<id>" }
 > {"type":"match.join","payload":{"match_id":"<id>"}}
 > {"type":"match.input","payload":{"action":"click"}}
 """
