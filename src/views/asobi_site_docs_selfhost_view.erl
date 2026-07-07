@@ -24,7 +24,7 @@ render(Bindings) ->
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Prefer managed? "]},
-                    ~"Asobi Cloud is live - fully managed game servers, EU-sovereign hosting, per-environment scaling, and a free trial. ",
+                    ~"Asobi Cloud is live - fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
                     {a, [{href, ~"/docs/cloud"}, az_navigate], [
                         ~"See the cloud quickstart"
                     ]},

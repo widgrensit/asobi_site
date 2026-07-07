@@ -23,9 +23,9 @@ render(Bindings) ->
             {h2, [], [~"Get a game running in minutes"]},
             {'div', [{class, ~"docs-grid"}], [
                 {'div', [{class, ~"docs-card"}], [
-                    {h3, [], [~"Self-host - no account needed"]},
+                    {h3, [], [~"Self-host - free, no account needed"]},
                     {p, [], [
-                        ~"Docker only. Runs fully local, no signup, no credentials. About 5 minutes."
+                        ~"Open source, Docker only. Runs fully local - no signup, no credentials, no cost. About 5 minutes."
                     ]},
                     code(
                         ~"bash",
@@ -47,7 +47,7 @@ docker compose up -d
                 {'div', [{class, ~"docs-card"}], [
                     {h3, [], [~"Deploy to cloud - we run it"]},
                     {p, [], [
-                        ~"No Docker, no database to manage. EU-hosted, free trial. Spin up an environment and deploy in about 10 minutes."
+                        ~"No Docker, no database to manage - we run it, EU-hosted. Deploy to a managed environment in about 10 minutes."
                     ]},
                     code(
                         ~"bash",

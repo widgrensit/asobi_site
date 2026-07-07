@@ -31,9 +31,11 @@ render(Bindings) ->
             {'div', [{class, ~"docs-callout docs-callout-success"}], [
                 {p, [], [
                     {strong, [], [~"About 10 minutes to a running game. "]},
-                    ~"Free trial, no credit card to start. We run the servers and the database, so there is no Docker or Postgres to manage - just the ",
+                    ~"We run the servers and the database, so there is no Docker or Postgres to manage - just the ",
                     {code, [], [~"asobi"]},
-                    ~" CLI and your Lua."
+                    ~" CLI and your Lua. Want to try free first? ",
+                    {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"Self-host it locally"]},
+                    ~" in one command - no account needed."
                 ]}
             ]},
 
