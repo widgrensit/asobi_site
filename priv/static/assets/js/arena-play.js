@@ -5,14 +5,17 @@
 // match.input) is verified end-to-end against play.asobi.dev.
 (function () {
   "use strict";
-  var API = "https://play.asobi.dev";
-  var WS = "wss://play.asobi.dev/ws";
   var ARENA_W = 800, ARENA_H = 600;
 
+  var root = document.querySelector(".arena-play");
   var btn = document.getElementById("arena-play-btn");
   var canvas = document.getElementById("arena-canvas");
   var statusEl = document.getElementById("arena-status");
   if (!btn || !canvas) return;
+
+  var host = (root && root.dataset && root.dataset.backend) || "play.asobi.dev";
+  var API = "https://" + host;
+  var WS = "wss://" + host + "/ws";
   var ctx = canvas.getContext("2d");
 
   var ws = null, me = null, state = null, running = false, inputTimer = null;
