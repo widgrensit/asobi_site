@@ -10,6 +10,7 @@ render(Bindings) ->
             {~"/docs", ~"Overview"},
             {~"/docs/cloud", ~"Quick start - Cloud (fastest)"},
             {~"/docs/quickstart", ~"Quick start - Self-host"},
+            {~"/docs/samples", ~"Samples"},
             {~"/docs/quickstart/unity", ~"Quick start - Unity"},
             {~"/docs/quickstart/godot", ~"Quick start - Godot"},
             {~"/docs/quickstart/defold", ~"Quick start - Defold"},

@@ -26,6 +26,7 @@ routes(_Environment) ->
                 page(~"/blog/:slug", asobi_site_blog_post_view, blog),
                 docs(~"/docs", asobi_site_docs_view),
                 docs(~"/docs/quickstart", asobi_site_docs_quickstart_view),
+                docs(~"/docs/samples", asobi_site_docs_samples_view),
                 docs(~"/docs/concepts", asobi_site_docs_concepts_view),
                 docs(~"/docs/self-host", asobi_site_docs_selfhost_view),
                 docs(~"/docs/lua/api", asobi_site_docs_lua_api_view),
