@@ -26,6 +26,21 @@ render(Bindings) ->
                 ~"Virtual economy primitives: wallets (multi-currency), item definitions, player inventory, store listings, and server-side validated in-app purchases (Apple + Google Play). All balance changes go through a transactional ledger."
             ]},
 
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Windows. "]},
+                    ~"Run the ",
+                    {code, [], [~"curl"]},
+                    ~" examples in Git Bash or WSL, or use PowerShell's ",
+                    {code, [], [~"Invoke-RestMethod"]},
+                    ~" with the same URL and a JSON ",
+                    {code, [], [~"-Body"]},
+                    ~"; it parses the response for you. Authenticated calls add ",
+                    {code, [], [~"-Headers @{ Authorization = 'Bearer <token>' }"]},
+                    ~"."
+                ]}
+            ]},
+
             {h2, [], [~"Wallets"]},
             {p, [], [
                 ~"Each player can have multiple wallets, one per currency. Every change is a transaction in an audit-ready ledger."

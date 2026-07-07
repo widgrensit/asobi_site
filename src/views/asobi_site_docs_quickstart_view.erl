@@ -178,6 +178,21 @@ curl -sX POST http://localhost:8084/api/v1/auth/register \
 """
             ),
             {p, [], [
+                ~"On Windows, use PowerShell (no ",
+                {code, [], [~"curl"]},
+                ~" or ",
+                {code, [], [~"jq"]},
+                ~" install needed):"
+            ]},
+            code(
+                ~"powershell",
+                ~"""
+Invoke-RestMethod -Uri http://localhost:8084/api/v1/auth/register `
+  -Method Post -ContentType application/json `
+  -Body '{"username":"player1","password":"secret123"}'
+"""
+            ),
+            {p, [], [
                 ~"An SDK does this for you and attaches the token to every REST and WebSocket call, refreshing it automatically. For a raw test, connect with the ",
                 {code, [], [~"access_token"]},
                 ~" using ",
@@ -249,10 +264,28 @@ COPY game/ /app/game
                 {a, [{href, ~"https://console.asobi.dev"}], [~"console.asobi.dev"]},
                 ~" you get a hosted environment with an endpoint URL and hot-reload deploys through the CLI - new Lua loads with no dropped connections."
             ]},
+            {p, [], [~"Install the CLI. On Linux and macOS:"]},
             code(
                 ~"bash",
                 ~"""
 curl -fsSL https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.sh | sh
+"""
+            ),
+            {p, [], [
+                ~"On Windows (PowerShell), or via ",
+                {code, [], [~"winget install widgrensit.asobi"]},
+                ~":"
+            ]},
+            code(
+                ~"powershell",
+                ~"""
+irm https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.ps1 | iex
+"""
+            ),
+            {p, [], [~"Then, in any shell:"]},
+            code(
+                ~"bash",
+                ~"""
 asobi login
 asobi use <your-game>
 asobi deploy prod lua

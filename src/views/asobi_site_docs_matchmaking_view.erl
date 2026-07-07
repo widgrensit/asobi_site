@@ -24,6 +24,21 @@ render(Bindings) ->
                 ~"Players submit tickets with a mode, optional properties, and an optional party; a per-mode strategy module groups tickets into matches and spawns them."
             ]},
 
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Windows. "]},
+                    ~"Run the ",
+                    {code, [], [~"curl"]},
+                    ~" examples in Git Bash or WSL, or use PowerShell's ",
+                    {code, [], [~"Invoke-RestMethod"]},
+                    ~" with the same URL and a JSON ",
+                    {code, [], [~"-Body"]},
+                    ~"; it parses the response for you. Authenticated calls add ",
+                    {code, [], [~"-Headers @{ Authorization = 'Bearer <token>' }"]},
+                    ~"."
+                ]}
+            ]},
+
             {h2, [], [~"Submitting a ticket"]},
             ?stateless(asobi_site_tabbed_code, render, #{
                 id => ~"mm-submit",

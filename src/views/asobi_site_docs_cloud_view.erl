@@ -45,12 +45,25 @@ render(Bindings) ->
             {p, [], [
                 ~"The ",
                 {code, [], [~"asobi"]},
-                ~" CLI is a single binary. Install the latest release with the one-line installer:"
+                ~" CLI is a single binary. Install the latest release with the one-line installer. On Linux and macOS:"
             ]},
             code(
                 ~"bash",
                 ~"""
 curl -fsSL https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.sh | sh
+"""
+            ),
+            {p, [], [
+                ~"On Windows (PowerShell), or with ",
+                {code, [], [~"winget install widgrensit.asobi"]},
+                ~" / ",
+                {code, [], [~"scoop install asobi"]},
+                ~":"
+            ]},
+            code(
+                ~"powershell",
+                ~"""
+irm https://raw.githubusercontent.com/widgrensit/asobi-cli/main/install.ps1 | iex
 """
             ),
             {p, [], [

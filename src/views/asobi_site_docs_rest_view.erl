@@ -27,6 +27,21 @@ render(Bindings) ->
                 ~"."
             ]},
 
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Windows. "]},
+                    ~"Run the ",
+                    {code, [], [~"curl"]},
+                    ~" examples in Git Bash or WSL, or use PowerShell's ",
+                    {code, [], [~"Invoke-RestMethod"]},
+                    ~" with the same URL and a JSON ",
+                    {code, [], [~"-Body"]},
+                    ~"; it parses the response for you. Authenticated calls add ",
+                    {code, [], [~"-Headers @{ Authorization = 'Bearer <token>' }"]},
+                    ~"."
+                ]}
+            ]},
+
             section(
                 ~"Auth",
                 ~"""
