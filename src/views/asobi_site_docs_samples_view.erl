@@ -20,6 +20,25 @@ render(Bindings) ->
                 ~"Complete, runnable games. Each one is two commands to your machine: scaffold it, then run its bundled backend locally. Self-host is free - no account, no keys."
             ]},
 
+            {'div', [{class, ~"arena-play"}], [
+                {h2, [], [~"Play a live match, right now"]},
+                {p, [], [
+                    ~"No install, no signup. This drops you into a live Asobi server running the Arena sample - move with WASD, aim with the mouse, click to shoot. You will be matched with bots in a moment."
+                ]},
+                {button, [{id, ~"arena-play-btn"}, {class, ~"btn btn-primary"}], [
+                    ~"\x{25B6} Play a live match"
+                ]},
+                {p, [{id, ~"arena-status"}, {class, ~"arena-status"}], []},
+                {canvas,
+                    [
+                        {id, ~"arena-canvas"},
+                        {class, ~"arena-canvas"},
+                        {width, ~"640"},
+                        {height, ~"480"}
+                    ],
+                    []}
+            ]},
+
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"How this works. "]},
@@ -34,7 +53,9 @@ render(Bindings) ->
                 ]}
             ]},
 
-            {'div', [{class, ~"samples-grid"}], [sample_card(S) || S <- samples()]}
+            {'div', [{class, ~"samples-grid"}], [sample_card(S) || S <- samples()]},
+
+            {script, [{src, ~"/assets/js/arena-play.js"}, {defer, true}], []}
         ]}
     ).
 
