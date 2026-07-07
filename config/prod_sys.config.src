@@ -22,6 +22,7 @@
         {json_lib, json}
     ]},
     {asobi_site, [
-        {use_sessions, false}
+        {use_sessions, false},
+        {demo_backend_host, <<"asobi-demo-live3.asobi-studio.asobi.dev">>}
     ]}
 ].
