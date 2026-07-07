@@ -24,10 +24,11 @@ render(Bindings) ->
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Prefer managed? "]},
-                    ~"Asobi Cloud is coming - fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
-                    {a, [{href, ~"/cloud"}, az_navigate], [
-                        ~"Join the waitlist at asobi.dev/cloud."
-                    ]}
+                    ~"Asobi Cloud is live - fully managed game servers, EU-sovereign hosting, per-environment scaling. ",
+                    {a, [{href, ~"/docs/cloud"}, az_navigate], [
+                        ~"See the cloud quickstart"
+                    ]},
+                    ~"."
                 ]}
             ]},
 

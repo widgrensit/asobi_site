@@ -8,7 +8,8 @@ render(Bindings) ->
     Sections = [
         {~"Get started", [
             {~"/docs", ~"Overview"},
-            {~"/docs/quickstart", ~"Quick start (server)"},
+            {~"/docs/cloud", ~"Quick start - Cloud (fastest)"},
+            {~"/docs/quickstart", ~"Quick start - Self-host"},
             {~"/docs/quickstart/unity", ~"Quick start - Unity"},
             {~"/docs/quickstart/godot", ~"Quick start - Godot"},
             {~"/docs/quickstart/defold", ~"Quick start - Defold"},
@@ -40,12 +41,11 @@ render(Bindings) ->
             {~"/docs/erlang/api", ~"Erlang API (advanced)"}
         ]},
         {~"Operate", [
-            {~"/docs/self-host", ~"Self-host"},
+            {~"/docs/self-host", ~"Self-host (Docker, VPS, k8s)"},
             {~"/docs/configuration", ~"Configuration"},
             {~"/docs/clustering", ~"Clustering"},
             {~"/docs/performance", ~"Performance"},
-            {~"/docs/errors", ~"Errors & status codes"},
-            {~"/docs/cloud", ~"Cloud"}
+            {~"/docs/errors", ~"Errors & status codes"}
         ]},
         {~"Security", [
             {~"/docs/security", ~"Overview"},

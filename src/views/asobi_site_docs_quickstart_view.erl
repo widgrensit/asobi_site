@@ -37,6 +37,14 @@ render(Bindings) ->
                     ~"Docker and a terminal. Nothing else - you do not need Erlang or rebar3 to write and run a Lua game."
                 ]}
             ]},
+            {'div', [{class, ~"docs-callout docs-callout-success"}], [
+                {p, [], [
+                    {strong, [], [~"Nothing to sign up for. "]},
+                    ~"Self-host runs entirely on your machine - no Asobi account, no API key, no credentials. About 10 minutes to a running game. Want us to host it instead? See the ",
+                    {a, [{href, ~"/docs/cloud"}, az_navigate], [~"cloud quickstart"]},
+                    ~"."
+                ]}
+            ]},
 
             {h2, [], [~"1. Write the game"]},
             {p, [], [

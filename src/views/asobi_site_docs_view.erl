@@ -20,6 +20,56 @@ render(Bindings) ->
                 ~"Prefer the BEAM? Asobi is a plain Erlang library underneath, so you can use it directly too."
             ]},
 
+            {h2, [], [~"Get a game running in minutes"]},
+            {'div', [{class, ~"docs-grid"}], [
+                {'div', [{class, ~"docs-card"}], [
+                    {h3, [], [~"Self-host - free, no account needed"]},
+                    {p, [], [
+                        ~"Open source, Docker only. Runs fully local - no signup, no credentials, no cost. About 5 minutes."
+                    ]},
+                    code(
+                        ~"bash",
+                        ~"""
+docker compose up -d
+# your Lua game + Postgres, server on http://localhost:8084
+"""
+                    ),
+                    {p, [], [
+                        {a,
+                            [
+                                {href, ~"/docs/quickstart"},
+                                {class, ~"btn btn-primary"},
+                                az_navigate
+                            ],
+                            [~"Self-host quickstart \x{2192}"]}
+                    ]}
+                ]},
+                {'div', [{class, ~"docs-card"}], [
+                    {h3, [], [~"Deploy to cloud - we run it"]},
+                    {p, [], [
+                        ~"No Docker, no database to manage - we run it, EU-hosted. Deploy to a managed environment in about 10 minutes."
+                    ]},
+                    code(
+                        ~"bash",
+                        ~"""
+asobi login
+asobi init mygame
+asobi create prod
+asobi deploy prod lua
+"""
+                    ),
+                    {p, [], [
+                        {a,
+                            [
+                                {href, ~"/docs/cloud"},
+                                {class, ~"btn btn-primary"},
+                                az_navigate
+                            ],
+                            [~"Cloud quickstart \x{2192}"]}
+                    ]}
+                ]}
+            ]},
+
             {'div', [{class, ~"docs-cta-row"}], [
                 {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}, az_navigate], [
                     ~"Quick start \x{2192}"
@@ -132,3 +182,6 @@ card(Href, Title, Desc) ->
             {p, [], [Desc]}
         ]}
     ).
+
+code(Lang, Body) ->
+    ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).

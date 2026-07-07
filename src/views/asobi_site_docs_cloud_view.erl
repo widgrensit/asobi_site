@@ -28,6 +28,17 @@ render(Bindings) ->
                 ~"EU-hosted, and the core is open source, so you can self-host any time."
             ]},
 
+            {'div', [{class, ~"docs-callout docs-callout-success"}], [
+                {p, [], [
+                    {strong, [], [~"About 10 minutes to a running game. "]},
+                    ~"We run the servers and the database, so there is no Docker or Postgres to manage - just the ",
+                    {code, [], [~"asobi"]},
+                    ~" CLI and your Lua. Want to try free first? ",
+                    {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"Self-host it locally"]},
+                    ~" in one command - no account needed."
+                ]}
+            ]},
+
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"Before you start. "]},
