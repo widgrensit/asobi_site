@@ -1,8 +1,9 @@
-// Live in-browser Asobi arena demo. Connects a guest player to the shared
-// showcase backend (play.asobi.dev) running the arena sample, renders match
-// state on a canvas, and streams input. Vanilla JS, no build step. The wire
-// protocol here (register -> session.connect -> matchmaker.add -> match.state /
-// match.input) is verified end-to-end against play.asobi.dev.
+// Live in-browser Asobi arena demo. Connects a guest player to the backend
+// named in the .arena-play [data-backend] attribute (set from asobi_site's
+// demo_backend_host config; in prod this points at an asobi_saas-provisioned
+// env running the arena sample), renders match state on a canvas, and streams
+// input. Vanilla JS, no build step. Wire protocol: register ->
+// session.connect -> matchmaker.add -> match.state / match.input.
 (function () {
   "use strict";
   var ARENA_W = 800, ARENA_H = 600;
