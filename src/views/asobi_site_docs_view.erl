@@ -101,6 +101,11 @@ asobi deploy prod lua
                     ~"Matches, worlds, zones, voting, phases. The primitives Asobi gives you."
                 ),
                 card(
+                    ~"/docs/samples",
+                    ~"Samples",
+                    ~"Complete games you scaffold and run in two commands."
+                ),
+                card(
                     ~"/docs/tutorials/tic-tac-toe",
                     ~"Tic-tac-toe",
                     ~"Your first Asobi game. Two players, one match, authoritative Lua."

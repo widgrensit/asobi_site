@@ -2001,3 +2001,87 @@ code {
 }
 .blog-footer-cta p { margin-bottom: var(--sp-3); }
 .blog-footer-cta a { color: var(--indigo); }
+
+/* =========================================================================
+   Samples gallery
+   ========================================================================= */
+.samples-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: var(--sp-5);
+    margin: var(--sp-5) 0;
+}
+.sample-card {
+    display: flex;
+    flex-direction: column;
+    border: 1px solid var(--line);
+    border-radius: var(--r-2);
+    background: var(--ink-0);
+    overflow: hidden;
+    box-shadow: 0 1px 0 var(--line);
+}
+.sample-media {
+    width: 100%;
+    aspect-ratio: 16 / 9;
+    object-fit: cover;
+    display: block;
+    border-bottom: 1px solid var(--line);
+    background: var(--ink-1);
+}
+.sample-body {
+    display: flex;
+    flex-direction: column;
+    gap: var(--sp-3);
+    padding: var(--sp-5) var(--sp-6);
+}
+.sample-head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-3);
+}
+.sample-head h3 {
+    margin: 0;
+    color: var(--text);
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: var(--fs-md);
+}
+.sample-badge {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--indigo);
+    border: 1px solid var(--line-strong);
+    border-radius: 999px;
+    padding: 2px 10px;
+    white-space: nowrap;
+}
+.sample-body > p {
+    margin: 0;
+    color: var(--text-2);
+    font-size: var(--fs-sm);
+}
+.sample-tags {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-2);
+}
+.sample-tag {
+    font-size: var(--fs-xs);
+    color: var(--text-3);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 1px 8px;
+}
+.sample-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: var(--sp-4);
+    margin-top: var(--sp-1);
+}
+.sample-links a {
+    font-size: var(--fs-sm);
+    font-weight: 500;
+}
