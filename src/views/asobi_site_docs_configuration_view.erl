@@ -36,6 +36,80 @@ render(Bindings) ->
                 ~" at runtime."
             ]},
 
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Do you even need this file? "]},
+                    ~"It depends how you run Asobi. On ",
+                    {strong, [], [~"Asobi Cloud"]},
+                    ~" (",
+                    {code, [], [~"asobi deploy"]},
+                    ~") and with the ",
+                    {strong, [], [~"asobi_lua Docker image"]},
+                    ~" (",
+                    {code, [], [~"asobi dev"]},
+                    ~" / ",
+                    {code, [], [~"docker compose up"]},
+                    ~") you do not write any config file - the platform owns it, or the container is tuned by the ",
+                    {code, [], [~"ASOBI_*"]},
+                    ~" environment variables (see ",
+                    {a, [{href, ~"#common-env-vars"}], [~"Common env vars"]},
+                    ~"). You only edit ",
+                    {code, [], [~"sys.config"]},
+                    ~" when you ",
+                    {a, [{href, ~"/docs/self-host"}, az_navigate], [
+                        ~"build the release from source"
+                    ]},
+                    ~". The blocks below are that file's keys."
+                ]}
+            ]},
+
+            {h2, [], [~"Where the file lives"]},
+            {p, [], [
+                ~"In a self-host release the config file is ",
+                {code, [], [~"config/sys.config"]},
+                ~" in the Asobi source tree (or ",
+                {code, [], [~"config/prod_sys.config.src"]},
+                ~" when you want env-var templating). ",
+                {code, [], [~"rebar3 release"]},
+                ~" bakes it into the release at ",
+                {code, [], [~"releases/<vsn>/sys.config"]},
+                ~", which the BEAM reads at boot. A complete file assembles the blocks documented below:"
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+%% config/sys.config - a complete self-host example.
+[
+    {kura, [
+        {repo, asobi_repo}, {backend, kura_backend_postgres},
+        {host, "localhost"}, {port, 5432}, {database, "asobi"},
+        {user, "postgres"}, {password, "postgres"}, {pool_size, 10}
+    ]},
+    {nova, [
+        {cowboy_configuration, #{port => 8084}}
+    ]},
+    {asobi, [
+        {game_dir, "/app/game"},   %% where match.lua / config.lua are read from
+        {game_modes, #{
+            ~"default" => #{module => {lua, ~"match.lua"}, match_size => 2}
+        }},
+        {rate_limits, #{
+            auth => #{limit => 5,   window => 1000},
+            iap  => #{limit => 10,  window => 1000},
+            api  => #{limit => 300, window => 1000}
+        }}
+    ]},
+    {asobi_lua, []},
+    {kernel, [
+        {logger, [
+            {handler, default, logger_std_h,
+                #{formatter => {nova_jsonlogger_formatter, #{}}}}
+        ]}
+    ]}
+].
+"""
+            ),
+
             {h2, [], [~"Database"]},
             code(
                 ~"erlang",
@@ -181,7 +255,7 @@ render(Bindings) ->
 """
             ),
 
-            {h2, [], [~"Rate limits"]},
+            {h2, [{id, ~"rate-limits"}], [~"Rate limits"]},
             {p, [], [
                 ~"Per-route limits enforced by ",
                 {code, [], [~"asobi_rate_limit_plugin"]},
@@ -319,7 +393,7 @@ render(Bindings) ->
 """
             ),
 
-            {h2, [], [~"Common env vars"]},
+            {h2, [{id, ~"common-env-vars"}], [~"Common env vars"]},
             {p, [], [
                 ~"These are the variables consumed by the published ",
                 {code, [], [~"asobi_lua"]},
