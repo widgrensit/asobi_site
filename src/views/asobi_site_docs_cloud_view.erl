@@ -181,6 +181,58 @@ asobi init mygame
                 {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* API reference"]},
                 ~" for the full callback set."
             ]},
+            {p, [], [
+                ~"Want to run it before deploying? ",
+                {code, [], [~"asobi dev"]},
+                ~" boots the ",
+                {code, [], [~"asobi_lua"]},
+                ~" image and Postgres locally in Docker - no account, no keys - and hot-reloads ",
+                {code, [], [~"lua/"]},
+                ~" as you edit."
+            ]},
+            {h3, [], [~"Multiple game modes"]},
+            {p, [], [
+                ~"By itself ",
+                {code, [], [~"match.lua"]},
+                ~" loads as the ",
+                {code, [], [~"default"]},
+                ~" mode. To ship more than one mode, add a ",
+                {code, [], [~"lua/config.lua"]},
+                ~" manifest mapping mode names to files; clients then pick one with ",
+                {code, [], [~"matchmaker.add {mode = ...}"]},
+                ~"."
+            ]},
+            code(
+                ~"lua",
+                ~"""
+-- lua/config.lua
+return {
+    default = "match.lua",
+    ranked  = "ranked.lua"
+}
+"""
+            ),
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Want a whole backend, not just Lua? "]},
+                    ~"For a complete runnable example - ",
+                    {code, [], [~"docker-compose.yml"]},
+                    ~", the mode manifest, and every ",
+                    {code, [], [~"ASOBI_*"]},
+                    ~" environment variable in one repo - scaffold from the backend template:"
+                ]},
+                code(
+                    ~"bash",
+                    ~"""
+asobi init mybackend --template backend
+"""
+                ),
+                {p, [], [
+                    ~"That is the self-host on-ramp. The runtime config it exposes is documented on the ",
+                    {a, [{href, ~"/docs/configuration"}, az_navigate], [~"Configuration"]},
+                    ~" page."
+                ]}
+            ]},
 
             {h2, [], [~"5. Create an environment"]},
             {p, [], [
