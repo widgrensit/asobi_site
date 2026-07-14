@@ -1,0 +1,35 @@
+name: Quickstart drift
+
+# Fails if an SDK quickstart page cites a client-SDK symbol that no longer
+# exists (asobi_site#87). Runs when the quickstarts or the guard change, and
+# weekly to catch drift introduced by an SDK release in another repo.
+on:
+  push:
+    paths:
+      - 'src/views/asobi_site_docs_quickstart_*_view.erl'
+      - 'scripts/check-quickstart-drift.sh'
+      - '.github/workflows/quickstart-drift.yml'
+  pull_request:
+    paths:
+      - 'src/views/asobi_site_docs_quickstart_*_view.erl'
+      - 'scripts/check-quickstart-drift.sh'
+      - '.github/workflows/quickstart-drift.yml'
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  drift:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Fetch client SDK repos
+        run: |
+          mkdir -p "$RUNNER_TEMP/sdks"
+          for engine in godot unity defold; do
+            git clone --depth 1 "https://github.com/widgrensit/asobi-$engine" \
+              "$RUNNER_TEMP/sdks/asobi-$engine"
+          done
+      - name: Check quickstart-vs-SDK drift
+        run: scripts/check-quickstart-drift.sh "$RUNNER_TEMP/sdks"
