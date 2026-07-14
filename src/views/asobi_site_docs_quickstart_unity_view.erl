@@ -117,8 +117,10 @@ public class AsobiClientBehaviour : MonoBehaviour
         _client = new AsobiClient(Host, port: Port);
 
         // 1. Authenticate. await it before connecting - the WebSocket uses
-        //    this session. (Production: use a platform provider.)
-        await _client.Auth.RegisterAsync("player1", "secret123", "Player One");
+        //    this session. A fresh username each run - registering the same
+        //    one twice returns 409 username_taken (see below).
+        var name = $"player_{UnityEngine.Random.Range(100000, 999999)}";
+        await _client.Auth.RegisterAsync(name, "secret1234", "Player One");
 
         // 2. Subscribe BEFORE connecting so you don't miss early events.
         _client.Realtime.OnMatchmakerMatched += OnMatched;
@@ -169,7 +171,11 @@ public class AsobiClientBehaviour : MonoBehaviour
                     {code, [], [~"await"]},
                     ~" ",
                     {code, [], [~"RegisterAsync"]},
-                    ~" before you connect. Auth is rate-limited to 5/sec per IP - bursting returns ",
+                    ~" before you connect. Registering a username that already exists returns ",
+                    {code, [], [~"409 username_taken"]},
+                    ~" - a real game registers once and calls ",
+                    {code, [], [~"LoginAsync"]},
+                    ~" on return (this quickstart uses a fresh random name each run). Auth is rate-limited to 5/sec per IP - bursting returns ",
                     {code, [], [~"429 rate_limited"]},
                     ~". See ",
                     {a, [{href, ~"/docs/security/auth"}, az_navigate], [~"Auth & rate limiting"]},

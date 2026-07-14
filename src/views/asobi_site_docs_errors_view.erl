@@ -38,12 +38,15 @@ render(Bindings) ->
         |                         | bad_data, channel_id_invalid, body_too_large               | invalid query params before any DB work.
  401    | Unauthenticated         | invalid_token, expired_token                               | asobi_auth_plugin / IAP receipt validation.
  403    | Forbidden               | not_member, not_owner, not_match_participant,              | Caller is authenticated but lacks the right
-        |                         | last_auth_method, group_full, friendship_self              | (channel membership, ticket ownership, etc).
+        |                         | last_auth_method, friendship_self                          | (channel membership, ticket ownership, etc).
  404    | Not found               | match_not_found, world_not_found, ticket_not_found,        | Resource lookup miss.
         |                         | save_not_found, group_not_found
- 409    | Conflict                | already_friends, username_taken, world_already_owned       | Idempotent-ish endpoints flag duplicate state.
+ 409    | Conflict                | username_taken, already_friend, already_joined, group_full | Duplicate or conflicting state - e.g. a taken
+        |                         | version_conflict, provider_already_linked                 | username on register, re-joining a match.
  413    | Payload too large       | content_too_large, save_too_large                          | Body exceeded the per-endpoint cap (DM 2000B,
         |                         |                                                            | save 256KB, etc).
+ 422    | Unprocessable content   | validation_failed                                          | Well-formed but invalid field values (username
+        |                         |                                                            | too short, weak password). Body carries fields.
  429    | Too many requests       | rate_limited, world_cap_exceeded                           | Seki limiter or per-player world cap hit.
  500    | Internal error          | internal_error                                             | Unexpected crash in a controller; logged with
         |                         |                                                            | a correlation id, never leaks internals.

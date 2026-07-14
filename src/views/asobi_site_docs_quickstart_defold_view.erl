@@ -98,9 +98,10 @@ function init(self)
     self.client = asobi.create("localhost", 8084)
 
     -- Authenticate first. Everything else happens inside this callback,
-    -- once you actually have a session. The callback gets (data, err).
-    self.client.auth.register(self.client, "player1", "secret123", nil,
-        function(data, err)
+    -- once you actually have a session. The callback gets (data, err). A fresh
+    -- username each run - registering the same one twice returns 409 (below).
+    self.client.auth.register(self.client, "player_" .. math.random(100000, 999999),
+        "secret1234", nil, function(data, err)
             if err then print("auth failed: " .. tostring(err.error)) return end
 
             -- A match was formed. Join it before state starts flowing.
@@ -138,7 +139,11 @@ end
                     {strong, [], [~"Authenticate first (in init). "]},
                     ~"The client is the first argument to every API call. Nest the rest inside the ",
                     {code, [], [~"register"]},
-                    ~" callback so it only runs once you have a session. Auth is rate-limited to 5/sec per IP; production builds should use a platform provider (see ",
+                    ~" callback so it only runs once you have a session. Registering a username that already exists returns ",
+                    {code, [], [~"409 username_taken"]},
+                    ~" - a real game registers once and calls ",
+                    {code, [], [~"login"]},
+                    ~" on return (this quickstart uses a fresh random name each run). Auth is rate-limited to 5/sec per IP; production builds should use a platform provider (see ",
                     {a, [{href, ~"/docs/security/auth"}, az_navigate], [~"Auth & rate limiting"]},
                     ~")."
                 ]},
