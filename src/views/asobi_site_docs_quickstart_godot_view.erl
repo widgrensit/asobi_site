@@ -92,7 +92,9 @@ func _ready() -> void:
 
     # 1. Authenticate. await the result before doing anything else - the
     #    WebSocket connects with this session.
-    var resp := await Asobi.auth.register("player1", "secret123", "Player One")
+    # A fresh username each run - registering the same one twice returns
+    # 409 username_taken (see below).
+    var resp := await Asobi.auth.register("player_%d" % randi(), "secret1234", "Player One")
     if resp.has("error"):
         push_error("auth failed: %s" % resp.error)
         return
@@ -136,7 +138,11 @@ func _process(_delta: float) -> void:
                     {code, [], [~"login"]},
                     ~") call and check ",
                     {code, [], [~"resp.has(\"error\")"]},
-                    ~" before you connect. Auth is rate-limited to 5/sec per IP; production builds should use a platform provider (see ",
+                    ~" before you connect. Registering a username that already exists returns ",
+                    {code, [], [~"409 username_taken"]},
+                    ~" - a real game registers once and calls ",
+                    {code, [], [~"login"]},
+                    ~" on return (this quickstart uses a fresh random name each run). Auth is rate-limited to 5/sec per IP; production builds should use a platform provider (see ",
                     {a, [{href, ~"/docs/security/auth"}, az_navigate], [~"Auth & rate limiting"]},
                     ~")."
                 ]},
