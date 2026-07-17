@@ -131,12 +131,6 @@ const SITE_ROUTES = {
   'security-threat-model': '/docs/security/threat-model',
   'security-known-limitations': '/docs/security/known-limitations',
 };
-html = html.replace(/href="([a-z0-9-]+)\.md(#[^"]*)?"/g, (_, base, anchor = '') => {
-  const route = SITE_ROUTES[base];
-  const href = route ? route + anchor : `https://hexdocs.pm/asobi/${base}.html${anchor}`;
-  return `href="${href}"`;
-});
-
 // splice generated blocks back in (markdown-it wraps a lone token in <p>…</p>)
 blocks.forEach((blockHtml, i) => {
   html = html.replace(`<p>@@BLOCK${i}@@</p>`, blockHtml);
@@ -145,6 +139,14 @@ if (html.includes('@@BLOCK')) {
   console.error('ERROR: a lifted block was not spliced back:', mdPath);
   process.exit(1);
 }
+
+// Rewrite .md cross-links AFTER splicing, so links inside callouts and tab
+// groups are covered too.
+html = html.replace(/href="([a-z0-9-]+)\.md(#[^"]*)?"/g, (_, base, anchor = '') => {
+  const route = SITE_ROUTES[base];
+  const href = route ? route + anchor : `https://hexdocs.pm/asobi/${base}.html${anchor}`;
+  return `href="${href}"`;
+});
 
 // --- emit the erlang view -------------------------------------------------
 
