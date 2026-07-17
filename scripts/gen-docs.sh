@@ -34,6 +34,7 @@ world-server|asobi_site_docs_world_server_view|docs-world-server|World server �
 configuration|asobi_site_docs_configuration_view|docs-configuration|Configuration — Asobi docs|Configuration|config
 security-auth|asobi_site_docs_security_auth_view|docs-sec-auth|Auth & rate limiting — Asobi docs|Security / Authentication & rate limiting|secauth
 clustering|asobi_site_docs_clustering_view|docs-clustering|Clustering — Asobi docs|Clustering|cluster
+security-known-limitations|asobi_site_docs_security_known_limits_view|docs-sec-known|Known limitations — Asobi docs|Security / Known limitations|seclim
 EOF
 )
 
