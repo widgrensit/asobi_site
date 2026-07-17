@@ -382,9 +382,9 @@ asobi.auth.oauth(\"google\", id_token, function(result)
 end)</code></pre></div></div>
 <h2 id=\"next-steps\" tabindex=\"-1\">Next Steps</h2>
 <ul>
-<li><a href=\"iap.md\">In-App Purchases</a> -- receipt validation for Apple and Google</li>
-<li><a href=\"rest-api.md\">REST API</a> -- full API reference</li>
-<li><a href=\"websocket-protocol.md\">WebSocket Protocol</a> -- real-time message types</li>
+<li><a href=\"/docs/economy\">In-App Purchases</a> -- receipt validation for Apple and Google</li>
+<li><a href=\"/docs/protocols/rest\">REST API</a> -- full API reference</li>
+<li><a href=\"/docs/protocols/websocket\">WebSocket Protocol</a> -- real-time message types</li>
 </ul>
 "}
     ]}.

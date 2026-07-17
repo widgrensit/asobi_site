@@ -112,6 +112,31 @@ const body = work.replace(/^#\s+.*(\r?\n)+/, '');
 const h1 = (src.match(/^#\s+(.*)/) || [, title])[1];
 let html = md.render(body);
 
+// Guide cross-references are relative .md links (e.g. rest-api.md). ex_doc
+// resolves those on hexdocs; on the site they must become /docs routes. A guide
+// with no site page falls back to its hexdocs page so no link 404s.
+const SITE_ROUTES = {
+  'authentication': '/docs/authentication',
+  'rest-api': '/docs/protocols/rest',
+  'websocket-protocol': '/docs/protocols/websocket',
+  'matchmaking': '/docs/matchmaking',
+  'world-server': '/docs/world-server',
+  'voting': '/docs/voting',
+  'economy': '/docs/economy',
+  'iap': '/docs/economy',
+  'clustering': '/docs/clustering',
+  'configuration': '/docs/configuration',
+  'performance-tuning': '/docs/performance',
+  'security-auth': '/docs/security/auth',
+  'security-threat-model': '/docs/security/threat-model',
+  'security-known-limitations': '/docs/security/known-limitations',
+};
+html = html.replace(/href="([a-z0-9-]+)\.md(#[^"]*)?"/g, (_, base, anchor = '') => {
+  const route = SITE_ROUTES[base];
+  const href = route ? route + anchor : `https://hexdocs.pm/asobi/${base}.html${anchor}`;
+  return `href="${href}"`;
+});
+
 // splice generated blocks back in (markdown-it wraps a lone token in <p>…</p>)
 blocks.forEach((blockHtml, i) => {
   html = html.replace(`<p>@@BLOCK${i}@@</p>`, blockHtml);
