@@ -1,0 +1,10 @@
+{
+  "name": "asobi-site-docgen",
+  "private": true,
+  "type": "module",
+  "description": "Authoring-time generator: asobi guides markdown -> asobi_site docs view modules.",
+  "dependencies": {
+    "markdown-it": "^14.1.0",
+    "markdown-it-anchor": "^9.2.0"
+  }
+}

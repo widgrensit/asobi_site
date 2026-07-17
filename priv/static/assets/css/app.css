@@ -1624,6 +1624,37 @@ code {
 .docs-content pre code { background: none; border: 0; padding: 0; font-size: inherit; color: #f4ead6; }
 .docs-content strong { color: var(--text); }
 
+/* Tables generated from guide markdown (bare <table>, no class). Mirrors the
+   comparison-table look and scrolls horizontally on narrow viewports rather
+   than overflowing the page. */
+.docs-content table {
+    display: block;
+    width: 100%;
+    max-width: 100%;
+    overflow-x: auto;
+    border-collapse: collapse;
+    margin: var(--sp-4) 0 var(--sp-5);
+    font-size: var(--fs-sm);
+}
+.docs-content th,
+.docs-content td {
+    padding: var(--sp-3) var(--sp-4);
+    text-align: left;
+    border: 1px solid var(--line);
+    vertical-align: top;
+}
+.docs-content th {
+    font-family: var(--font-mono);
+    font-size: var(--fs-xs);
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--text-3);
+    font-weight: 500;
+    background: var(--ink-1);
+    white-space: nowrap;
+}
+.docs-content td code { white-space: nowrap; }
+
 .docs-breadcrumb {
     font-family: var(--font-mono);
     font-size: var(--fs-xs);
@@ -1656,6 +1687,30 @@ code {
 .docs-callout-success {
     border-left-color: var(--emerald);
     background: color-mix(in oklab, var(--emerald) 12%, var(--ink-0));
+}
+
+/* Severity variants for callouts generated from guide admonitions
+   (> #### Title {: .warning}). .info reuses the indigo base. */
+.docs-callout-tip {
+    border-left-color: var(--emerald);
+    background: color-mix(in oklab, var(--emerald) 12%, var(--ink-0));
+}
+.docs-callout-warning {
+    border-left-color: var(--tan);
+    background: color-mix(in oklab, var(--tan) 16%, var(--ink-0));
+}
+.docs-callout-error {
+    border-left-color: var(--crimson);
+    background: color-mix(in oklab, var(--crimson) 10%, var(--ink-0));
+}
+.docs-callout-neutral {
+    border-left-color: var(--line);
+    background: var(--ink-1);
+}
+.docs-callout-title {
+    font-weight: 600;
+    color: var(--text);
+    margin: 0 0 var(--sp-2);
 }
 
 .docs-grid {

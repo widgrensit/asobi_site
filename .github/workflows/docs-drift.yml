@@ -1,28 +1,25 @@
 name: Docs drift
 
-# Fails if a docs page describes something the source no longer backs:
-#   - a quickstart citing a client-SDK symbol that no longer exists (#87)
-#   - an error table missing an atom a controller returns, or listing one it
-#     never returns (#90 shipped a guest table missing four atoms)
+# Fails if a quickstart page cites a client-SDK symbol that no longer exists
+# (#87). This repo hand-writes its SDK quickstarts as Erlang views, so nothing
+# but CI notices when an SDK release in another repo removes a symbol a
+# quickstart still calls.
 #
-# Both live here because both catch the same class of bug: this repo hand-writes
-# its docs as Erlang views rather than generating them from source, so nothing
-# but CI notices when the source moves underneath a page. Runs when the pages or
-# the guards change, and weekly to catch drift from a release in another repo.
+# The error-table guard that used to live here was removed: the guest table now
+# lives in asobi's guides/authentication.md (the site page is generated from it,
+# ADR 0003), and asobi's own check-error-drift.sh verifies that table against
+# the controller. Checking a generated copy here would duplicate the upstream
+# guard.
 on:
   push:
     paths:
       - 'src/views/asobi_site_docs_quickstart_*_view.erl'
-      - 'src/views/asobi_site_docs_auth_view.erl'
       - 'scripts/check-quickstart-drift.sh'
-      - 'scripts/check-error-drift.sh'
       - '.github/workflows/docs-drift.yml'
   pull_request:
     paths:
       - 'src/views/asobi_site_docs_quickstart_*_view.erl'
-      - 'src/views/asobi_site_docs_auth_view.erl'
       - 'scripts/check-quickstart-drift.sh'
-      - 'scripts/check-error-drift.sh'
       - '.github/workflows/docs-drift.yml'
   schedule:
     - cron: '0 6 * * 1'
@@ -41,10 +38,5 @@ jobs:
             git clone --depth 1 "https://github.com/widgrensit/asobi-$engine" \
               "$RUNNER_TEMP/sdks/asobi-$engine"
           done
-      - name: Fetch asobi
-        run: |
-          git clone --depth 1 https://github.com/widgrensit/asobi "$RUNNER_TEMP/asobi"
       - name: Check quickstart-vs-SDK drift
         run: scripts/check-quickstart-drift.sh "$RUNNER_TEMP/sdks"
-      - name: Check error-table-vs-controller drift
-        run: scripts/check-error-drift.sh "$RUNNER_TEMP/asobi"
