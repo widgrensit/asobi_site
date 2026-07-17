@@ -24,11 +24,11 @@ fi
 manifest=$(
 	cat <<'EOF'
 authentication|asobi_site_docs_auth_view|docs-auth|Authentication — Asobi docs|Authentication|auth
+security-threat-model|asobi_site_docs_security_threat_model_view|docs-sec-threat|Threat model — Asobi docs|Security / Threat model|threat
 EOF
 )
 
 count=0
-outs=()
 while IFS='|' read -r guide mod id title crumb slug; do
 	[ -z "$guide" ] && continue
 	src="$asobi/guides/${guide}.md"
@@ -38,16 +38,18 @@ while IFS='|' read -r guide mod id title crumb slug; do
 		exit 1
 	fi
 	node "$gen" "$src" "$mod" "$id" "$title" "$crumb" "$slug" >"$out"
-	outs+=("$out")
 	echo "  ok $guide -> $(basename "$out")"
 	count=$((count + 1))
 done <<<"$manifest"
 
 # erlfmt the generated modules so `rebar3 fmt --check` in CI stays green. The
-# generator emits valid but unformatted Erlang; formatting is deterministic, so
-# the committed output is stable across regenerations.
+# generator emits valid but unformatted boilerplate around a triple-quoted HTML
+# blob; erlfmt leaves the blob alone and tidies the boilerplate, converging in
+# one pass, so the committed output is stable across regenerations. Run without
+# file args - the erlfmt `files` globs in rebar.config cover src/**, and passing
+# explicit paths alongside the `write` option is a no-op.
 if [ "$count" -gt 0 ]; then
-	(cd "$repo_root" && rebar3 fmt "${outs[@]}" >/dev/null 2>&1)
+	(cd "$repo_root" && rebar3 fmt >/dev/null 2>&1)
 fi
 
 echo "generated $count view(s)"
