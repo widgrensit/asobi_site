@@ -255,6 +255,50 @@ render(Bindings) ->
 """
             ),
 
+            {h2, [{id, ~"guest-auth"}], [~"Guest (anonymous) auth"]},
+            {p, [], [
+                ~"Opt-in and fail-closed: ",
+                {a, [{href, ~"/docs/authentication#guest-anonymous"}, az_navigate], [
+                    ~"guest auth"
+                ]},
+                ~" stays off until ",
+                {code, [], [~"guest_auth"]},
+                ~" is true ",
+                {em, [], [~"and"]},
+                ~" a pepper is configured. Without both, the endpoints return ",
+                {code, [], [~"404 guest_auth_disabled"]},
+                ~"."
+            ]},
+            code(
+                ~"erlang",
+                ~"""
+{asobi, [
+    {guest_auth, true},
+
+    %% Required. A key-id -> pepper map (>= 32 bytes each). Keep old keys for the
+    %% guest retention window so existing guests can still resume after rotation.
+    {guest_verifier_pepper, #{~"v1" => ~"a-32-byte-or-longer-secret......"}},
+    {guest_verifier_key_id, ~"v1"},
+
+    %% Optional abuse control: max unclaimed guests, or `infinity`.
+    {guest_unlinked_cap, 100000},
+
+    %% Optional retention. Unset = permanent guests (never reaped). Set to a
+    %% number of seconds to delete unclaimed guests older than that.
+    {guest_reap_after, 2592000}   %% e.g. 30 days
+]}
+"""
+            ),
+            {p, [], [
+                ~"The pepper is a server-side secret that makes a stolen database of verifiers useless without it - store it like any other secret (env or secret manager), never in source. ",
+                ~"Rotating it means adding a new key id and pointing ",
+                {code, [], [~"guest_verifier_key_id"]},
+                ~" at it while the old key stays in the map; drop the old key only once no guest can still be resuming with it."
+            ]},
+            {p, [], [
+                ~"Guest creation is additionally bounded by the per-IP auth limiter below and a global create limit."
+            ]},
+
             {h2, [{id, ~"rate-limits"}], [~"Rate limits"]},
             {p, [], [
                 ~"Per-route limits enforced by ",

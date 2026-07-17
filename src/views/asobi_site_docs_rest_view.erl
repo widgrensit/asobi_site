@@ -47,8 +47,10 @@ render(Bindings) ->
                 ~"""
 POST /api/v1/auth/register     Register a new player
 POST /api/v1/auth/login        Login, returns an access + refresh token pair
+POST /api/v1/auth/guest        Guest create-or-resume from a device secret (opt-in)
 POST /api/v1/auth/refresh      Rotate the pair (send refresh_token, get a new pair)
 POST /api/v1/auth/oauth        OAuth / Steam token validation
+POST /api/v1/auth/guest/upgrade  Claim a guest account with username + password
 POST /api/v1/auth/link         Link a provider to the current account
 DELETE /api/v1/auth/unlink     Unlink a provider (never the last one)
 """

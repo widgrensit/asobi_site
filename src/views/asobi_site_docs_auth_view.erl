@@ -20,7 +20,9 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Authentication"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Asobi supports username/password, OAuth/OIDC social login (Google, Apple, Microsoft, Discord), Steam, and device auth. ",
+                ~"Asobi supports username/password, ",
+                {a, [{href, ~"#guest-anonymous"}], [~"guest (anonymous)"]},
+                ~" accounts a player can upgrade later, OAuth/OIDC social login (Google, Apple, Microsoft, Discord), and Steam. ",
                 ~"Players can link multiple providers to a single account."
             ]},
 
@@ -88,6 +90,197 @@ curl -X POST http://localhost:8084/api/v1/auth/refresh \
             {p, [], [
                 ~"The official SDKs persist the refresh token, attach the access token to every call, and refresh-and-retry on a 401 automatically."
             ]},
+
+            {h2, [{id, ~"guest-anonymous"}], [~"Guest (anonymous)"]},
+            {p, [], [
+                ~"Guest auth lets a player start playing immediately - no email, no password, no social sign-in - and claim a real account later without losing progress. ",
+                ~"It is the device-based option: the client generates a secret once, stores it on the device, and presents it to resume the same account on every launch."
+            ]},
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Opt-in. "]},
+                    ~"Guest auth is disabled by default. Both endpoints return ",
+                    {code, [], [~"404 guest_auth_disabled"]},
+                    ~" until you set ",
+                    {code, [], [~"guest_auth"]},
+                    ~" and a ",
+                    {code, [], [~"guest_verifier_pepper"]},
+                    ~" in ",
+                    {code, [], [~"sys.config"]},
+                    ~" - see ",
+                    {a, [{href, ~"/docs/configuration#guest-auth"}, az_navigate], [
+                        ~"Configuration"
+                    ]},
+                    ~"."
+                ]}
+            ]},
+
+            {h3, [], [~"How it works"]},
+            {ol, [], [
+                {li, [], [
+                    ~"On first launch the client generates a random ",
+                    {code, [], [~"device_secret"]},
+                    ~" (at least 32 bytes from a CSPRNG) and a stable ",
+                    {code, [], [~"device_id"]},
+                    ~", and stores both in secure device storage (Keychain on iOS, Keystore on Android)."
+                ]},
+                {li, [], [
+                    ~"The client posts them to ",
+                    {code, [], [~"POST /api/v1/auth/guest"]},
+                    ~". Asobi creates a player, stores only a salted, peppered HMAC of the secret - never the secret itself - and returns a token pair."
+                ]},
+                {li, [], [
+                    ~"On later launches the client posts the same pair. Asobi verifies the HMAC and resumes the ",
+                    {em, [], [~"same"]},
+                    ~" player (create-or-resume)."
+                ]},
+                {li, [], [
+                    ~"When the player is ready, they call ",
+                    {code, [], [~"POST /api/v1/auth/guest/upgrade"]},
+                    ~" with a username and password. The account becomes a normal password account and the device secret is revoked."
+                ]}
+            ]},
+            {p, [], [
+                ~"Treat ",
+                {code, [], [~"device_secret"]},
+                ~" like a password: generate it with a cryptographic RNG, keep it in secure storage, and never log it or send it anywhere but this endpoint. ",
+                ~"A guest account is only as safe as that secret, so it stays low-assurance until upgraded."
+            ]},
+
+            {h3, [], [~"Create or resume"]},
+            code(
+                ~"bash",
+                ~"""
+curl -X POST http://localhost:8084/api/v1/auth/guest \
+  -H 'Content-Type: application/json' \
+  -d '{"device_id": "b64-device-id", "device_secret": "b64-32-random-bytes"}'
+"""
+            ),
+            {p, [], [~"First call (new account):"]},
+            code(
+                ~"json",
+                ~"""
+{
+  "player_id": "...",
+  "access_token": "...",
+  "refresh_token": "...",
+  "username": "guest_019f615cbc4a",
+  "created": true,
+  "guest": true
+}
+"""
+            ),
+            {p, [], [
+                ~"Later calls with the same credentials resume the same player and omit ",
+                {code, [], [~"created"]},
+                ~". A wrong secret for a known ",
+                {code, [], [~"device_id"]},
+                ~" returns ",
+                {code, [], [~"401 invalid_device_secret"]},
+                ~" and never creates a second account."
+            ]},
+
+            {h3, [], [~"Upgrade to a real account"]},
+            {p, [], [
+                ~"Requires the guest's own session (the token from the create-or-resume call). Only an unclaimed guest may upgrade - a password account, or an account with a non-guest provider, is refused."
+            ]},
+            code(
+                ~"bash",
+                ~"""
+curl -X POST http://localhost:8084/api/v1/auth/guest/upgrade \
+  -H 'Authorization: Bearer <access_token>' \
+  -H 'Content-Type: application/json' \
+  -d '{"username": "player1", "password": "secret123"}'
+"""
+            ),
+            code(
+                ~"json",
+                ~"""
+{
+  "player_id": "...",
+  "access_token": "...",
+  "refresh_token": "...",
+  "username": "player1",
+  "upgraded": true
+}
+"""
+            ),
+            {p, [], [
+                ~"Upgrade revokes every token the guest held (the fresh pair above replaces them) and deletes the device verifier, so the old device secret can no longer sign in. ",
+                ~"Player id, progress, wallets, and inventory are preserved."
+            ]},
+
+            {h3, [], [~"Errors"]},
+            {'div', [{class, ~"docs-api"}], [
+                {pre, [], [
+                    {code, [], [
+                        ~"""
+ Status | error                     | Meaning
+--------|---------------------------|------------------------------------------------
+ 400    | missing_required_fields   | device_id / device_secret (or username /
+        |                           | password on upgrade) absent
+ 400    | weak_device_secret        | Secret decodes to fewer than 32 bytes, or
+        |                           | exceeds the size cap
+ 400    | invalid_device_id         | device_id empty or over 255 bytes
+ 401    | invalid_device_secret     | Wrong secret for a known device
+ 401    | guest_revoked             | The device verifier was revoked
+ 401    | guest_upgraded            | Already claimed; log in with its real credentials
+ 404    | guest_auth_disabled       | Guest auth is not enabled in config
+ 404    | player_not_found          | The upgrade token resolves to no player
+ 409    | device_already_registered | Two creates for the same device raced; retry -
+        |                           | the retry resumes the existing guest
+ 409    | not_an_unclaimed_guest    | Upgrade target is not an unclaimed guest
+ 409    | username_taken            | Upgrade username is already in use
+ 422    | validation_failed         | Upgrade fields invalid (see `fields`)
+ 500    | guest_create_failed       | The player row could not be created
+ 500    | guest_player_missing      | The device resolves to an identity whose player
+        |                           | no longer exists
+ 503    | guest_capacity_reached    | Global create limit or the unlinked-guest cap
+        |                           | was hit
+"""
+                    ]}
+                ]}
+            ]},
+
+            {h3, [], [~"SDK integration"]},
+            ?stateless(asobi_site_tabbed_code, render, #{
+                id => ~"guest-sdk",
+                tabs => [
+                    #{
+                        label => ~"Lua",
+                        lang => ~"lua",
+                        body =>
+                            ~"""
+-- Defold (Lua). device_id / device_secret are yours to generate and persist.
+client.auth.guest(client, device_id, device_secret, function(data, err)
+    if err then print("guest sign-in failed: " .. tostring(err.error)) return end
+    -- data.created is true on first sign-in, absent on resume.
+    print("signed in as guest " .. tostring(data.player_id))
+end)
+
+-- Later, claim a permanent account. Keeps the same player_id.
+client.auth.upgrade_guest(client, "player1", "secret123", function(data, err)
+    if err then print("upgrade failed: " .. tostring(err.error)) return end
+    print("upgraded to " .. tostring(data.username))
+end)
+"""
+                    },
+                    #{
+                        label => ~"C#",
+                        lang => ~"csharp",
+                        body =>
+                            ~"""
+// Unity (C#). deviceId / deviceSecret are yours to generate and persist.
+var resp = await client.Auth.GuestAsync(deviceId, deviceSecret);
+Debug.Log(resp.created ? $"New guest {resp.player_id}" : $"Resumed {resp.player_id}");
+
+// Later, claim a permanent account. Replaces the stored tokens.
+var upgraded = await client.Auth.UpgradeGuestAsync("player1", "secret123");
+Debug.Log($"Upgraded: {upgraded.upgraded}");
+"""
+                    }
+                ]
+            }),
 
             {h2, [], [~"OAuth / social login"]},
             {p, [], [
