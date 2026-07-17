@@ -223,6 +223,8 @@ wscat -c ws://localhost:8084/ws
                 ~"You will see ",
                 {code, [], [~"{\"type\":\"match.state\",\"payload\":{\"hits\":1}}"]},
                 ~" - every click increments the counter. For a real client, use an SDK: ",
+                {a, [{href, ~"/js"}, az_navigate], [~"TypeScript/JS"]},
+                ~", ",
                 {a, [{href, ~"/defold"}, az_navigate], [~"Defold"]},
                 ~", ",
                 {a, [{href, ~"/unity"}, az_navigate], [~"Unity"]},
