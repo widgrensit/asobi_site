@@ -148,7 +148,21 @@ if (html.includes('@@BLOCK')) {
 
 // --- emit the erlang view -------------------------------------------------
 
+// Short scalars use the plain ~"" sigil.
 const bin = s => '~"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
+
+// The HTML blob uses the triple-quoted verbatim sigil. erlfmt cannot stably
+// re-wrap a huge single-line ~"" binary (it oscillates), but it leaves
+// triple-quoted content untouched, so the generated module stays fmt-stable.
+// The content must not contain a line that is exactly `"""`; HTML never does,
+// but guard rather than emit a module that won't parse.
+function rawBlob(s) {
+  if (/^\s*"""\s*$/m.test(s)) {
+    console.error('ERROR: HTML contains a line that is exactly triple-quote:', mdPath);
+    process.exit(1);
+  }
+  return '~"""\n' + s.replace(/\n$/, '') + '\n"""';
+}
 
 process.stdout.write(`%% GENERATED from asobi guides/${mdPath.split('/').pop()} - do not edit by hand.
 %% Regenerate with scripts/gen-docs.sh
@@ -169,6 +183,6 @@ render(Bindings) ->
             ${bin(' / ' + breadcrumb)}
         ]},
         {h1, [], [${bin(h1)}]},
-        {raw, ${bin(html)}}
+        {raw, ${rawBlob(html)}}
     ]}.
 `);
