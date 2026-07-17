@@ -35,6 +35,41 @@ render(Bindings) ->
                 ]}
             ]},
 
+            {'div', [{class, ~"docs-callout docs-callout-info"}], [
+                {p, [{class, ~"docs-callout-title"}], [~"Result envelope"]},
+                {p, [], [
+                    ~"The persistence-style calls - ",
+                    {code, [], [~"economy.*"]},
+                    ~", ",
+                    {code, [], [~"storage.*"]},
+                    ~", ",
+                    {code, [], [~"leaderboard.top/rank/around"]},
+                    ~", ",
+                    {code, [], [~"terrain.get_chunk"]},
+                    ~", ",
+                    {code, [], [~"notify"]},
+                    ~" - return a wrapped result: ",
+                    {code, [], [~"{ ok = <value> }"]},
+                    ~" on success, ",
+                    {code, [], [~"{ error = \"reason\" }"]},
+                    ~" on failure. Read ",
+                    {code, [], [~"result.ok"]},
+                    ~" (never a bare value, never ",
+                    {code, [], [~"nil"]},
+                    ~"). The plain calls (",
+                    {code, [], [~"broadcast"]},
+                    ~", ",
+                    {code, [], [~"send"]},
+                    ~", ",
+                    {code, [], [~"zone.spawn"]},
+                    ~", ",
+                    {code, [], [~"leaderboard.submit"]},
+                    ~", ",
+                    {code, [], [~"spatial.*"]},
+                    ~") return their value directly."
+                ]}
+            ]},
+
             %% ---- Messaging ----
             {h2, [], [~"Messaging"]},
 
@@ -108,10 +143,11 @@ game.notify_many(tournament_players, "bracket_advance", "Round 2 starting", {
 
             api(
                 ~"game.storage.get(collection, key)",
-                ~"Read an arbitrary JSON-serialisable value. Returns nil if missing.",
+                ~"Read an arbitrary JSON-serialisable value. { ok = value } if present, { error = \"not_found\" } if missing.",
                 ~"lua",
                 ~"""
-local highscore = game.storage.get("highscores", "global") or 0
+local r = game.storage.get("highscores", "global")
+local highscore = r.ok or 0
 """
             ),
 
@@ -130,7 +166,7 @@ game.storage.set("highscores", "global", new_score)
                 ~"lua",
                 ~"""
 game.storage.player_set(player_id, "inventory", "backpack", items)
-local pack = game.storage.player_get(player_id, "inventory", "backpack")
+local pack = game.storage.player_get(player_id, "inventory", "backpack").ok
 """
             ),
 
@@ -139,12 +175,14 @@ local pack = game.storage.player_get(player_id, "inventory", "backpack")
 
             api(
                 ~"game.economy.balance(player_id)",
-                ~"Return the full wallet as { currency_id = amount, ... }.",
+                ~"{ ok = { {currency, balance}, ... } } - one entry per currency the player holds.",
                 ~"lua",
                 ~"""
-local wallet = game.economy.balance(player_id)
-if (wallet.gold or 0) >= 100 then
-  -- can afford
+local r = game.economy.balance(player_id)
+for _, w in ipairs(r.ok) do
+  if w.currency == "gold" and w.balance >= 100 then
+    -- can afford
+  end
 end
 """
             ),
@@ -160,7 +198,7 @@ game.economy.grant(winner_id, "gold", 50, "match_win")
 
             api(
                 ~"game.economy.debit(player_id, currency, amount, reason)",
-                ~"Subtract currency. Returns { ok = true } or { ok = false, error = \"insufficient_funds\" }.",
+                ~"Subtract currency. { ok = wallet } on success, { error = \"insufficient_funds\" } if the balance is too low.",
                 ~"lua",
                 ~"""
 local result = game.economy.debit(player_id, "gold", 100, "shop_buy:sword")
@@ -193,10 +231,11 @@ game.leaderboard.submit("arena:weekly", player_id, kills)
 
             api(
                 ~"game.leaderboard.top(board_id, count)",
-                ~"Return the top N entries as { {player_id, score, rank}, ... }.",
+                ~"{ ok = { {player_id, score, rank}, ... } } - the top N entries.",
                 ~"lua",
                 ~"""
-for _, entry in ipairs(game.leaderboard.top("arena:weekly", 10)) do
+local r = game.leaderboard.top("arena:weekly", 10)
+for _, entry in ipairs(r.ok) do
   -- entry.rank, entry.player_id, entry.score
   game.broadcast("leaderboard_row", entry)
 end
@@ -205,19 +244,20 @@ end
 
             api(
                 ~"game.leaderboard.rank(board_id, player_id)",
-                ~"Return a specific player's current rank.",
+                ~"{ ok = rank } for the player, or { error = \"not_found\" } if unranked.",
                 ~"lua",
                 ~"""
-local my_rank = game.leaderboard.rank("arena:weekly", player_id)
+local r = game.leaderboard.rank("arena:weekly", player_id)
+local my_rank = r.ok  -- nil if r.error == "not_found"
 """
             ),
 
             api(
                 ~"game.leaderboard.around(board_id, player_id, count)",
-                ~"Return the N entries surrounding a specific player (useful for \x{201C}you are here\x{201D} displays).",
+                ~"{ ok = { entries } } surrounding a specific player (useful for \x{201C}you are here\x{201D} displays).",
                 ~"lua",
                 ~"""
-local neighbors = game.leaderboard.around("arena:weekly", player_id, 5)
+local neighbors = game.leaderboard.around("arena:weekly", player_id, 5).ok
 """
             ),
 
@@ -322,10 +362,10 @@ end
 
             api(
                 ~"game.terrain.get_chunk(cx, cy)",
-                ~"Fetch compressed chunk bytes for the given chunk coordinates. Chunks are served automatically on zone entry - use this only if you need the data server-side.",
+                ~"{ ok = bytes } - compressed chunk bytes for the given chunk coordinates. Chunks are served automatically on zone entry; use this only if you need the data server-side.",
                 ~"lua",
                 ~"""
-local bytes = game.terrain.get_chunk(4, 7)
+local bytes = game.terrain.get_chunk(4, 7).ok
 """
             ),
 
