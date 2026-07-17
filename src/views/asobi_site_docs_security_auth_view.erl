@@ -50,6 +50,88 @@ render(Bindings) ->
                 ~"."
             ]},
 
+            {h2, [], [~"Guest device verifiers"]},
+            {p, [], [
+                {a, [{href, ~"/docs/authentication#guest-anonymous"}, az_navigate], [
+                    ~"Guest auth"
+                ]},
+                ~" trades a device-held secret for a session, so it is opt-in and fails closed: ",
+                {code, [], [~"asobi_guest_controller"]},
+                ~" refuses to serve unless ",
+                {code, [], [~"guest_auth"]},
+                ~" is true ",
+                {em, [], [~"and"]},
+                ~" a ",
+                {code, [], [~"guest_verifier_pepper"]},
+                ~" is configured. A misconfigured deployment returns ",
+                {code, [], [~"404"]},
+                ~" rather than minting unauthenticated accounts."
+            ]},
+            {p, [], [
+                ~"The secret itself is never stored. What lands in the database is a verifier:"
+            ]},
+            {ul, [], [
+                {li, [], [
+                    ~"A per-identity 16-byte salt from ",
+                    {code, [], [~"crypto:strong_rand_bytes/1"]},
+                    ~", plus a server-side pepper selected by key id."
+                ]},
+                {li, [], [
+                    {code, [], [~"crypto:mac(hmac, sha256, Pepper, <<Salt, Secret>>)"]},
+                    ~" - written to the identity's ",
+                    {code, [], [~"provider_metadata"]},
+                    ~" (",
+                    {code, [], [~"salt"]},
+                    ~" / ",
+                    {code, [], [~"key_id"]},
+                    ~" / ",
+                    {code, [], [~"verifier"]},
+                    ~" / ",
+                    {code, [], [~"revoked"]},
+                    ~")."
+                ]},
+                {li, [], [
+                    ~"Comparison goes through ",
+                    {code, [], [~"crypto:hash_equals/2"]},
+                    ~", so a wrong secret cannot be recovered by timing the response."
+                ]},
+                {li, [], [
+                    ~"The pepper is keyed (",
+                    {code, [], [~"key_id"]},
+                    ~" -> pepper) so it can be rotated without stranding guests, and it lives outside the database - a dumped verifier table is useless without it."
+                ]}
+            ]},
+            {p, [], [
+                ~"Input is bounded before any crypto runs: the secret must decode to at least 32 bytes (and stay under a size cap), and ",
+                {code, [], [~"device_id"]},
+                ~" must be non-empty and at most 255 bytes."
+            ]},
+            {p, [], [
+                ~"Upgrade is the compromise-recovery moment, so it is treated as one. ",
+                {code, [], [~"nova_auth_refresh:revoke_all/2"]},
+                ~" kills the entire token family before a fresh pair is issued, and the guest identity is deleted outright - a stolen device secret that already minted tokens loses both the tokens and the ability to re-authenticate."
+            ]},
+            {p, [], [
+                ~"The optional reaper (",
+                {code, [], [~"asobi_guest_reaper"]},
+                ~", off unless ",
+                {code, [], [~"guest_reap_after"]},
+                ~" is set) re-checks that a guest is still unclaimed ",
+                {em, [], [~"inside"]},
+                ~" its delete transaction. A player who upgrades between the pre-check and the delete wins the race, so a concurrent upgrade can never be silently reaped. The unlinked-guest cap reads a short-TTL cached count so an unauthenticated create storm cannot force a full-table ",
+                {code, [], [~"COUNT"]},
+                ~" per request, and a failed count returns ",
+                {code, [], [~"unknown"]},
+                ~" so the cap fails closed."
+            ]},
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Assurance level. "]},
+                    ~"A guest is only as strong as a secret sitting in client storage, so treat guests as low-assurance until upgraded. ",
+                    ~"Anything valuable - purchases, competitive ranking, cross-device identity - should require a claimed account."
+                ]}
+            ]},
+
             {h2, [], [~"Apple StoreKit 2 JWS verification"]},
             {p, [], [
                 {code, [], [~"asobi_iap:verify_apple/1"]},
@@ -243,6 +325,10 @@ render(Bindings) ->
                 {li, [], [
                     {code, [], [~"asobi_iap_SUITE.erl"]},
                     ~" - Apple JWS happy path + 14 negative cases."
+                ]},
+                {li, [], [
+                    {code, [], [~"asobi_guest_SUITE.erl"]},
+                    ~" - guest create-or-resume, wrong-secret rejection, upgrade + token revocation."
                 ]},
                 {li, [], [
                     {code, [], [~"asobi_world_lobby_SUITE.erl"]},
