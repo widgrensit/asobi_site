@@ -1,31 +1,43 @@
 name: Docs drift
 
-# Fails if a quickstart page cites a client-SDK symbol that no longer exists
-# (#87). This repo hand-writes its SDK quickstarts as Erlang views, so nothing
-# but CI notices when an SDK release in another repo removes a symbol a
-# quickstart still calls.
+# Two guards against docs going stale:
+#
+#  - quickstart-vs-SDK: a hand-written SDK quickstart citing a client-SDK symbol
+#    that no longer exists (#87).
+#  - generated-vs-guide: a docs view generated from an asobi guide (ADR 0003)
+#    that has drifted from a fresh regeneration - a guide changed without
+#    regenerating, or a generated view was hand-edited despite its header.
+#
+# Both catch the same class of bug: the source moved and only CI noticed. The
+# weekly cron catches drift introduced by a change in the asobi repo.
 #
 # The error-table guard that used to live here was removed: the guest table now
-# lives in asobi's guides/authentication.md (the site page is generated from it,
-# ADR 0003), and asobi's own check-error-drift.sh verifies that table against
-# the controller. Checking a generated copy here would duplicate the upstream
-# guard.
+# lives in asobi's guides/authentication.md, and asobi's own check-error-drift.sh
+# verifies it against the controller.
 on:
   push:
     paths:
-      - 'src/views/asobi_site_docs_quickstart_*_view.erl'
+      - 'src/views/asobi_site_docs_*_view.erl'
       - 'scripts/check-quickstart-drift.sh'
+      - 'scripts/check-generated-current.sh'
+      - 'scripts/gen-doc-view.mjs'
+      - 'scripts/gen-docs.sh'
+      - 'scripts/package.json'
       - '.github/workflows/docs-drift.yml'
   pull_request:
     paths:
-      - 'src/views/asobi_site_docs_quickstart_*_view.erl'
+      - 'src/views/asobi_site_docs_*_view.erl'
       - 'scripts/check-quickstart-drift.sh'
+      - 'scripts/check-generated-current.sh'
+      - 'scripts/gen-doc-view.mjs'
+      - 'scripts/gen-docs.sh'
+      - 'scripts/package.json'
       - '.github/workflows/docs-drift.yml'
   schedule:
     - cron: '0 6 * * 1'
 
 jobs:
-  drift:
+  quickstart-drift:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
@@ -40,3 +52,24 @@ jobs:
           done
       - name: Check quickstart-vs-SDK drift
         run: scripts/check-quickstart-drift.sh "$RUNNER_TEMP/sdks"
+
+  generated-current:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - uses: erlef/setup-beam@v1
+        with:
+          version-type: strict
+          otp-version: '28.0.4'
+          rebar3-version: '3.26.0'
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Fetch asobi (the guides source)
+        run: git clone --depth 1 https://github.com/widgrensit/asobi "$RUNNER_TEMP/asobi"
+      - name: Install generator deps
+        run: npm --prefix scripts ci
+      - name: Check generated views are current with the guides
+        run: scripts/check-generated-current.sh "$RUNNER_TEMP/asobi"
