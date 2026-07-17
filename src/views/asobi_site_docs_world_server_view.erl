@@ -90,6 +90,190 @@ for global game events (boss phases, quest triggers, vote requests)</li>
 <li><code>a</code> -- added (full entity state)</li>
 <li><code>r</code> -- removed</li>
 </ul>
+<h2 id="lua-implementation" tabindex="-1">Lua Implementation</h2>
+<p>Most games write world logic in Lua and run the asobi_lua Docker image - no
+Erlang needed. The <a href="#erlang-implementation">Erlang behaviour</a> below is the same
+model for teams embedding asobi as a library.</p>
+<p>World scripts follow the same pattern as match scripts but with
+zone-specific callbacks. Set <code>game_type = &quot;world&quot;</code> in your mode globals.</p>
+<blockquote>
+<p><strong>Gotcha</strong>: the global is <strong><code>game_type</code></strong>, not <code>type</code>. The Erlang
+<code>sys.config</code> form uses the key <code>type</code>, but the Lua loader
+reads <code>game_type</code>. A Lua script that sets <code>type = &quot;world&quot;</code> is
+silently ignored — the script registers as a <em>match</em> mode and
+<code>world.find_or_create</code> returns <code>mode_not_found</code>.</p>
+</blockquote>
+<pre><code class="language-lua">-- lua/world.lua
+
+-- World mode config
+game_type   = &quot;world&quot;
+match_size  = 10            -- required by the loader for every mode,
+                            -- including worlds. Use 1 for worlds that
+                            -- don't gate on a minimum player count.
+max_players = 500
+grid_size   = 5
+zone_size   = 400
+tick_rate   = 50
+view_radius = 1
+strategy    = &quot;fill&quot;
+
+function init(config)
+    return {
+        dungeon_level = 1,
+        boss_hp = 10000,
+        tick_count = 0
+    }
+end
+
+function join(player_id, state)
+    return state
+end
+
+function leave(player_id, state)
+    return state
+end
+
+function spawn_position(player_id, state)
+    return {
+        x = 100 + math.random(200),
+        y = 100 + math.random(200)
+    }
+end
+
+function post_tick(tick, state)
+    state.tick_count = tick
+
+    -- Boss defeated: trigger a vote
+    if state.boss_hp &lt;= 0 then
+        state.boss_hp = 10000
+        state.dungeon_level = state.dungeon_level + 1
+        state._vote = {
+            template = &quot;boon_pick&quot;,
+            options = {
+                { id = &quot;shield&quot;, label = &quot;Shield Boost&quot; },
+                { id = &quot;speed&quot;,  label = &quot;Speed Boost&quot; },
+                { id = &quot;damage&quot;, label = &quot;Damage Boost&quot; }
+            },
+            method = &quot;plurality&quot;,
+            window_ms = 15000
+        }
+    end
+
+    -- Time limit: 30 minutes at 20 Hz
+    if tick &gt;= 36000 then
+        state._finished = true
+        state._result = { reason = &quot;time_up&quot; }
+    end
+
+    return state
+end
+
+-- Optional: procedural generation
+function generate_world(seed, config)
+    local zones = {}
+    for x = 0, 4 do
+        for y = 0, 4 do
+            local key = x .. &quot;,&quot; .. y
+            zones[key] = {
+                biome = pick_biome(x, y, seed),
+                spawners = {}
+            }
+        end
+    end
+    return zones
+end
+
+function get_state(player_id, state)
+    return {
+        dungeon_level = state.dungeon_level,
+        boss_hp = state.boss_hp
+    }
+end
+</code></pre>
+<h3 id="lua-callbacks" tabindex="-1">Lua Callbacks</h3>
+<table>
+<thead>
+<tr>
+<th>Function</th>
+<th>Required</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>init(config)</code></td>
+<td>yes</td>
+<td>Return initial global game state</td>
+</tr>
+<tr>
+<td><code>join(player_id, state)</code></td>
+<td>yes</td>
+<td>Handle player join, return state</td>
+</tr>
+<tr>
+<td><code>leave(player_id, state)</code></td>
+<td>yes</td>
+<td>Handle player leave, return state</td>
+</tr>
+<tr>
+<td><code>spawn_position(player_id, state)</code></td>
+<td>yes</td>
+<td>Return <code>{x=N, y=N}</code> table</td>
+</tr>
+<tr>
+<td><code>post_tick(tick, state)</code></td>
+<td>yes</td>
+<td>Global tick logic. Set <code>_finished</code>/<code>_result</code> or <code>_vote</code> on state</td>
+</tr>
+<tr>
+<td><code>generate_world(seed, config)</code></td>
+<td>no</td>
+<td>Return table keyed by <code>&quot;x,y&quot;</code> strings</td>
+</tr>
+<tr>
+<td><code>get_state(player_id, state)</code></td>
+<td>no</td>
+<td>Player-visible state</td>
+</tr>
+<tr>
+<td><code>vote_resolved(template, result, state)</code></td>
+<td>no</td>
+<td>Handle vote result</td>
+</tr>
+</tbody>
+</table>
+<h3 id="finishing-a-world" tabindex="-1">Finishing a World</h3>
+<p>Set <code>_finished</code> and <code>_result</code> on your state in <code>post_tick()</code>:</p>
+<pre><code class="language-lua">function post_tick(tick, state)
+    if all_quests_complete(state) then
+        state._finished = true
+        state._result = {
+            status = &quot;completed&quot;,
+            dungeon_level = state.dungeon_level,
+            survivors = count_alive(state)
+        }
+    end
+    return state
+end
+</code></pre>
+<h3 id="triggering-votes" tabindex="-1">Triggering Votes</h3>
+<p>Set <code>_vote</code> on your state in <code>post_tick()</code>:</p>
+<pre><code class="language-lua">function post_tick(tick, state)
+    if state.boss_hp &lt;= 0 then
+        state._vote = {
+            template = &quot;choose_path&quot;,
+            options = {
+                { id = &quot;cave&quot;, label = &quot;Dark Cave&quot; },
+                { id = &quot;forest&quot;, label = &quot;Enchanted Forest&quot; }
+            },
+            method = &quot;plurality&quot;,
+            window_ms = 20000
+        }
+        state.boss_hp = nil  -- clear so vote doesn't re-trigger
+    end
+    return state
+end
+</code></pre>
 <h2 id="erlang-implementation" tabindex="-1">Erlang Implementation</h2>
 <p>Implement the <code>asobi_world</code> behaviour:</p>
 <pre><code class="language-erlang">-module(my_dungeon).
@@ -300,187 +484,6 @@ post_tick(_TickN, State) -&gt;
     {ok, ZoneStates}.
 </code></pre>
 <p>Each zone receives its state via the <code>zone_state</code> field in <code>zone_tick/2</code>.</p>
-<h2 id="lua-implementation" tabindex="-1">Lua Implementation</h2>
-<p>World scripts follow the same pattern as match scripts but with
-zone-specific callbacks. Set <code>game_type = &quot;world&quot;</code> in your mode globals.</p>
-<blockquote>
-<p><strong>Gotcha</strong>: the global is <strong><code>game_type</code></strong>, not <code>type</code>. The Erlang
-<code>sys.config</code> form (above) uses the key <code>type</code>, but the Lua loader
-reads <code>game_type</code>. A Lua script that sets <code>type = &quot;world&quot;</code> is
-silently ignored — the script registers as a <em>match</em> mode and
-<code>world.find_or_create</code> returns <code>mode_not_found</code>.</p>
-</blockquote>
-<pre><code class="language-lua">-- lua/world.lua
-
--- World mode config
-game_type   = &quot;world&quot;
-match_size  = 10            -- required by the loader for every mode,
-                            -- including worlds. Use 1 for worlds that
-                            -- don't gate on a minimum player count.
-max_players = 500
-grid_size   = 5
-zone_size   = 400
-tick_rate   = 50
-view_radius = 1
-strategy    = &quot;fill&quot;
-
-function init(config)
-    return {
-        dungeon_level = 1,
-        boss_hp = 10000,
-        tick_count = 0
-    }
-end
-
-function join(player_id, state)
-    return state
-end
-
-function leave(player_id, state)
-    return state
-end
-
-function spawn_position(player_id, state)
-    return {
-        x = 100 + math.random(200),
-        y = 100 + math.random(200)
-    }
-end
-
-function post_tick(tick, state)
-    state.tick_count = tick
-
-    -- Boss defeated: trigger a vote
-    if state.boss_hp &lt;= 0 then
-        state.boss_hp = 10000
-        state.dungeon_level = state.dungeon_level + 1
-        state._vote = {
-            template = &quot;boon_pick&quot;,
-            options = {
-                { id = &quot;shield&quot;, label = &quot;Shield Boost&quot; },
-                { id = &quot;speed&quot;,  label = &quot;Speed Boost&quot; },
-                { id = &quot;damage&quot;, label = &quot;Damage Boost&quot; }
-            },
-            method = &quot;plurality&quot;,
-            window_ms = 15000
-        }
-    end
-
-    -- Time limit: 30 minutes at 20 Hz
-    if tick &gt;= 36000 then
-        state._finished = true
-        state._result = { reason = &quot;time_up&quot; }
-    end
-
-    return state
-end
-
--- Optional: procedural generation
-function generate_world(seed, config)
-    local zones = {}
-    for x = 0, 4 do
-        for y = 0, 4 do
-            local key = x .. &quot;,&quot; .. y
-            zones[key] = {
-                biome = pick_biome(x, y, seed),
-                spawners = {}
-            }
-        end
-    end
-    return zones
-end
-
-function get_state(player_id, state)
-    return {
-        dungeon_level = state.dungeon_level,
-        boss_hp = state.boss_hp
-    }
-end
-</code></pre>
-<h3 id="lua-callbacks" tabindex="-1">Lua Callbacks</h3>
-<table>
-<thead>
-<tr>
-<th>Function</th>
-<th>Required</th>
-<th>Description</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><code>init(config)</code></td>
-<td>yes</td>
-<td>Return initial global game state</td>
-</tr>
-<tr>
-<td><code>join(player_id, state)</code></td>
-<td>yes</td>
-<td>Handle player join, return state</td>
-</tr>
-<tr>
-<td><code>leave(player_id, state)</code></td>
-<td>yes</td>
-<td>Handle player leave, return state</td>
-</tr>
-<tr>
-<td><code>spawn_position(player_id, state)</code></td>
-<td>yes</td>
-<td>Return <code>{x=N, y=N}</code> table</td>
-</tr>
-<tr>
-<td><code>post_tick(tick, state)</code></td>
-<td>yes</td>
-<td>Global tick logic. Set <code>_finished</code>/<code>_result</code> or <code>_vote</code> on state</td>
-</tr>
-<tr>
-<td><code>generate_world(seed, config)</code></td>
-<td>no</td>
-<td>Return table keyed by <code>&quot;x,y&quot;</code> strings</td>
-</tr>
-<tr>
-<td><code>get_state(player_id, state)</code></td>
-<td>no</td>
-<td>Player-visible state</td>
-</tr>
-<tr>
-<td><code>vote_resolved(template, result, state)</code></td>
-<td>no</td>
-<td>Handle vote result</td>
-</tr>
-</tbody>
-</table>
-<h3 id="finishing-a-world" tabindex="-1">Finishing a World</h3>
-<p>Set <code>_finished</code> and <code>_result</code> on your state in <code>post_tick()</code>:</p>
-<pre><code class="language-lua">function post_tick(tick, state)
-    if all_quests_complete(state) then
-        state._finished = true
-        state._result = {
-            status = &quot;completed&quot;,
-            dungeon_level = state.dungeon_level,
-            survivors = count_alive(state)
-        }
-    end
-    return state
-end
-</code></pre>
-<h3 id="triggering-votes" tabindex="-1">Triggering Votes</h3>
-<p>Set <code>_vote</code> on your state in <code>post_tick()</code>:</p>
-<pre><code class="language-lua">function post_tick(tick, state)
-    if state.boss_hp &lt;= 0 then
-        state._vote = {
-            template = &quot;choose_path&quot;,
-            options = {
-                { id = &quot;cave&quot;, label = &quot;Dark Cave&quot; },
-                { id = &quot;forest&quot;, label = &quot;Enchanted Forest&quot; }
-            },
-            method = &quot;plurality&quot;,
-            window_ms = 20000
-        }
-        state.boss_hp = nil  -- clear so vote doesn't re-trigger
-    end
-    return state
-end
-</code></pre>
 <h2 id="spawn-templates" tabindex="-1">Spawn templates</h2>
 <p>Worlds seed non-player entities (NPCs, resources, objects) from <strong>spawn
 templates</strong>. Implement the optional <code>spawn_templates/1</code> callback to return a
