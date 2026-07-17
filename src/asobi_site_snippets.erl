@@ -61,7 +61,7 @@ sdk_label(lua) -> ~"Lua".
 get(hero_connect, unreal) ->
     ~"""
     UAsobiClient* Client = NewObject<UAsobiClient>();
-    Client->SetBaseUrl(TEXT("http://localhost:8080"));
+    Client->SetBaseUrl(TEXT("http://localhost:8084"));
 
     UAsobiAuth* Auth = NewObject<UAsobiAuth>();
     Auth->Init(Client);
@@ -71,14 +71,14 @@ get(hero_connect, unreal) ->
     Auth->Login(TEXT("player1"), TEXT("secret"), OnLogin);
 
     // After login:
-    WebSocket->Connect(TEXT("ws://localhost:8080/ws"));
+    WebSocket->Connect(TEXT("ws://localhost:8084/ws"));
     WebSocket->Authenticate(Client->GetAuthToken());
     Matchmaker->Add(TEXT("arena"), {}, OnQueued);
     WebSocket->OnMatchState.AddDynamic(this, &AMyPawn::OnMatchState);
     """;
 get(hero_connect, unity) ->
     ~"""
-    var asobi = new AsobiClient("localhost", port: 8080);
+    var asobi = new AsobiClient("localhost", port: 8084);
     await asobi.Auth.LoginAsync("player1", "secret");
 
     asobi.Realtime.OnMatchState += state =>
@@ -118,22 +118,21 @@ get(hero_connect, defold) ->
     """;
 get(hero_connect, js) ->
     ~"""
-    import { Asobi } from "@asobi/client";
+    import { Asobi } from "@widgrensit/asobi";
 
-    const asobi = new Asobi({ baseUrl: "http://localhost:8080" });
-    const { access_token } = await asobi.auth.login({
+    const asobi = new Asobi({ baseUrl: "http://localhost:8084" });
+    const { access_token } = await asobi.auth.register({
         username: "player1", password: "secret",
     });
-    asobi.client.setToken(access_token);
 
-    const ws = asobi.websocket();
+    const ws = asobi.websocket({ token: access_token });
     ws.on("match.state", (s) => console.log("tick", s.tick));
     await ws.connect();
-    await asobi.matchmaker.add({ mode: "arena" });
+    ws.sendFire("matchmaker.add", { mode: "arena" });
     """;
 get(hero_connect, dart) ->
     ~"""
-    final asobi = AsobiClient(host: 'localhost', port: 8080);
+    final asobi = AsobiClient(host: 'localhost', port: 8084);
     await asobi.auth.login('player1', 'secret');
 
     asobi.realtime.onMatchState.listen((state) {

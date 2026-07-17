@@ -17,7 +17,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"TypeScript / JavaScript SDK"]},
                     {p, [], [
-                        ~"Browser and Node.js 18+ client for Asobi. Event-emitter API over WebSocket, typed REST APIs, auto-reconnect."
+                        ~"Browser and Node.js 22+ client for Asobi. Event-emitter API over WebSocket, typed REST APIs, auto-reconnect."
                     ]},
                     {a,
                         [
@@ -32,7 +32,7 @@ render(Bindings) ->
                     {'div', [{class, ~"guide-code"}], [
                         {pre, [], [
                             {code, [], [
-                                ~"npm install @asobi/client"
+                                ~"npm install github:widgrensit/asobi-js"
                             ]}
                         ]}
                     ]}
@@ -64,7 +64,7 @@ render(Bindings) ->
                     {h2, [], [~"Reference"]},
                     {p, [], [
                         ~"All submodules (auth, players, matches, matchmaker, worlds, dm, leaderboards, economy, inventory, social, chat, tournaments, votes, notifications, storage) are typed and exported from ",
-                        {code, [], [~"@asobi/client"]},
+                        {code, [], [~"@widgrensit/asobi"]},
                         ~"."
                     ]}
                 ]}
