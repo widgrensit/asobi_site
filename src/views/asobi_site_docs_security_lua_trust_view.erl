@@ -38,6 +38,54 @@ render(Bindings) ->
                 ~"."
             ]},
 
+            {h2, [], [~"Per-callback isolation"]},
+            {p, [], [
+                ~"Most Lua callbacks run inside a child process (the loader's ",
+                {code, [], [~"bounded_eval"]},
+                ~" wrapper) with a wall-clock timeout and ",
+                {code, [], [~"max_heap_size: kill => true"]},
+                ~". A runaway loop or allocation crashes the child, the parent gen_server gets a ",
+                {code, [], [~"{error, timeout | heap_exhausted}"]},
+                ~", and the match continues:"
+            ]},
+            {pre, [], [
+                {code, [], [
+                    ~"""
+ Callback                    | Bounded? | Budget
+-----------------------------|----------|-----------
+ init/1                      | yes      | 1000-2000 ms
+ tick/1, zone_tick/2         | yes      | 500 ms
+ get_state/{1,2}             | yes      | 100 ms
+ join/2, leave/2            | yes      | 200 ms
+ vote_*                      | yes      | 200 ms
+ phases/1, on_phase_*/2      | yes      | 200 ms
+ terrain_provider/1          | yes      | 5000 ms
+ handle_input/3              | NO       | (see below)
+"""
+                ]}
+            ]},
+            {p, [], [
+                {code, [], [~"handle_input/3"]},
+                ~" is the one callback that does ",
+                {strong, [], [~"not"]},
+                ~" spawn-isolate. At realistic input rates the per-call spawn cost dominated the actual Lua work, so removing the wrapper recovered a 35-45% tail-latency win at 200 players x 10 Hz input (ADR 0002)."
+            ]},
+            {p, [], [
+                ~"The trade is explicit: a ",
+                {code, [], [~"while true do end"]},
+                ~" inside ",
+                {code, [], [~"handle_input"]},
+                ~" hangs the match server until the caller's ",
+                {code, [], [~"gen_server:call/2"]},
+                ~" timeout trips (5 s default); the supervisor then restarts the match process. Blast radius is one match. So ",
+                {code, [], [~"handle_input/3"]},
+                ~" is ",
+                {strong, [], [~"not a sandbox boundary"]},
+                ~" - it is a hot path for trusted-author scripts. Audit the inputs your match script accepts, and avoid pattern-matching dispatch on attacker-controlled strings. Per-tick fairness stays owned by ",
+                {code, [], [~"tick/1"]},
+                ~", which still spawn-isolates."
+            ]},
+
             {h2, [], [~"Verified negative results"]},
             {p, [], [
                 ~"These are properties prior security audits looked at and confirmed hold. Documented here so future readers don't re-derive them."

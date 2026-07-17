@@ -142,11 +142,23 @@ render(Bindings) ->
 
             {h2, [], [~"Per-callback wall-clock limits"]},
             {p, [], [
-                ~"Every Lua callback (init, tick, join, leave, handle_input, get_state, vote_requested, vote_resolved, generate_world, phases, spawn_templates, on_phase_started/ended, on_zone_loaded/unloaded, on_world_recovered, terrain_provider, spawn_position, post_tick, zone_tick, bot ",
+                ~"Every Lua callback (init, tick, join, leave, get_state, vote_requested, vote_resolved, generate_world, phases, spawn_templates, on_phase_started/ended, on_zone_loaded/unloaded, on_world_recovered, terrain_provider, spawn_position, post_tick, zone_tick, bot ",
                 {code, [], [~"think"]},
                 ~") runs in a child process with a wall-clock budget. A runaway script (",
                 {code, [], [~"while true do end"]},
                 ~", deep recursion, huge allocation) is killed when its budget elapses; the parent gen_server logs a warning and continues with the previous state. Limits are tuned per callback - init/generate_world get more time, per-tick callbacks get less."
+            ]},
+            {p, [], [
+                {code, [], [~"handle_input/3"]},
+                ~" is the exception - it is ",
+                {strong, [], [~"not"]},
+                ~" wall-clock-bounded. It runs inline for tail-latency wins at high input rates (ADR 0002), so a ",
+                {code, [], [~"while true do end"]},
+                ~" there hangs the match until the gen_server timeout (5 s) and the supervisor restarts the match; blast radius is one match. It is not a sandbox boundary - see the ",
+                {a, [{href, ~"/docs/security/lua-trust-model"}, az_navigate], [
+                    ~"trust model"
+                ]},
+                ~"."
             ]},
             {p, [], [
                 ~"The same wall-clock wrapper is applied to the initial script body load (",
