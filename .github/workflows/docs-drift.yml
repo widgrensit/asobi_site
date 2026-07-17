@@ -1,0 +1,50 @@
+name: Docs drift
+
+# Fails if a docs page describes something the source no longer backs:
+#   - a quickstart citing a client-SDK symbol that no longer exists (#87)
+#   - an error table missing an atom a controller returns, or listing one it
+#     never returns (#90 shipped a guest table missing four atoms)
+#
+# Both live here because both catch the same class of bug: this repo hand-writes
+# its docs as Erlang views rather than generating them from source, so nothing
+# but CI notices when the source moves underneath a page. Runs when the pages or
+# the guards change, and weekly to catch drift from a release in another repo.
+on:
+  push:
+    paths:
+      - 'src/views/asobi_site_docs_quickstart_*_view.erl'
+      - 'src/views/asobi_site_docs_auth_view.erl'
+      - 'scripts/check-quickstart-drift.sh'
+      - 'scripts/check-error-drift.sh'
+      - '.github/workflows/docs-drift.yml'
+  pull_request:
+    paths:
+      - 'src/views/asobi_site_docs_quickstart_*_view.erl'
+      - 'src/views/asobi_site_docs_auth_view.erl'
+      - 'scripts/check-quickstart-drift.sh'
+      - 'scripts/check-error-drift.sh'
+      - '.github/workflows/docs-drift.yml'
+  schedule:
+    - cron: '0 6 * * 1'
+
+jobs:
+  drift:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4
+        with:
+          persist-credentials: false
+      - name: Fetch client SDK repos
+        run: |
+          mkdir -p "$RUNNER_TEMP/sdks"
+          for engine in godot unity defold; do
+            git clone --depth 1 "https://github.com/widgrensit/asobi-$engine" \
+              "$RUNNER_TEMP/sdks/asobi-$engine"
+          done
+      - name: Fetch asobi
+        run: |
+          git clone --depth 1 https://github.com/widgrensit/asobi "$RUNNER_TEMP/asobi"
+      - name: Check quickstart-vs-SDK drift
+        run: scripts/check-quickstart-drift.sh "$RUNNER_TEMP/sdks"
+      - name: Check error-table-vs-controller drift
+        run: scripts/check-error-drift.sh "$RUNNER_TEMP/asobi"
