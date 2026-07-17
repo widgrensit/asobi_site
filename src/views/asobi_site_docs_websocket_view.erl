@@ -1,3 +1,5 @@
+%% GENERATED from asobi guides/websocket-protocol.md - do not edit by hand.
+%% Regenerate with scripts/gen-docs.sh
 -module(asobi_site_docs_websocket_view).
 -include("asobi_site_view.hrl").
 
@@ -5,384 +7,346 @@
 
 -spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
-    {
-        maps:merge(
-            #{id => ~"docs-ws", title => ~"WebSocket protocol — Asobi docs"},
-            Bindings
-        ),
-        #{}
-    }.
+    {maps:merge(#{id => ~"docs-ws", title => ~"WebSocket protocol — Asobi docs"}, Bindings), #{}}.
 
 -spec render(map()) -> asobi_site_html:html().
 render(Bindings) ->
-    ?html(
-        {'div', [{id, ?get(id)}], [
-            {p, [{class, ~"docs-breadcrumb"}], [
-                {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
-                ~" / Protocols / WebSocket"
-            ]},
-            {h1, [], [~"WebSocket protocol"]},
-            {p, [{class, ~"docs-lede"}], [
-                ~"One WebSocket per client at ",
-                {code, [], [~"/ws"]},
-                ~". All messages are JSON with a common envelope. Use this directly if you're writing a custom client; the SDKs wrap it."
-            ]},
-
-            {h2, [], [~"Envelope"]},
-            code(
-                ~"json",
-                ~"""
-// Client → server
-{"cid": "optional", "type": "message.type", "payload": {}}
-
-// Server → client
-{"cid": "echoed-if-request", "type": "message.type", "payload": {}}
-"""
-            ),
-            {p, [], [
-                ~"The ",
-                {code, [], [~"cid"]},
-                ~" is optional. When present, the server echoes it back so the client can correlate request/response pairs."
-            ]},
-
-            {h2, [], [~"Session"]},
-            msg(
-                ~"session.connect",
-                ~"client",
-                ~"First message; authenticates the connection.",
-                ~"""
-{"type": "session.connect", "payload": {"token": "<access_token>"}}
-"""
-            ),
-            msg(
-                ~"session.connected",
-                ~"server",
-                ~"Ack of session.connect.",
-                ~"""
-{"type": "session.connected", "payload": {"player_id": "..."}}
-"""
-            ),
-            msg(
-                ~"session.heartbeat",
-                ~"client",
-                ~"Keep-alive ping; send periodically.",
-                ~"""
-{"type": "session.heartbeat", "payload": {}}
-"""
-            ),
-
-            {h2, [], [~"Matches"]},
-            msg(
-                ~"match.join",
-                ~"client",
-                ~"Join a specific match (after matchmaking or invite).",
-                ~"""
-{"type": "match.join", "payload": {"match_id": "..."}}
-"""
-            ),
-            msg(
-                ~"match.input",
-                ~"client",
-                ~"Send an input to the match.",
-                ~"""
-{"type": "match.input", "payload": {"action": "move", "x": 10, "y": 5}}
-"""
-            ),
-            msg(
-                ~"match.leave",
-                ~"client",
-                ~"Leave the current match.",
-                ~"""
-{"type": "match.leave", "payload": {}}
-"""
-            ),
-            msg(
-                ~"match.state",
-                ~"server",
-                ~"Broadcast state update (shape is game-specific, returned by your get_state callback).",
-                ~"""
-{"type": "match.state", "payload": {"players": {...}, "tick": 42}}
-"""
-            ),
-            msg(
-                ~"match.finished",
-                ~"server",
-                ~"Match ended with a result.",
-                ~"""
-{"type": "match.finished", "payload": {"match_id": "...", "result": {...}}}
-"""
-            ),
-
-            {h2, [], [~"Matchmaking"]},
-            msg(
-                ~"matchmaker.add",
-                ~"client",
-                ~"Submit a ticket.",
-                ~"""
-{"type": "matchmaker.add",
- "payload": {"mode": "arena", "properties": {"skill": 1200}}}
-"""
-            ),
-            msg(
-                ~"matchmaker.queued",
-                ~"server",
-                ~"Reply to matchmaker.add: you are in the queue.",
-                ~"""
-{"type": "matchmaker.queued", "payload": {"ticket_id": "..."}}
-"""
-            ),
-            msg(
-                ~"matchmaker.remove",
-                ~"client",
-                ~"Cancel a ticket.",
-                ~"""
-{"type": "matchmaker.remove", "payload": {"ticket_id": "..."}}
-"""
-            ),
-            msg(
-                ~"match.matched",
-                ~"server",
-                ~"A match was found.",
-                ~"""
-{"type": "match.matched", "payload": {"match_id": "...", "players": [...]}}
-"""
-            ),
-
-            {h2, [], [~"Chat"]},
-
-            {h3, [], [~"Channel id namespacing"]},
-            {p, [], [~"Every channel id must start with one of these prefixes:"]},
-            {pre, [], [
-                {code, [], [
-                    ~"""
- Prefix    | Used for                                    | Membership rule
------------|---------------------------------------------|-------------------------------------------------
- dm:       | Direct messages                             | Both participants only.
- world:    | World-wide chat                             | Players currently joined to the world.
- zone:     | A specific zone within a world              | Players currently inside that zone.
- prox:     | Proximity chat (radius around a position)   | Players within the configured radius.
- room:     | Group / lobby / custom rooms                | Group members or open join (per-room policy).
-"""
-                ]}
-            ]},
-            {p, [], [
-                ~"A frame with a channel id missing or not matching one of these prefixes is rejected with ",
-                {code, [], [~"channel_id_invalid"]},
-                ~". This shape lets the runtime route messages and enforce membership without a registry lookup per frame."
-            ]},
-
-            {h3, [], [~"Per-connection cap"]},
-            {p, [], [
-                ~"A single WS connection may join at most ",
-                {strong, [], [~"32 channels simultaneously"]},
-                ~". Attempts to join a 33rd are rejected with ",
-                {code, [], [~"too_many_channels"]},
-                ~". Idle channels with zero members stop after 60 s; rejoining is cheap."
-            ]},
-
-            {h3, [], [~"History access"]},
-            {p, [], [
-                ~"Fetching history (",
-                {code, [], [~"GET /api/v1/chat/:channel_id/history"]},
-                ~") requires membership: DM participants for ",
-                {code, [], [~"dm:"]},
-                ~", world joiners for ",
-                {code, [], [~"world:"]},
-                ~"/",
-                {code, [], [~"zone:"]},
-                ~"/",
-                {code, [], [~"prox:"]},
-                ~", group members for ",
-                {code, [], [~"room:"]},
-                ~". Non-members get ",
-                {code, [], [~"403"]},
-                ~"; ",
-                {code, [], [~"?limit"]},
-                ~" is clamped to 200."
-            ]},
-
-            {h3, [], [~"DM size cap"]},
-            {p, [], [
-                ~"DM ",
-                {code, [], [~"content"]},
-                ~" is capped at 2000 bytes; non-binary or empty content rejected with ",
-                {code, [], [~"content_empty"]},
-                ~" / ",
-                {code, [], [~"content_too_large"]},
-                ~"."
-            ]},
-
-            msg(
-                ~"chat.join / chat.leave",
-                ~"client",
-                ~"Join/leave a channel. Channel id must be namespaced.",
-                ~"""
-{"type": "chat.join",  "payload": {"channel_id": "world:abc123"}}
-{"type": "chat.leave", "payload": {"channel_id": "world:abc123"}}
-"""
-            ),
-            msg(
-                ~"chat.send",
-                ~"client",
-                ~"Post a message.",
-                ~"""
-{"type": "chat.send", "payload": {"channel_id": "lobby", "content": "Hello!"}}
-"""
-            ),
-            msg(
-                ~"chat.message",
-                ~"server",
-                ~"A new message in a joined channel.",
-                ~"""
-{"type": "chat.message",
- "payload": {
-   "channel_id": "lobby",
-   "sender_id": "...",
-   "content": "Hello!",
-   "sent_at": "2026-04-15T10:30:00Z"
- }}
-"""
-            ),
-
-            {h2, [], [~"Voting"]},
-            msg(
-                ~"vote.cast",
-                ~"client",
-                ~"Cast a vote. For approval voting, option_id is a list.",
-                ~"""
-{"type": "vote.cast",
- "payload": {"vote_id": "...", "option_id": "jungle"}}
-
-// approval voting
-{"type": "vote.cast",
- "payload": {"vote_id": "...", "option_id": ["jungle", "caves"]}}
-"""
-            ),
-            msg(
-                ~"vote.veto",
-                ~"client",
-                ~"Use a veto token to cancel. Requires veto_tokens_per_player > 0 and veto_enabled on the vote.",
-                ~"""
-{"type": "vote.veto", "payload": {"vote_id": "..."}}
-"""
-            ),
-            msg(
-                ~"match.vote_start",
-                ~"server",
-                ~"A new vote has started.",
-                ~"""
-{"type": "match.vote_start",
- "payload": {
-   "vote_id": "...",
-   "options": [{"id": "jungle", "label": "Jungle Path"}, {"id": "volcano", "label": "Volcano Path"}],
-   "window_ms": 15000,
-   "method": "plurality"
- }}
-"""
-            ),
-            msg(
-                ~"match.vote_tally",
-                ~"server",
-                ~"Running tally update (only with visibility: live).",
-                ~"""
-{"type": "match.vote_tally",
- "payload": {
-   "vote_id": "...",
-   "tallies": {"jungle": 2, "volcano": 1},
-   "time_remaining_ms": 8432,
-   "total_votes": 3
- }}
-"""
-            ),
-            msg(
-                ~"match.vote_result",
-                ~"server",
-                ~"Vote closed, winner determined.",
-                ~"""
-{"type": "match.vote_result",
- "payload": {
-   "vote_id": "...",
-   "winner": "jungle",
-   "counts": {"jungle": 2, "volcano": 1},
-   "distribution": {"jungle": 0.666, "volcano": 0.333},
-   "total_votes": 3,
-   "turnout": 1.0
- }}
-"""
-            ),
-            msg(
-                ~"match.vote_vetoed",
-                ~"server",
-                ~"A player vetoed the vote.",
-                ~"""
-{"type": "match.vote_vetoed", "payload": {"vote_id": "...", "vetoed_by": "player_id"}}
-"""
-            ),
-
-            {h2, [], [~"Presence & notifications"]},
-            msg(
-                ~"presence.update",
-                ~"client",
-                ~"Update your online status.",
-                ~"""
-{"type": "presence.update",
- "payload": {"status": "in_game", "metadata": {"match_id": "..."}}}
-"""
-            ),
-            msg(
-                ~"presence.updated",
-                ~"server",
-                ~"Acknowledges your presence status change.",
-                ~"""
-{"type": "presence.updated", "payload": {"status": "online"}}
-"""
-            ),
-            msg(
-                ~"notification.new",
-                ~"server",
-                ~"A new notification for the player.",
-                ~"""
-{"type": "notification.new",
- "payload": {
-   "id": "...",
-   "type": "friend_request",
-   "subject": "New friend request",
-   "content": {"from_player_id": "..."}
- }}
-"""
-            ),
-
-            {h2, [], [~"Where next?"]},
-            {ul, [], [
-                {li, [], [
-                    {a, [{href, ~"/docs/protocols/rest"}, az_navigate], [~"REST API"]},
-                    ~" - HTTP endpoints for things that don't fit a real-time channel."
-                ]},
-                {li, [], [
-                    {a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]},
-                    ~" - how to get the access token for ",
-                    {code, [], [~"session.connect"]},
-                    ~"."
-                ]},
-                {li, [], [
-                    {a, [{href, ~"/docs/voting"}, az_navigate], [~"Voting in depth"]},
-                    ~" - methods, tie-breakers, weighted, ranked."
-                ]}
-            ]}
-        ]}
-    ).
-msg(Name, Direction, Desc, Example) ->
-    ?html(
-        {'div', [{class, ~"docs-api"}], [
-            {h3, [], [
-                {code, [], [Name]},
-                ~" ",
-                {span, [{class, ~"docs-ws-dir"}], [~"(", Direction, ~")"]}
-            ]},
-            {p, [], [Desc]},
-            {pre, [], [{code, [{class, ~"language-json"}], [Example]}]}
-        ]}
-    ).
-
-code(Lang, Body) ->
-    ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).
+    {'div', [{id, maps:get(id, Bindings)}], [
+        {p, [{class, ~"docs-breadcrumb"}], [
+            {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
+            ~" / Protocols / WebSocket"
+        ]},
+        {h1, [], [~"WebSocket Protocol"]},
+        {raw,
+            ~"""
+<p>Asobi uses a single WebSocket connection per client at <code>/ws</code>. All messages
+are JSON with a common envelope format.</p>
+<h2 id="message-format" tabindex="-1">Message Format</h2>
+<h3 id="client-to-server" tabindex="-1">Client to Server</h3>
+<pre><code class="language-json">{
+  &quot;cid&quot;: &quot;optional-correlation-id&quot;,
+  &quot;type&quot;: &quot;message.type&quot;,
+  &quot;payload&quot;: {}
+}
+</code></pre>
+<h3 id="server-to-client" tabindex="-1">Server to Client</h3>
+<pre><code class="language-json">{
+  &quot;cid&quot;: &quot;correlation-id-if-request&quot;,
+  &quot;type&quot;: &quot;message.type&quot;,
+  &quot;payload&quot;: {}
+}
+</code></pre>
+<p>The <code>cid</code> field is optional. When provided, the server echoes it back in
+the response so the client can correlate request/response pairs.</p>
+<h2 id="connection" tabindex="-1">Connection</h2>
+<h3 id="sessionconnect" tabindex="-1"><code>session.connect</code></h3>
+<p>Authenticate the WebSocket connection. Must be the first message sent.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.connect&quot;, &quot;payload&quot;: {&quot;token&quot;: &quot;session_token_here&quot;}}
+</code></pre>
+<p>Response:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.connected&quot;, &quot;payload&quot;: {&quot;player_id&quot;: &quot;...&quot;}}
+</code></pre>
+<h3 id="sessionheartbeat" tabindex="-1"><code>session.heartbeat</code></h3>
+<p>Keep-alive ping. Send periodically to prevent timeout.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;payload&quot;: {}}
+</code></pre>
+<h2 id="matches" tabindex="-1">Matches</h2>
+<h3 id="matchjoin" tabindex="-1"><code>match.join</code></h3>
+<p>Join a match (after being matched via matchmaker or direct invite).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.join&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;}}
+</code></pre>
+<h3 id="matchinput" tabindex="-1"><code>match.input</code></h3>
+<p>Send game input to the match server.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.input&quot;, &quot;payload&quot;: {&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 10, &quot;y&quot;: 5}}
+</code></pre>
+<h3 id="matchstate-server-push" tabindex="-1"><code>match.state</code> (server push)</h3>
+<p>Server broadcasts game state updates to all players in the match.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.state&quot;, &quot;payload&quot;: {&quot;players&quot;: {...}, &quot;tick&quot;: 42}}
+</code></pre>
+<h3 id="matchstarted-server-push" tabindex="-1"><code>match.started</code> (server push)</h3>
+<p>Notification that a match has begun.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.started&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;players&quot;: [...]}}
+</code></pre>
+<h3 id="matchfinished-server-push" tabindex="-1"><code>match.finished</code> (server push)</h3>
+<p>Notification that a match has ended with results.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.finished&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;result&quot;: {...}}}
+</code></pre>
+<h3 id="matchleave" tabindex="-1"><code>match.leave</code></h3>
+<p>Leave the current match.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.leave&quot;, &quot;payload&quot;: {}}
+</code></pre>
+<h2 id="matchmaking" tabindex="-1">Matchmaking</h2>
+<h3 id="matchmakeradd" tabindex="-1"><code>matchmaker.add</code></h3>
+<p>Submit a matchmaking ticket.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.add&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;properties&quot;: {&quot;skill&quot;: 1200}}}
+</code></pre>
+<h3 id="matchmakerremove" tabindex="-1"><code>matchmaker.remove</code></h3>
+<p>Cancel a matchmaking ticket.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.remove&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;}}
+</code></pre>
+<h3 id="matchmatched-server-push" tabindex="-1"><code>match.matched</code> (server push)</h3>
+<p>Notification that the matchmaker paired you into a match.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.matched&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;players&quot;: [...]}}
+</code></pre>
+<blockquote>
+<p>Note: distinct from <code>match.joined</code>, which is the server's reply to a
+client-initiated <code>match.join</code> message. Both signal &quot;you're in a match
+and <code>match.state</code> will follow,&quot; but only <code>match.matched</code> is fired
+spontaneously by the matchmaker.</p>
+</blockquote>
+<h2 id="worlds" tabindex="-1">Worlds</h2>
+<p>The world server runs persistent shared spaces with zoned interest
+management. See <a href="/docs/world-server">World server</a> for the model and
+<a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a> for tuning.</p>
+<h3 id="worldlist" tabindex="-1"><code>world.list</code></h3>
+<p>List running worlds. Optional filters: <code>mode</code> (string), <code>has_capacity</code>
+(bool — only worlds that aren't full).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.list&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;walkers&quot;, &quot;has_capacity&quot;: true}}
+</code></pre>
+<p>Response:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.list&quot;, &quot;payload&quot;: {&quot;worlds&quot;: [{&quot;world_id&quot;: &quot;...&quot;, &quot;mode&quot;: &quot;walkers&quot;, &quot;player_count&quot;: 1, &quot;max_players&quot;: 8}]}}
+</code></pre>
+<h3 id="worldcreate" tabindex="-1"><code>world.create</code></h3>
+<p>Create a new world for the given mode. Refuses with
+<code>world_capacity_reached</code> (global cap hit) or <code>player_world_limit_reached</code>
+(per-player cap hit). On success the caller is auto-joined.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.create&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;walkers&quot;}}
+</code></pre>
+<h3 id="worldfind_or_create" tabindex="-1"><code>world.find_or_create</code></h3>
+<p>Atomic find-or-create: returns the first non-full world for the mode,
+or creates one if none exists. The caller is auto-joined. <strong>This is the
+right call for &quot;drop me into a shared room&quot; flows.</strong></p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.find_or_create&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;walkers&quot;}}
+</code></pre>
+<h3 id="worldjoin" tabindex="-1"><code>world.join</code></h3>
+<p>Join a specific world by id (e.g. one returned from <code>world.list</code>).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.join&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;}}
+</code></pre>
+<h3 id="worldinput" tabindex="-1"><code>world.input</code></h3>
+<p>Send game input to your zone. The <code>payload</code> IS the input map — there is
+no inner <code>data</code> wrapper. Field names are entirely up to your game; the
+server only forwards the map verbatim to your <code>handle_input/3</code> callback.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.input&quot;, &quot;payload&quot;: {&quot;kind&quot;: &quot;move&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480}}
+</code></pre>
+<p>The server routes the message to whichever zone owns your player
+entity — clients don't specify zone coordinates.</p>
+<h3 id="worldleave" tabindex="-1"><code>world.leave</code></h3>
+<p>Leave the current world.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.leave&quot;, &quot;payload&quot;: {}}
+</code></pre>
+<h3 id="worldjoined-server-push" tabindex="-1"><code>world.joined</code> (server push)</h3>
+<p>Sent in response to a successful <code>world.create</code>, <code>world.find_or_create</code>,
+or <code>world.join</code>. The <code>payload</code> is the full world info (mode, world_id,
+player_count, grid_size, max_players, …).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.joined&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;, &quot;mode&quot;: &quot;walkers&quot;, &quot;grid_size&quot;: 1, &quot;max_players&quot;: 8, &quot;player_count&quot;: 1, &quot;status&quot;: &quot;running&quot;}}
+</code></pre>
+<h3 id="worldtick-server-push" tabindex="-1"><code>world.tick</code> (server push)</h3>
+<p>Per-zone delta broadcast. The first <code>world.tick</code> after <code>world.joined</code> is
+the <strong>initial snapshot</strong> for every entity in the zone — register your
+handler before sending the join message or you miss it.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.tick&quot;, &quot;payload&quot;: {&quot;tick&quot;: 42, &quot;updates&quot;: [{&quot;op&quot;: &quot;a&quot;, &quot;id&quot;: &quot;01HX...&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480, &quot;type&quot;: &quot;player&quot;}]}}
+</code></pre>
+<p><code>updates</code> is a list of entity deltas. <code>op</code> values:</p>
+<table>
+<thead>
+<tr>
+<th><code>op</code></th>
+<th>Meaning</th>
+<th>Fields</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>&quot;a&quot;</code></td>
+<td>Added — full state</td>
+<td>id + every field on the entity</td>
+</tr>
+<tr>
+<td><code>&quot;u&quot;</code></td>
+<td>Updated — diff</td>
+<td>id + only changed fields</td>
+</tr>
+<tr>
+<td><code>&quot;r&quot;</code></td>
+<td>Removed</td>
+<td>id only</td>
+</tr>
+</tbody>
+</table>
+<h3 id="worldterrain-server-push" tabindex="-1"><code>world.terrain</code> (server push)</h3>
+<p>Sent on zone subscription when the world has a terrain provider. The
+chunk data is base64-encoded compressed binary; see
+<a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a> for the encoding.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.terrain&quot;, &quot;payload&quot;: {&quot;coords&quot;: [3, 5], &quot;data&quot;: &quot;eJw...&quot;}}
+</code></pre>
+<h3 id="worldleft-server-push" tabindex="-1"><code>world.left</code> (server push)</h3>
+<p>Confirmation that the leave completed (or that the client was already
+out of any world).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.left&quot;, &quot;payload&quot;: {&quot;success&quot;: true}}
+</code></pre>
+<h3 id="worldfinished-server-push" tabindex="-1"><code>world.finished</code> (server push)</h3>
+<p>The world ended (e.g. last player left and the empty grace expired, or
+the game module returned <code>{finished, Result, State}</code> from <code>post_tick</code>).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.finished&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;, &quot;result&quot;: {}}}
+</code></pre>
+<h3 id="worldphase_changed-server-push" tabindex="-1"><code>world.phase_changed</code> (server push)</h3>
+<p>Phase transition for worlds that declare phases. Payload mirrors the
+match <code>match.phase_changed</code> event.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.phase_changed&quot;, &quot;payload&quot;: {&quot;phase&quot;: &quot;combat&quot;, &quot;duration_ms&quot;: 60000}}
+</code></pre>
+<h2 id="chat" tabindex="-1">Chat</h2>
+<p>Channel ids are namespaced: every id must start with one of these prefixes, and
+a frame whose channel id is missing or unprefixed is rejected with
+<code>channel_id_invalid</code>. The prefix lets the runtime route the message and enforce
+membership without a per-frame registry lookup.</p>
+<table>
+<thead>
+<tr>
+<th>Prefix</th>
+<th>Used for</th>
+<th>Membership rule</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>dm:</code></td>
+<td>Direct messages</td>
+<td>Both participants only.</td>
+</tr>
+<tr>
+<td><code>world:</code></td>
+<td>World-wide chat</td>
+<td>Players currently joined to the world.</td>
+</tr>
+<tr>
+<td><code>zone:</code></td>
+<td>A specific zone within a world</td>
+<td>Players currently inside that zone.</td>
+</tr>
+<tr>
+<td><code>prox:</code></td>
+<td>Proximity chat (radius around a position)</td>
+<td>Players within the configured radius.</td>
+</tr>
+<tr>
+<td><code>room:</code></td>
+<td>Group / lobby / custom rooms</td>
+<td>Group members, or open join per room policy.</td>
+</tr>
+</tbody>
+</table>
+<p>A single connection may join at most <strong>32 channels</strong> at once; a 33rd is rejected
+with <code>too_many_channels</code>. Idle channels with no members stop after 60s; rejoining
+is cheap. Message <code>content</code> is capped at 2000 bytes and empty or non-binary
+content is rejected with <code>content_empty</code> / <code>content_too_large</code>.</p>
+<p>History (<code>GET /api/v1/chat/:channel_id/history</code>) requires membership and clamps
+<code>?limit</code> to 200; non-members get <code>403</code>.</p>
+<h3 id="chatjoin" tabindex="-1"><code>chat.join</code></h3>
+<p>Join a chat channel. The channel id must be namespaced.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.join&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;room:lobby&quot;}}
+</code></pre>
+<h3 id="chatsend" tabindex="-1"><code>chat.send</code></h3>
+<p>Send a message to a channel.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.send&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;room:lobby&quot;, &quot;content&quot;: &quot;Hello!&quot;}}
+</code></pre>
+<h3 id="chatmessage-server-push" tabindex="-1"><code>chat.message</code> (server push)</h3>
+<p>A new message in a joined channel.</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;chat.message&quot;,
+  &quot;payload&quot;: {
+    &quot;channel_id&quot;: &quot;room:lobby&quot;,
+    &quot;sender_id&quot;: &quot;...&quot;,
+    &quot;content&quot;: &quot;Hello!&quot;,
+    &quot;sent_at&quot;: &quot;2025-01-15T10:30:00Z&quot;
+  }
+}
+</code></pre>
+<h3 id="chatleave" tabindex="-1"><code>chat.leave</code></h3>
+<p>Leave a chat channel.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.leave&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;room:lobby&quot;}}
+</code></pre>
+<h2 id="voting" tabindex="-1">Voting</h2>
+<h3 id="votecast" tabindex="-1"><code>vote.cast</code></h3>
+<p>Cast a vote in an active match vote.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;vote.cast&quot;, &quot;cid&quot;: &quot;v1&quot;, &quot;payload&quot;: {&quot;vote_id&quot;: &quot;...&quot;, &quot;option_id&quot;: &quot;jungle&quot;}}
+</code></pre>
+<p>For approval voting, <code>option_id</code> is a list:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;vote.cast&quot;, &quot;payload&quot;: {&quot;vote_id&quot;: &quot;...&quot;, &quot;option_id&quot;: [&quot;jungle&quot;, &quot;caves&quot;]}}
+</code></pre>
+<h3 id="voteveto" tabindex="-1"><code>vote.veto</code></h3>
+<p>Use a veto token to cancel the current vote. Requires <code>veto_tokens_per_player &gt; 0</code>
+in match config and <code>veto_enabled</code> on the vote.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;vote.veto&quot;, &quot;payload&quot;: {&quot;vote_id&quot;: &quot;...&quot;}}
+</code></pre>
+<h3 id="matchvote_start-server-push" tabindex="-1"><code>match.vote_start</code> (server push)</h3>
+<p>A new vote has started.</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;match.vote_start&quot;,
+  &quot;payload&quot;: {
+    &quot;vote_id&quot;: &quot;...&quot;,
+    &quot;options&quot;: [{&quot;id&quot;: &quot;jungle&quot;, &quot;label&quot;: &quot;Jungle Path&quot;}, {&quot;id&quot;: &quot;volcano&quot;, &quot;label&quot;: &quot;Volcano Path&quot;}],
+    &quot;window_ms&quot;: 15000,
+    &quot;method&quot;: &quot;plurality&quot;
+  }
+}
+</code></pre>
+<h3 id="matchvote_tally-server-push" tabindex="-1"><code>match.vote_tally</code> (server push)</h3>
+<p>Running tally update (only with <code>&quot;live&quot;</code> visibility).</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;match.vote_tally&quot;,
+  &quot;payload&quot;: {
+    &quot;vote_id&quot;: &quot;...&quot;,
+    &quot;tallies&quot;: {&quot;jungle&quot;: 2, &quot;volcano&quot;: 1},
+    &quot;time_remaining_ms&quot;: 8432,
+    &quot;total_votes&quot;: 3
+  }
+}
+</code></pre>
+<h3 id="matchvote_result-server-push" tabindex="-1"><code>match.vote_result</code> (server push)</h3>
+<p>Vote closed, winner determined.</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;match.vote_result&quot;,
+  &quot;payload&quot;: {
+    &quot;vote_id&quot;: &quot;...&quot;,
+    &quot;winner&quot;: &quot;jungle&quot;,
+    &quot;counts&quot;: {&quot;jungle&quot;: 2, &quot;volcano&quot;: 1},
+    &quot;distribution&quot;: {&quot;jungle&quot;: 0.666, &quot;volcano&quot;: 0.333},
+    &quot;total_votes&quot;: 3,
+    &quot;turnout&quot;: 1.0
+  }
+}
+</code></pre>
+<h3 id="matchvote_vetoed-server-push" tabindex="-1"><code>match.vote_vetoed</code> (server push)</h3>
+<p>A player vetoed the vote.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.vote_vetoed&quot;, &quot;payload&quot;: {&quot;vote_id&quot;: &quot;...&quot;, &quot;vetoed_by&quot;: &quot;player_id&quot;}}
+</code></pre>
+<h2 id="presence" tabindex="-1">Presence</h2>
+<h3 id="presenceupdate" tabindex="-1"><code>presence.update</code></h3>
+<p>Update your online status.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;presence.update&quot;, &quot;payload&quot;: {&quot;status&quot;: &quot;in_game&quot;, &quot;metadata&quot;: {&quot;match_id&quot;: &quot;...&quot;}}}
+</code></pre>
+<h3 id="presencechanged-server-push" tabindex="-1"><code>presence.changed</code> (server push)</h3>
+<p>A friend's presence changed.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;presence.changed&quot;, &quot;payload&quot;: {&quot;player_id&quot;: &quot;...&quot;, &quot;status&quot;: &quot;online&quot;}}
+</code></pre>
+<h2 id="notifications" tabindex="-1">Notifications</h2>
+<h3 id="notificationnew-server-push" tabindex="-1"><code>notification.new</code> (server push)</h3>
+<p>A new notification for the player.</p>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;notification.new&quot;,
+  &quot;payload&quot;: {
+    &quot;id&quot;: &quot;...&quot;,
+    &quot;type&quot;: &quot;friend_request&quot;,
+    &quot;subject&quot;: &quot;New friend request&quot;,
+    &quot;content&quot;: {&quot;from_player_id&quot;: &quot;...&quot;}
+  }
+}
+</code></pre>
+<h2 id="next-steps" tabindex="-1">Next steps</h2>
+<ul>
+<li><a href="/docs/protocols/rest">REST API</a> - the request/response surface alongside this socket protocol.</li>
+<li><a href="/docs/authentication">Authentication</a> - obtaining the token the socket authenticates with.</li>
+<li><a href="/docs/voting">Voting</a> - the vote flow whose <code>match.vote_*</code> pushes appear above.</li>
+</ul>
+"""}
+    ]}.

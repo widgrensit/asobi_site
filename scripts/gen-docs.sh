@@ -25,6 +25,7 @@ manifest=$(
 	cat <<'EOF'
 authentication|asobi_site_docs_auth_view|docs-auth|Authentication — Asobi docs|Authentication|auth
 security-threat-model|asobi_site_docs_security_threat_model_view|docs-sec-threat|Threat model — Asobi docs|Security / Threat model|threat
+websocket-protocol|asobi_site_docs_websocket_view|docs-ws|WebSocket protocol — Asobi docs|Protocols / WebSocket|ws
 EOF
 )
 
