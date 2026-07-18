@@ -39,6 +39,54 @@ render(Bindings) ->
                     []}
             ]},
 
+            {'div',
+                [
+                    {class, ~"livepatch-play"},
+                    {'data-backend', livepatch_host()},
+                    {'data-mode', ~"livepatch"}
+                ],
+                [
+                    {h2, [], [~"Patch a live game - watch nobody reconnect"]},
+                    {p, [], [
+                        ~"This is a party trivia game whose scoring rule is hot-reloaded while you play. Answer a question, then the server's ",
+                        {code, [], [~"score()"]},
+                        ~" rule gets swapped underneath the running match - your score so far stays, the new rule applies from now on, and the connection never drops. No other game backend does this."
+                    ]},
+                    {button, [{id, ~"livepatch-btn"}, {class, ~"btn btn-primary"}], [
+                        ~"\x{25B6} Play Live Patch"
+                    ]},
+                    {p, [{id, ~"livepatch-status"}, {class, ~"arena-status"}], []},
+                    {'div', [{id, ~"livepatch-fallback"}, {class, ~"livepatch-fallback"}], [
+                        {p, [], [
+                            ~"The hosted demo isn't up yet. Run it yourself - Docker only, no account:"
+                        ]},
+                        {pre, [], [
+                            {code, [{class, ~"language-bash"}], [
+                                ~"git clone https://github.com/widgrensit/asobi_livepatch_lua\ncd asobi_livepatch_lua && docker compose up -d\n./patch.sh streak   # swap the scoring rule while a match runs"
+                            ]}
+                        ]},
+                        {p, [], [
+                            {a, [{href, ~"https://github.com/widgrensit/asobi_livepatch_lua"}], [
+                                ~"asobi_livepatch_lua on GitHub \x{2192}"
+                            ]}
+                        ]}
+                    ]},
+                    {'div', [{id, ~"livepatch-game"}, {class, ~"livepatch-game"}], [
+                        {'div', [{class, ~"livepatch-bar"}], [
+                            {span, [{id, ~"livepatch-rule"}, {class, ~"livepatch-rule"}], []},
+                            {span, [{id, ~"livepatch-flash"}, {class, ~"livepatch-flash"}], []}
+                        ]},
+                        {p, [{id, ~"livepatch-question"}, {class, ~"livepatch-question"}], []},
+                        {'div', [{id, ~"livepatch-options"}, {class, ~"livepatch-options"}], []},
+                        {'div', [{class, ~"livepatch-panels"}], [
+                            {'div', [{id, ~"livepatch-scores"}, {class, ~"livepatch-scores"}], []},
+                            {pre, [{class, ~"livepatch-code"}], [
+                                {code, [{id, ~"livepatch-code"}, {class, ~"language-lua"}], []}
+                            ]}
+                        ]}
+                    ]}
+                ]},
+
             {'div', [{class, ~"docs-callout"}], [
                 {p, [], [
                     {strong, [], [~"How this works. "]},
@@ -55,7 +103,8 @@ render(Bindings) ->
 
             {'div', [{class, ~"samples-grid"}], [sample_card(S) || S <- samples()]},
 
-            {script, [{src, ~"/assets/js/arena-play.js"}, {defer, true}], []}
+            {script, [{src, ~"/assets/js/arena-play.js"}, {defer, true}], []},
+            {script, [{src, ~"/assets/js/livepatch-play.js"}, {defer, true}], []}
         ]}
     ).
 
@@ -138,3 +187,9 @@ code(Lang, Body) ->
 %% repoint the demo (e.g. to an asobi_saas-provisioned env) without code changes.
 backend_host() ->
     application:get_env(asobi_site, demo_backend_host, ~"play.asobi.dev").
+
+%% Host of the showcase backend the Live Patch demo connects to. Defaults to the
+%% shared showcase host; override in sys.config to point at a dedicated
+%% volume-mounted env (hot-reload needs mtime polling, so not a sealed bundle).
+livepatch_host() ->
+    application:get_env(asobi_site, livepatch_demo_host, ~"livepatch.asobi.dev").
