@@ -25,7 +25,7 @@ render(Bindings) ->
                 {'div', [{class, ~"docs-card"}], [
                     {h3, [], [~"Self-host - free, no account needed"]},
                     {p, [], [
-                        ~"Open source, Docker only. Runs fully local - no signup, no credentials, no cost. About 5 minutes."
+                        ~"Open source, Docker only. Runs fully local - no signup, no credentials, no cost. First match in under 5 minutes."
                     ]},
                     code(
                         ~"bash",
@@ -71,17 +71,17 @@ asobi deploy prod lua
             ]},
 
             {'div', [{class, ~"docs-cta-row"}], [
-                {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}, az_navigate], [
-                    ~"Quick start \x{2192}"
+                {a, [{href, ~"/docs/samples"}, {class, ~"btn btn-primary"}, az_navigate], [
+                    ~"\x{25B6} Play a live match - no install \x{2192}"
                 ]},
                 {a,
                     [
-                        {href, ~"/docs/tutorials/tic-tac-toe"},
+                        {href, ~"/docs/quickstart"},
                         {class, ~"btn btn-secondary"},
                         az_navigate
                     ],
                     [
-                        ~"Tic-tac-toe tutorial"
+                        ~"Quick start"
                     ]},
                 {a, [{href, ~"https://github.com/widgrensit/asobi"}, {class, ~"btn btn-ghost"}], [
                     ~"GitHub"
@@ -93,7 +93,7 @@ asobi deploy prod lua
                 card(
                     ~"/docs/quickstart",
                     ~"Quick start",
-                    ~"Run the server, write a Lua game, connect a client - about 10 minutes."
+                    ~"Run the server, write a Lua game, connect a client - first match in under 5 minutes."
                 ),
                 card(
                     ~"/docs/concepts",
@@ -103,7 +103,7 @@ asobi deploy prod lua
                 card(
                     ~"/docs/samples",
                     ~"Samples",
-                    ~"Complete games you scaffold and run in two commands."
+                    ~"Play a complete game live in your browser - no install - then scaffold it in two commands."
                 ),
                 card(
                     ~"/docs/tutorials/tic-tac-toe",
