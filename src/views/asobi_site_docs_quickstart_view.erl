@@ -18,8 +18,17 @@ render(Bindings) ->
             {h1, [], [~"Quick start"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Write a tiny game in Lua, run the Asobi server, and connect a client. ",
-                ~"About 10 minutes. You host the server yourself, or run it on managed Asobi ",
+                ~"No signup, first match in under 5 minutes. You host the server yourself, or run it on managed Asobi ",
                 ~"(cloud) - the game and the client code are identical either way."
+            ]},
+
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Want zero setup first? "]},
+                    ~"Play the Arena sample live in your browser - no install, no signup - on the ",
+                    {a, [{href, ~"/docs/samples"}, az_navigate], [~"samples page"]},
+                    ~", then come back here to build your own."
+                ]}
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
@@ -40,7 +49,7 @@ render(Bindings) ->
             {'div', [{class, ~"docs-callout docs-callout-success"}], [
                 {p, [], [
                     {strong, [], [~"Nothing to sign up for. "]},
-                    ~"Self-host runs entirely on your machine - no Asobi account, no API key, no credentials. About 10 minutes to a running game. Want us to host it instead? See the ",
+                    ~"Self-host runs entirely on your machine - no Asobi account, no API key, no credentials. Under 5 minutes to a running match. Want us to host it instead? See the ",
                     {a, [{href, ~"/docs/cloud"}, az_navigate], [~"cloud quickstart"]},
                     ~"."
                 ]}

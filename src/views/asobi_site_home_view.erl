@@ -56,15 +56,21 @@ render(Bindings) ->
                         ~"and help shape the future of game backends on the BEAM."
                     ]},
                     {'div', [{class, ~"hero-actions"}], [
-                        {a, [{href, ~"/docs/quickstart"}, {class, ~"btn btn-primary"}, az_navigate],
+                        {a, [{href, ~"/docs/samples"}, {class, ~"btn btn-primary"}, az_navigate], [
+                            ~"\x{25B6} Play a live match",
+                            {span, [{class, ~"arrow"}], [~" \x{2192}"]}
+                        ]},
+                        {a,
                             [
-                                ~"Get started",
-                                {span, [{class, ~"arrow"}], [~" \x{2192}"]}
-                            ]},
+                                {href, ~"/docs/quickstart"},
+                                {class, ~"btn btn-secondary"},
+                                az_navigate
+                            ],
+                            [~"Get started"]},
                         {a,
                             [
                                 {href, ~"https://console.asobi.dev"},
-                                {class, ~"btn btn-secondary"}
+                                {class, ~"btn btn-ghost"}
                             ],
                             [~"Sign in to Console"]}
                     ]}
