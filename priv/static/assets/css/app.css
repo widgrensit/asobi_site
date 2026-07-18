@@ -2185,6 +2185,8 @@ code {
 .livepatch-play h2 { margin-top: 0; }
 .livepatch-play > p { color: var(--text-2); font-size: var(--fs-sm); }
 .livepatch-game { display: none; margin-top: var(--sp-4); }
+.livepatch-fallback { display: none; margin-top: var(--sp-4); font-size: var(--fs-sm); color: var(--text-2); }
+.livepatch-fallback pre { margin: var(--sp-3) 0; }
 .livepatch-bar {
     display: flex;
     align-items: center;

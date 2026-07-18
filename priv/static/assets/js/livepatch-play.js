@@ -13,6 +13,7 @@
   var gameEl = document.getElementById("livepatch-game");
   if (!btn || !gameEl) return;
 
+  var fallbackEl = document.getElementById("livepatch-fallback");
   var ruleEl = document.getElementById("livepatch-rule");
   var flashEl = document.getElementById("livepatch-flash");
   var questionEl = document.getElementById("livepatch-question");
@@ -33,16 +34,32 @@
     "Streak multiplier": "score = function(is_correct, secs_left, streak)\n  if is_correct then return 100 * streak end\n  return 0\nend"
   };
 
-  var ws = null, me = null, matchId = null, running = false;
+  var ws = null, me = null, matchId = null, running = false, done = false, matchTimer = null;
   var lastRule = null, lastQi = null, answered = false;
 
   function setStatus(s) { if (statusEl) statusEl.textContent = s; }
 
+  // Shown when the hosted showcase backend isn't reachable yet: point people at
+  // the self-host path instead of leaving a dead button.
+  function fallback() {
+    if (done) return;
+    done = true;
+    if (matchTimer) { clearTimeout(matchTimer); matchTimer = null; }
+    if (ws) { try { ws.close(); } catch (e) {} }
+    setStatus("");
+    if (fallbackEl) fallbackEl.style.display = "block";
+    btn.disabled = false;
+  }
+
   function start() {
+    if (fallbackEl) fallbackEl.style.display = "none";
+    done = false;
     btn.disabled = true;
     setStatus("Connecting…");
     var uname = "guest_" + Math.random().toString(36).slice(2, 10);
     var pass = Math.random().toString(36).slice(2) + "Aa1!";
+    // If nothing connects us to a match in time, the host probably isn't up.
+    matchTimer = setTimeout(fallback, 9000);
     fetch(API + "/api/v1/auth/register", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -50,7 +67,7 @@
     })
       .then(function (r) { return r.json(); })
       .then(function (d) { connect(d.access_token || d.session_token); })
-      .catch(function () { setStatus("Couldn't reach the demo server — try again."); btn.disabled = false; });
+      .catch(fallback);
   }
 
   function connect(token) {
@@ -64,6 +81,7 @@
         setStatus("Finding a match…");
         ws.send(JSON.stringify({ type: "matchmaker.add", payload: { mode: mode } }));
       } else if (msg.type === "match.matched") {
+        if (matchTimer) { clearTimeout(matchTimer); matchTimer = null; }
         matchId = msg.payload.match_id;
         running = true;
         gameEl.style.display = "block";
@@ -73,8 +91,8 @@
         render(msg.payload);
       }
     };
-    ws.onclose = function () { stop("Disconnected. Click to play again."); };
-    ws.onerror = function () { setStatus("Connection error."); };
+    ws.onclose = function () { if (running) stop("Disconnected. Click to play again."); else fallback(); };
+    ws.onerror = fallback;
   }
 
   function stop(message) {

@@ -56,6 +56,21 @@ render(Bindings) ->
                         ~"\x{25B6} Play Live Patch"
                     ]},
                     {p, [{id, ~"livepatch-status"}, {class, ~"arena-status"}], []},
+                    {'div', [{id, ~"livepatch-fallback"}, {class, ~"livepatch-fallback"}], [
+                        {p, [], [
+                            ~"The hosted demo isn't up yet. Run it yourself - Docker only, no account:"
+                        ]},
+                        {pre, [], [
+                            {code, [{class, ~"language-bash"}], [
+                                ~"git clone https://github.com/widgrensit/asobi_livepatch_lua\ncd asobi_livepatch_lua && docker compose up -d\n./patch.sh streak   # swap the scoring rule while a match runs"
+                            ]}
+                        ]},
+                        {p, [], [
+                            {a, [{href, ~"https://github.com/widgrensit/asobi_livepatch_lua"}], [
+                                ~"asobi_livepatch_lua on GitHub \x{2192}"
+                            ]}
+                        ]}
+                    ]},
                     {'div', [{id, ~"livepatch-game"}, {class, ~"livepatch-game"}], [
                         {'div', [{class, ~"livepatch-bar"}], [
                             {span, [{id, ~"livepatch-rule"}, {class, ~"livepatch-rule"}], []},
@@ -177,4 +192,4 @@ backend_host() ->
 %% shared showcase host; override in sys.config to point at a dedicated
 %% volume-mounted env (hot-reload needs mtime polling, so not a sealed bundle).
 livepatch_host() ->
-    application:get_env(asobi_site, livepatch_demo_host, ~"play.asobi.dev").
+    application:get_env(asobi_site, livepatch_demo_host, ~"livepatch.asobi.dev").
