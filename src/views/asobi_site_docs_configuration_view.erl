@@ -303,7 +303,7 @@ Without it Apple receipt verification is refused.</p>
 <h2 id="guest-anonymous-auth" tabindex="-1">Guest (anonymous) auth</h2>
 <p>Guest auth lets a device create a throwaway player without credentials and
 upgrade it to a real account later. It is <strong>opt-in and fails closed</strong>: the
-guest endpoints return <code>404 guest_auth_disabled</code> until <code>guest_auth</code> is <code>true</code>
+guest endpoints return <code>403 guest_auth_disabled</code> until <code>guest_auth</code> is <code>true</code>
 <strong>and</strong> a <code>guest_verifier_pepper</code> is set.</p>
 <pre><code class="language-erlang">{guest_auth, true},
 %% Required. A key-id -&gt; pepper map (&gt;= 32 bytes each). Keep old key ids for the
