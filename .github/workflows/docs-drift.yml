@@ -67,9 +67,11 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch asobi (the guides source)
-        run: git clone --depth 1 https://github.com/widgrensit/asobi "$RUNNER_TEMP/asobi"
+      - name: Fetch the guide sources (asobi + asobi_lua)
+        run: |
+          git clone --depth 1 https://github.com/widgrensit/asobi "$RUNNER_TEMP/asobi"
+          git clone --depth 1 https://github.com/widgrensit/asobi_lua "$RUNNER_TEMP/asobi_lua"
       - name: Install generator deps
         run: npm --prefix scripts ci
       - name: Check generated views are current with the guides
-        run: scripts/check-generated-current.sh "$RUNNER_TEMP/asobi"
+        run: scripts/check-generated-current.sh "$RUNNER_TEMP/asobi" "$RUNNER_TEMP/asobi_lua"

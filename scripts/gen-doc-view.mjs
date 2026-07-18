@@ -130,6 +130,10 @@ const SITE_ROUTES = {
   'security-auth': '/docs/security/auth',
   'security-threat-model': '/docs/security/threat-model',
   'security-known-limitations': '/docs/security/known-limitations',
+  // asobi_lua-owned pages (their guides cross-reference these).
+  'security-sandbox': '/docs/security/lua-sandbox',
+  'security-trust-model': '/docs/security/lua-trust-model',
+  'lua-scripting': '/docs/lua/api',
 };
 // splice generated blocks back in (markdown-it wraps a lone token in <p>…</p>)
 blocks.forEach((blockHtml, i) => {
