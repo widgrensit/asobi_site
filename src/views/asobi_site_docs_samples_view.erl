@@ -238,4 +238,4 @@ livepatch_host() ->
 %% Host of the managed-cloud env serving the Best of 3 mode. Override in
 %% sys.config with the env's endpoint once it is deployed.
 bestof3_host() ->
-    application:get_env(asobi_site, bestof3_demo_host, ~"bestof3.asobi.dev").
+    application:get_env(asobi_site, bestof3_demo_host, ~"rps-lua-prod.asobi-studio.asobi.dev").
