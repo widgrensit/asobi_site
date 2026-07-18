@@ -389,6 +389,60 @@ self.client = asobi.create("pong-prod.acme.asobi.dev", 443, true)
                 ]}
             ]},
 
+            {h2, [], [~"Self-host vs managed: who does what"]},
+            {p, [], [
+                ~"The game is identical either way - the same engine, the same Lua. What differs is who operates the infrastructure around it. On managed cloud the control plane provisions and runs these for you; self-hosting, they are yours to configure."
+            ]},
+            {table, [], [
+                {thead, [], [
+                    {tr, [], [
+                        {th, [], [~"Concern"]},
+                        {th, [], [~"Self-host"]},
+                        {th, [], [~"Managed cloud"]}
+                    ]}
+                ]},
+                {tbody, [], [
+                    resp_row(
+                        ~"Engine + runtime",
+                        ~"You run the Docker image",
+                        ~"Provisioned and run per environment"
+                    ),
+                    resp_row(
+                        ~"Postgres database",
+                        ~"You provision and operate it",
+                        ~"A database per environment, managed for you"
+                    ),
+                    resp_row(
+                        ~"TLS certificates",
+                        ~"You obtain and renew them",
+                        ~"Automatic (per-tenant wildcard)"
+                    ),
+                    resp_row(
+                        ~"Deploy + hot-reload",
+                        ~"Rebuild the image and restart it",
+                        [{code, [], [~"asobi deploy"]}, ~" builds and rolls it out"]
+                    ),
+                    resp_row(
+                        ~"Engine API key",
+                        ~"Not applicable - you are the operator",
+                        ~"Minted and rotated per environment"
+                    ),
+                    {tr, [], [
+                        {td, [], [~"Guest-auth toggle"]},
+                        {td, [{colspan, ~"2"}], [
+                            ~"Same both ways: ",
+                            {code, [], [~"guest_auth = true"]},
+                            ~" in your game Lua"
+                        ]}
+                    ]},
+                    resp_row(
+                        ~"Guest-auth pepper",
+                        [~"You set ", {code, [], [~"ASOBI_GUEST_VERIFIER_PEPPER"]}],
+                        ~"Provisioned per environment automatically"
+                    )
+                ]}
+            ]},
+
             {h2, [], [~"Where next?"]},
             {ul, [], [
                 {li, [], [
@@ -418,3 +472,13 @@ self.client = asobi.create("pong-prod.acme.asobi.dev", 443, true)
 
 code(Lang, Body) ->
     ?html({pre, [], [{code, [{class, iolist_to_binary([~"language-", Lang])}], [Body]}]}).
+
+resp_row(Concern, SelfHost, Managed) ->
+    {tr, [], [
+        {td, [], cell(Concern)},
+        {td, [], cell(SelfHost)},
+        {td, [], cell(Managed)}
+    ]}.
+
+cell(Content) when is_list(Content) -> Content;
+cell(Content) -> [Content].
