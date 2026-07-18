@@ -50,17 +50,33 @@
     done = false;
     btn.disabled = true;
     setStatus("Connecting…");
-    var uname = "guest_" + Math.random().toString(36).slice(2, 10);
-    var pass = Math.random().toString(36).slice(2) + "Aa1!";
     matchTimer = setTimeout(fallback, 12000);
-    fetch(API + "/api/v1/auth/register", {
+    fetch(API + "/api/v1/auth/guest", {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ username: uname, password: pass })
+      body: JSON.stringify(guestCreds())
     })
       .then(function (r) { return r.json(); })
-      .then(function (d) { connect(d.access_token || d.session_token); })
+      .then(function (d) { if (d && d.access_token) connect(d.access_token); else fallback(); })
       .catch(fallback);
+  }
+
+  // Anonymous guest auth: a device id + secret kept in localStorage, so a return
+  // visit resumes the same guest player. No username/password, no account to
+  // create. Needs the env to enable guest_auth; otherwise /auth/guest 404s and
+  // we fall back.
+  function guestCreds() {
+    var id, secret;
+    try { id = localStorage.getItem("asobi_device_id"); secret = localStorage.getItem("asobi_device_secret"); } catch (e) {}
+    if (!id || !secret) {
+      var idb = new Uint8Array(16), sb = new Uint8Array(32), c = window.crypto || window.msCrypto;
+      c.getRandomValues(idb); c.getRandomValues(sb);
+      id = "web_" + Array.prototype.map.call(idb, function (x) { return ("0" + x.toString(16)).slice(-2); }).join("");
+      var s = ""; for (var i = 0; i < sb.length; i++) s += String.fromCharCode(sb[i]);
+      secret = btoa(s);
+      try { localStorage.setItem("asobi_device_id", id); localStorage.setItem("asobi_device_secret", secret); } catch (e) {}
+    }
+    return { device_id: id, device_secret: secret };
   }
 
   function connect(token) {
