@@ -77,7 +77,7 @@ is secured to leak nothing useful even if the identity table is dumped:</p>
 <ul>
 <li><strong>Fails closed.</strong> The controller serves guest routes only when
 <code>guest_auth</code> is <code>true</code> <strong>and</strong> a <code>guest_verifier_pepper</code> is
-configured; otherwise every guest endpoint returns <code>404 guest_auth_disabled</code>.</li>
+configured; otherwise every guest endpoint returns <code>403 guest_auth_disabled</code>.</li>
 <li><strong>The device secret is never stored.</strong> The database holds a
 <em>verifier</em>, not the secret. On creation the server draws a 16-byte
 salt from <code>crypto:strong_rand_bytes/1</code> and combines it with a

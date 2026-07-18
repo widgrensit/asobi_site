@@ -271,7 +271,7 @@ Player id, progress, wallets, and inventory are preserved.</p>
 <td>The account was already claimed; log in with its real credentials</td>
 </tr>
 <tr>
-<td><code>404</code></td>
+<td><code>403</code></td>
 <td><code>guest_auth_disabled</code></td>
 <td>Guest auth is not enabled in config</td>
 </tr>
