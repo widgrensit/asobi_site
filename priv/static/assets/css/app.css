@@ -1581,6 +1581,19 @@ code {
 }
 .docs-nav-link:hover { color: var(--text); }
 .docs-nav-link.active { color: var(--indigo-deep); }
+.docs-nav-subheading {
+    display: block;
+    padding: 4px 0 2px;
+    font-size: var(--fs-sm);
+    color: var(--text-2);
+}
+.docs-nav-sublinks {
+    display: flex;
+    flex-direction: column;
+    margin-left: var(--sp-3);
+    padding-left: var(--sp-3);
+    border-left: 1px solid var(--line);
+}
 
 .docs-main { min-width: 0; }
 .docs-content h1 {

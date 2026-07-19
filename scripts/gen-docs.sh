@@ -35,6 +35,15 @@ configuration|asobi_site_docs_configuration_view|docs-configuration|Configuratio
 security-auth|asobi_site_docs_security_auth_view|docs-sec-auth|Auth & rate limiting — Asobi docs|Security / Authentication & rate limiting|secauth
 clustering|asobi_site_docs_clustering_view|docs-clustering|Clustering — Asobi docs|Clustering|cluster
 security-known-limitations|asobi_site_docs_security_known_limits_view|docs-sec-known|Known limitations — Asobi docs|Security / Known limitations|seclim
+large-worlds|asobi_site_docs_large_worlds_view|docs-large-worlds|Large worlds — Asobi docs|Large worlds|worlds
+comparison|asobi_site_docs_comparison_view|docs-comparison|How Asobi compares — Asobi docs|Comparison|compare
+glossary|asobi_site_docs_glossary_view|docs-glossary|Glossary — Asobi docs|Glossary|glossary
+architecture|asobi_site_docs_architecture_view|docs-architecture|Architecture — Asobi docs|Architecture|arch
+benchmarks|asobi_site_docs_benchmarks_view|docs-benchmarks|Benchmarks — Asobi docs|Benchmarks|bench
+exit|asobi_site_docs_exit_view|docs-exit|If Asobi disappears — Asobi docs|No lock-in|exit
+migrate-from-nakama|asobi_site_docs_migrate_nakama_view|docs-migrate-nakama|Migrate from Nakama — Asobi docs|Migrate / Nakama|mignakama
+migrate-from-hathora|asobi_site_docs_migrate_hathora_view|docs-migrate-hathora|Migrate from Hathora — Asobi docs|Migrate / Hathora|mighathora
+migrate-from-playfab|asobi_site_docs_migrate_playfab_view|docs-migrate-playfab|Migrate from PlayFab — Asobi docs|Migrate / PlayFab|migplayfab
 EOF
 )
 
