@@ -23,7 +23,7 @@ render(Bindings) ->
 groups tickets into matches using a per-mode strategy module.</p>
 <h2 id="how-it-works" tabindex="-1">How It Works</h2>
 <ol>
-<li>Player submits a matchmaking ticket with a mode, optional properties, and an optional party.</li>
+<li>Player submits a matchmaking ticket with a mode and optional properties.</li>
 <li>Matchmaker ticks periodically (default every 1 second).</li>
 <li>Each tick groups tickets by mode, and the mode's strategy module decides which tickets form a match.</li>
 <li>When a group is formed, a match is spawned.</li>
@@ -47,7 +47,7 @@ groups tickets into matches using a per-mode strategy module.</p>
     "properties": {"skill": 1200, "region": "eu-west"}
   }
 }</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">{ok, TicketId} = asobi_matchmaker:add(PlayerId, #{mode =&gt; &lt;&lt;"arena"&gt;&gt;, properties =&gt; #{skill =&gt; 1200, region =&gt; &lt;&lt;"eu-west"&gt;&gt;}}).</code></pre></div></div>
-<p>A ticket currently supports <code>mode</code>, <code>properties</code>, and <code>party</code>. A
+<p>A ticket supports <code>mode</code> and <code>properties</code>. A
 query-language extension (numeric ranges, required keys, automatic skill
 window expansion) is on the roadmap but not shipped — do that filtering
 inside your strategy module instead.</p>
@@ -98,17 +98,18 @@ match(Tickets, Config) -&gt;
     }}
 ]}
 </code></pre>
-<h2 id="party-support" tabindex="-1">Party Support</h2>
-<p>Players can queue as a party. All party members are placed in the same match:</p>
-<pre><code class="language-json">{
-  &quot;type&quot;: &quot;matchmaker.add&quot;,
-  &quot;payload&quot;: {
-    &quot;mode&quot;: &quot;arena&quot;,
-    &quot;party&quot;: [&quot;player_id_2&quot;, &quot;player_id_3&quot;],
-    &quot;properties&quot;: {&quot;skill&quot;: 1200}
-  }
-}
-</code></pre>
+<h2 id="playing-with-friends" tabindex="-1">Playing With Friends</h2>
+<p>The matchmaker has no party grouping. It queues individual players, and a
+ticket cannot bring other players with it.</p>
+<p>To play with someone specific, skip the queue: create a match or world,
+share its id or a join code out of band, and have them join directly. Gate
+entry by implementing <code>join/3</code> in your game module and checking the join
+context - see <a href="/docs/protocols/websocket#join-context">WebSocket Protocol</a>. To
+let friends find your session in a browser instead, see
+<a href="/docs/world-server">World Server</a>.</p>
+<p>Matchmaker-mediated party grouping would mean weighting tickets by party
+size, which changes what <code>match_size</code> means for every strategy module. It
+is not shipped, and a <code>party</code> field on a ticket is not accepted.</p>
 <h2 id="cancelling" tabindex="-1">Cancelling</h2>
 <div class="tabbed-code"><input type="radio" name="mm-tab1" id="mm-tab1-1" checked><input type="radio" name="mm-tab1" id="mm-tab1-2"><div class="tabbed-code-labels" role="tablist"><label for="mm-tab1-1">WebSocket (JSON)</label><label for="mm-tab1-2">Erlang</label></div><div class="tabbed-code-panels"><pre class="tabbed-code-panel"><code class="language-json">{"type": "matchmaker.remove", "payload": {"ticket_id": "..."}}</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">asobi_matchmaker:remove(PlayerId, TicketId).</code></pre></div></div>
 <p>Or via REST:</p>
