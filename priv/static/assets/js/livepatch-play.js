@@ -70,8 +70,8 @@
 
   // Anonymous guest auth: a device id + secret kept in localStorage, so a return
   // visit resumes the same guest player. No username/password, no account to
-  // create. Needs the env to enable guest_auth; otherwise /auth/guest 404s and
-  // we fall back.
+  // create. Needs the game to declare guest_auth and the operator to supply a
+  // pepper; otherwise /auth/guest 403s and we fall back.
   function guestCreds() {
     var id, secret;
     try { id = localStorage.getItem("asobi_device_id"); secret = localStorage.getItem("asobi_device_secret"); } catch (e) {}

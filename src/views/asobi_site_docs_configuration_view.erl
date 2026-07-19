@@ -302,11 +302,13 @@ redirect that providers call back to matches what you registered:</p>
 Without it Apple receipt verification is refused.</p>
 <h2 id="guest-anonymous-auth" tabindex="-1">Guest (anonymous) auth</h2>
 <p>Guest auth lets a device create a throwaway player without credentials and
-upgrade it to a real account later. It is <strong>opt-in and fails closed</strong>: the
-guest endpoints return <code>403 guest_auth_disabled</code> until <code>guest_auth</code> is <code>true</code>
-<strong>and</strong> a <code>guest_verifier_pepper</code> is set.</p>
-<pre><code class="language-erlang">{guest_auth, true},
-%% Required. A key-id -&gt; pepper map (&gt;= 32 bytes each). Keep old key ids for the
+upgrade it to a real account later. It is <strong>opt-in and fails closed</strong>: the guest
+endpoints return <code>403 guest_auth_disabled</code> until the <strong>game</strong> declares
+<code>guest_auth = true</code> in its Lua config <strong>and</strong> the <strong>operator</strong> sets a
+<code>guest_verifier_pepper</code> (ADR 0004). The toggle is a game global, not a
+<code>sys.config</code> key - see <a href="/docs/authentication#guest-anonymous">Authentication</a>. This
+page covers the operator half: the pepper and abuse controls.</p>
+<pre><code class="language-erlang">%% Required. A key-id -&gt; pepper map (&gt;= 32 bytes each). Keep old key ids for the
 %% guest retention window so existing guests can still resume after rotation.
 {guest_verifier_pepper, #{~&quot;v1&quot; =&gt; ~&quot;a-32-byte-or-longer-secret......&quot;}},
 {guest_verifier_key_id, ~&quot;v1&quot;},
@@ -328,14 +330,9 @@ guest endpoints return <code>403 guest_auth_disabled</code> until <code>guest_au
 </thead>
 <tbody>
 <tr>
-<td><code>guest_auth</code></td>
-<td><code>false</code></td>
-<td>Master switch. Both this and a pepper are required</td>
-</tr>
-<tr>
 <td><code>guest_verifier_pepper</code></td>
 <td>none</td>
-<td>Key-id -&gt; pepper map (each pepper &gt;= 32 bytes) or a single &gt;= 32-byte binary</td>
+<td>Key-id -&gt; pepper map (each pepper &gt;= 32 bytes) or a single &gt;= 32-byte binary. Presence is the operator's on switch</td>
 </tr>
 <tr>
 <td><code>guest_verifier_key_id</code></td>
