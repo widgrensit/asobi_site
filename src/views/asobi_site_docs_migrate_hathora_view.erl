@@ -56,7 +56,7 @@ from here on, in place of any Hathora auth token.</li>
 <li><strong>Queue for matchmaking</strong> to confirm the matchmaker works end-to-end:<pre><code class="language-bash">curl -s localhost:8084/api/v1/matchmaker \
   -H 'content-type: application/json' \
   -H 'authorization: Bearer wRqvop92/...' \
-  -d '{&quot;mode&quot;:&quot;default&quot;,&quot;properties&quot;:{},&quot;party&quot;:[&quot;019de3...&quot;]}'
+  -d '{&quot;mode&quot;:&quot;default&quot;,&quot;properties&quot;:{}}'
 # → { &quot;status&quot;: &quot;pending&quot;, &quot;ticket_id&quot;: &quot;019de3...&quot; }
 </code></pre>
 </li>
@@ -178,7 +178,7 @@ tournaments, voting, phases, seasons, reconnection</strong> are all already ther
 </tr>
 <tr>
 <td><code>createLobby</code> / <code>createRoom</code> / queue</td>
-<td><code>POST /api/v1/matchmaker</code> body <code>{&quot;mode&quot;:&quot;default&quot;,&quot;properties&quot;:{},&quot;party&quot;:[playerId]}</code></td>
+<td><code>POST /api/v1/matchmaker</code> body <code>{&quot;mode&quot;:&quot;default&quot;,&quot;properties&quot;:{}}</code></td>
 <td>Response: <code>{&quot;ticket_id&quot;:&quot;...&quot;,&quot;status&quot;:&quot;pending&quot;}</code>.</td>
 </tr>
 <tr>

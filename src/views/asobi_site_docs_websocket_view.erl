@@ -51,10 +51,48 @@ the response so the client can correlate request/response pairs.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;payload&quot;: {}}
 </code></pre>
 <h2 id="matches" tabindex="-1">Matches</h2>
+<h3 id="matchlist" tabindex="-1"><code>match.list</code></h3>
+<p>Browse live, joinable matches. Filters are optional.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.list&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;has_capacity&quot;: true}}
+</code></pre>
+<p>Reply payload is <code>{&quot;matches&quot;: [...]}</code>, each entry carrying <code>match_id</code>,
+<code>mode</code>, <code>status</code>, <code>player_count</code> and <code>max_players</code>. The roster is not
+included; see <a href="/docs/world-server">World Server</a> for why discovery and
+membership are separate surfaces.</p>
+<p><strong>Matches are unlisted by default.</strong> A matchmaker-spawned match is already
+assigned to its players, so it has no reason to appear in a browser. A mode
+opts in with <code>listed =&gt; true</code>. This is the inverse of worlds, which default
+to listed.</p>
+<p>Distinct from <code>GET /api/v1/matches</code>, which reads the match <em>record</em> table
+(finished matches, an audit trail). <code>GET /api/v1/matches/live</code> is the REST
+equivalent of this message.</p>
 <h3 id="matchjoin" tabindex="-1"><code>match.join</code></h3>
-<p>Join a match (after being matched via matchmaker or direct invite).</p>
+<p>Join a match (after being matched via matchmaker, discovered via
+<code>match.list</code>, or a direct invite).</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.join&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;}}
 </code></pre>
+<p>Joining is WebSocket-only by design: the join binds the match to your
+session so subsequent <code>match.input</code> is routed. There is no REST join, the
+same as for worlds.</p>
+<h4 id="join-context" tabindex="-1">Join context</h4>
+<p>Both <code>match.join</code> and <code>world.join</code> accept an optional <code>ctx</code>, passed through
+to your game module untouched:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.join&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;ctx&quot;: {&quot;code&quot;: &quot;AB12&quot;}}}
+</code></pre>
+<p>Asobi never interprets, echoes, or logs it. It reaches your game's
+<code>join/3</code> callback, which decides whether to accept. Games that implement
+only <code>join/2</code> are unaffected and a supplied <code>ctx</code> is ignored.</p>
+<p>This is how you build join codes, invites, passwords and party checks:
+without it there is no channel from a client to your game before
+membership exists, so <code>join/2</code> can implement an allowlist but never a code.</p>
+<p>Bounded at the server: a flat object, at most 8 keys, keys up to 64 bytes,
+string values up to 256 bytes, plus integers and booleans. No nesting.
+Violations are rejected with <code>invalid_join_ctx</code>, <code>join_ctx_too_many_keys</code>,
+<code>join_ctx_key_too_long</code>, <code>join_ctx_value_too_long</code>, or
+<code>invalid_join_ctx_value</code>.</p>
+<p><strong>A join context does not make a world private.</strong> Only a game that
+implements <code>join/3</code> and rejects unauthorised joins restricts entry; a game
+that ignores it stays open to anyone holding a <code>world_id</code>.</p>
 <h3 id="matchinput" tabindex="-1"><code>match.input</code></h3>
 <p>Send game input to the match server.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.input&quot;, &quot;payload&quot;: {&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 10, &quot;y&quot;: 5}}

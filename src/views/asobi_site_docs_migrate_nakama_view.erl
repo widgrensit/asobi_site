@@ -95,13 +95,13 @@ If you're committed to OSS-only, asobi is structurally simpler.</li>
 </tr>
 <tr>
 <td><strong>Parties</strong></td>
-<td>Matchmaker tickets with <code>party</code> field</td>
-<td>Send a list of player_ids in the ticket body.</td>
+<td>Not supported</td>
+<td>No matchmaker party grouping. Play with friends by sharing a match/world id or a join code and joining directly; gate entry in <code>join/3</code>.</td>
 </tr>
 <tr>
 <td><strong>MatchmakerAdd</strong></td>
 <td><code>POST /api/v1/matchmaker</code></td>
-<td>Body: <code>{mode, properties, party}</code>.</td>
+<td>Body: <code>{mode, properties}</code>.</td>
 </tr>
 <tr>
 <td><strong>Storage Engine</strong></td>

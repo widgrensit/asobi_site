@@ -377,6 +377,21 @@ by the per-IP auth limiter plus the global <code>guest_global</code> create limi
 <pre><code class="language-erlang">{world_max_per_player, 5},   %% default 5
 {world_max, 1000}            %% default 1000
 </code></pre>
+<h2 id="join-rate" tabindex="-1">Join rate</h2>
+<p>Joins are bounded per player, not per IP:</p>
+<pre><code class="language-erlang">{rate_limits, #{
+    join =&gt; #{algorithm =&gt; sliding_window, limit =&gt; 10, window =&gt; 60000}
+}}
+</code></pre>
+<p>Joining is how a client reaches a world's roster and leaving is free, so an
+unbounded join rate lets one account enumerate every live world by joining,
+reading <code>world.joined</code>, and leaving. The default (10 per minute) is generous
+for real play and turns a sweep of a full deployment from seconds into hours
+per identity. Exceeding it returns <code>join_rate_limited</code> and emits
+<code>[asobi, join, rate_limited]</code>.</p>
+<p>This bounds the cost of a sweep; it does not make worlds private. For that,
+implement <code>join/3</code> in your game module and reject unauthorised joins - see
+<a href="/docs/protocols/websocket">WebSocket Protocol</a>.</p>
 <p>A player at the per-player cap gets <code>429</code>; once the global cap is reached
 further creates get <code>503</code>.</p>
 <h2 id="terrain-provider-allowlist" tabindex="-1">Terrain provider allowlist</h2>
