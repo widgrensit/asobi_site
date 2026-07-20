@@ -107,6 +107,9 @@ match(Tickets, Config) -&gt;
 ]}
 </code></pre>
 <h2 id="playing-with-friends" tabindex="-1">Playing With Friends</h2>
+<blockquote>
+<p>Gathering players before a game starts is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
+</blockquote>
 <p>The matchmaker has no party grouping. It queues individual players, and a
 ticket cannot bring other players with it.</p>
 <p>To play with someone specific, skip the queue: create a match or world,

@@ -29,6 +29,7 @@ render(Bindings) ->
         ]},
         {~"Build", [
             {~"/docs/matchmaking", ~"Matchmaking"},
+            {~"/docs/lobbies", ~"Lobbies"},
             {~"/docs/world-server", ~"World server"},
             {~"/docs/large-worlds", ~"Large worlds"},
             {~"/docs/voting", ~"Voting"},
