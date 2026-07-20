@@ -28,6 +28,7 @@ security-threat-model|asobi_site_docs_security_threat_model_view|docs-sec-threat
 websocket-protocol|asobi_site_docs_websocket_view|docs-ws|WebSocket protocol — Asobi docs|Protocols / WebSocket|ws
 rest-api|asobi_site_docs_rest_view|docs-rest|REST API — Asobi docs|Protocols / REST|rest
 matchmaking|asobi_site_docs_matchmaking_view|docs-matchmaking|Matchmaking — Asobi docs|Matchmaking|mm
+lobbies|asobi_site_docs_lobbies_view|docs-lobbies|Lobbies — Asobi docs|Lobbies|lobbies
 economy|asobi_site_docs_economy_view|docs-economy|Economy & IAP — Asobi docs|Economy|econ
 voting|asobi_site_docs_voting_view|docs-voting|Voting — Asobi docs|Voting|vote
 world-server|asobi_site_docs_world_server_view|docs-world-server|World server — Asobi docs|World server|world

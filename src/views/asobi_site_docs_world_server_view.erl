@@ -484,7 +484,8 @@ post_tick(_TickN, State) -&gt;
 </tr>
 </tbody>
 </table>
-<h3 id="visibility" tabindex="-1">Visibility</h3>
+<p>#&gt; Using a world as a persistent hub is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
+<h2 id="visibility" tabindex="-1">Visibility</h2>
 <p><code>listed</code> and <code>quick_play</code> are independent axes, so a mode can be browsable
 but out of quick-play rotation, or reachable by quick-play while hidden from
 the browser.</p>
