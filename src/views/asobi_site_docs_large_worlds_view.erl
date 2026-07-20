@@ -28,15 +28,20 @@ loading, terrain data serving, and configurable zone lifecycle management.</p>
 <p>By default, all zones in a world are spawned at startup. For large worlds
 (thousands of zones), enable lazy loading so zones are created on demand
 when a player enters.</p>
-<pre><code class="language-erlang">Config = #{
+<div class="tabbed-code"><input type="radio" name="worlds-tab0" id="worlds-tab0-1" checked><input type="radio" name="worlds-tab0" id="worlds-tab0-2"><div class="tabbed-code-labels" role="tablist"><label for="worlds-tab0-1">Lua</label><label for="worlds-tab0-2">Erlang</label></div><div class="tabbed-code-panels"><pre class="tabbed-code-panel"><code class="language-lua">-- world.lua
+game_type         = "world"
+grid_size         = 2000       -- 2000x2000 zone grid
+zone_size         = 64         -- 64 tiles per zone
+lazy_zones        = true       -- auto-true when grid_size &gt; 100
+zone_idle_timeout = 30000      -- reap idle zones after 30s
+max_active_zones  = 10000      -- cap concurrent zone processes</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">Config = #{
     game_module =&gt; my_world,
     grid_size =&gt; 2000,          %% 2000x2000 zone grid
     zone_size =&gt; 64,            %% 64 tiles per zone
     lazy_zones =&gt; true,         %% auto-true when grid_size &gt; 100
     zone_idle_timeout =&gt; 30000, %% reap idle zones after 30s
     max_active_zones =&gt; 10000   %% cap concurrent zone processes
-}.
-</code></pre>
+}.</code></pre></div></div>
 <p>With <code>lazy_zones =&gt; true</code>:</p>
 <ul>
 <li>Zones are created when a player joins or moves into them</li>
@@ -67,7 +72,21 @@ your provider produces -- &quot;the data Asobi chunks&quot; is the data you hand
 The <code>asobi_terrain</code> helpers below give you a compact tile format, but any
 binary your client can decode works. A complete, runnable provider lives in
 <a href="https://github.com/widgrensit/asobi/tree/main/examples/world-terrain"><code>examples/world-terrain</code></a>.</p>
-<h3 id="terrain-provider-behaviour" tabindex="-1">Terrain Provider Behaviour</h3>
+<h3 id="selecting-a-provider-lua" tabindex="-1">Selecting a Provider (Lua)</h3>
+<p>A Lua world names its provider from <code>terrain_provider</code>, returning the module
+and its args:</p>
+<pre><code class="language-lua">-- world.lua
+function terrain_provider(config)
+	return {&quot;asobi_terrain_perlin&quot;, {seed = 42}}
+end
+</code></pre>
+<p>Two providers ship built in: <code>asobi_terrain_flat</code> and
+<code>asobi_terrain_perlin</code>. The name is checked against an allowlist rather than
+resolved as an arbitrary module, so a script cannot name <code>gen_server</code> or any
+other loaded module. Operators extend the allowlist via env.</p>
+<p><strong>Writing a new provider is Erlang only</strong> - the same split as matchmaker
+strategies. Lua selects; Erlang implements.</p>
+<h3 id="terrain-provider-behaviour-erlang" tabindex="-1">Terrain Provider Behaviour (Erlang)</h3>
 <p>Implement <code>asobi_terrain_provider</code> to supply terrain data:</p>
 <pre><code class="language-erlang">-module(my_terrain).
 -behaviour(asobi_terrain_provider).
