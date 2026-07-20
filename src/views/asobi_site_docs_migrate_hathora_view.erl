@@ -168,8 +168,8 @@ tournaments, voting, phases, seasons, reconnection</strong> are all already ther
 </tr>
 <tr>
 <td><code>HathoraClient.loginAnonymous</code></td>
-<td><code>POST /api/v1/auth/register</code> with <code>username</code> + <code>password</code></td>
-<td><strong>No anonymous flag today.</strong> You generate a random username/password in the client and persist it locally (or use OAuth). Response fields: <code>player_id</code>, <code>session_token</code>, <code>username</code>.</td>
+<td><code>POST /api/v1/auth/guest</code></td>
+<td>Device-backed anonymous auth: pass <code>device_id</code> + <code>device_secret</code>, get a real player back. Opt-in - the game declares <code>guest_auth</code> and the operator sets a pepper. Claim the account later with <code>POST /api/v1/auth/guest/upgrade</code>. See <a href="/docs/authentication">Authentication</a>.</td>
 </tr>
 <tr>
 <td><code>HathoraClient.loginGoogle</code></td>
@@ -193,8 +193,8 @@ tournaments, voting, phases, seasons, reconnection</strong> are all already ther
 </tr>
 <tr>
 <td><code>listActivePublicLobbies</code></td>
-<td><code>GET /api/v1/matches</code></td>
-<td>Query params filter results.</td>
+<td><code>GET /api/v1/matches/live</code></td>
+<td>Live, joinable matches. Filter with <code>mode</code> and <code>has_capacity</code>. Matches are <strong>unlisted by default</strong> - a mode opts in with <code>listed =&gt; true</code>. Not to be confused with <code>GET /api/v1/matches</code>, which reads the match record table (finished matches, an audit trail).</td>
 </tr>
 <tr>
 <td><code>getConnectionInfo(roomId)</code></td>

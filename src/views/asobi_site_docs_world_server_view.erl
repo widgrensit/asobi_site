@@ -211,6 +211,11 @@ end
 <td>Handle player join, return state</td>
 </tr>
 <tr>
+<td><code>join(player_id, state, ctx)</code></td>
+<td>no</td>
+<td>Same, plus the client's join context. Declare the third parameter and it is used instead — see <a href="/docs/protocols/websocket#join-context">Join context</a></td>
+</tr>
+<tr>
 <td><code>leave(player_id, state)</code></td>
 <td>yes</td>
 <td>Handle player leave, return state</td>
