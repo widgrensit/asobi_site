@@ -4,24 +4,27 @@
 # was hand-edited. The generated modules carry a "do not edit by hand" header;
 # this is what enforces it (ADR 0003).
 #
-# Fix a failure with: scripts/gen-docs.sh <asobi-checkout> && commit.
+# Fix a failure with: scripts/gen-docs.sh <asobi> <asobi_lua> && commit.
 #
-# Usage: scripts/check-generated-current.sh [ASOBI_DIR]
+# Usage: scripts/check-generated-current.sh [ASOBI_DIR] [ASOBI_LUA_DIR]
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 asobi="${1:-$(dirname "$repo_root")/asobi}"
+asobi_lua="${2:-$(dirname "$repo_root")/asobi_lua}"
 
-if [ ! -d "$asobi/guides" ]; then
-	echo "asobi guides not found at $asobi/guides" >&2
-	exit 1
-fi
+for d in "$asobi/guides" "$asobi_lua/guides"; do
+	[ -d "$d" ] || {
+		echo "guides not found at $d" >&2
+		exit 1
+	}
+done
 
 # Deterministic regeneration writes only the generated view modules.
-"$repo_root/scripts/gen-docs.sh" "$asobi" >/dev/null
+"$repo_root/scripts/gen-docs.sh" "$asobi" "$asobi_lua" >/dev/null
 
 if git -C "$repo_root" diff --quiet -- src/views/; then
-	echo "OK: generated docs views are current with the asobi guides."
+	echo "OK: generated docs views are current with the guides."
 	exit 0
 fi
 

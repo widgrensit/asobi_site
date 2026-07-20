@@ -724,7 +724,7 @@ Node D: zones {5,5}..{9,9}  (25 zones)
 </code></pre>
 <h2 id="next-steps" tabindex="-1">Next Steps</h2>
 <ul>
-<li><a href="https://hexdocs.pm/asobi/lua-scripting.html">Lua Scripting</a> -- match-based Lua scripting</li>
+<li><a href="/docs/lua/api">Lua Scripting</a> -- match-based Lua scripting</li>
 <li><a href="/docs/voting">Voting</a> -- in-game voting system</li>
 <li><a href="/docs/matchmaking">Matchmaking</a> -- how players enter worlds</li>
 <li><a href="/docs/clustering">Clustering</a> -- multi-node deployment</li>
