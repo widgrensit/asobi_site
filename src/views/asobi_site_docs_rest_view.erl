@@ -76,6 +76,37 @@ contract, config, and error codes.</p>
 <pre><code>GET /api/v1/players/:id        Get player profile
 PUT /api/v1/players/:id        Update own profile
 </code></pre>
+<h2 id="worlds" tabindex="-1">Worlds</h2>
+<pre><code>GET  /api/v1/worlds         Browse live worlds
+GET  /api/v1/worlds/:id     Get one world
+POST /api/v1/worlds         Create a world
+</code></pre>
+<p><code>GET /api/v1/worlds</code> accepts <code>mode</code> (ignored above 64 bytes) and
+<code>has_capacity=true</code>. Only worlds whose mode sets <code>listed</code> (the default) are
+returned. Results are cached for 500ms.</p>
+<p><code>POST /api/v1/worlds</code> returns <strong>201</strong> with the world info, <strong>429</strong> when the
+player is at their per-player cap (<code>player_world_limit_reached</code>), and <strong>503</strong>
+when the global cap is reached (<code>world_capacity_reached</code>). See
+<a href="/docs/configuration#world-capacity">World capacity</a>.</p>
+<p><code>GET /api/v1/worlds/:id</code> returns <strong>404</strong> for an unknown id.</p>
+<p>None of these return the player roster - see <a href="/docs/world-server">World Server</a>.
+There is no REST join: joining binds the world to your WebSocket session, so
+it is <code>world.join</code> over WS.</p>
+<h2 id="matches" tabindex="-1">Matches</h2>
+<pre><code>GET /api/v1/matches         Match history (finished matches)
+GET /api/v1/matches/live    Live, joinable matches
+GET /api/v1/matches/:id     Get one match record
+</code></pre>
+<p><strong>These read different data sources, and it is the most confusing thing in
+this API.</strong> <code>GET /api/v1/matches</code> queries the match <em>record</em> table: finished
+matches, an audit trail, nothing you can join. It accepts <code>mode</code>, <code>status</code>
+and <code>limit</code> (1-200, default 50), newest first.</p>
+<p><code>GET /api/v1/matches/live</code> enumerates running match processes and is what a
+lobby browser wants. It accepts <code>mode</code> and <code>has_capacity=true</code>. Matches are
+<strong>unlisted by default</strong> - a mode opts in with <code>listed =&gt; true</code> - so an empty
+result usually means no mode has opted in yet.</p>
+<p>Neither returns the player roster. As with worlds, joining is <code>match.join</code>
+over WS.</p>
 <h2 id="social" tabindex="-1">Social</h2>
 <pre><code>GET    /api/v1/friends                               List friends
 POST   /api/v1/friends                               Send friend request

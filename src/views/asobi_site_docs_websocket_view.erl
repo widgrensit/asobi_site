@@ -79,9 +79,21 @@ same as for worlds.</p>
 to your game module untouched:</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.join&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;ctx&quot;: {&quot;code&quot;: &quot;AB12&quot;}}}
 </code></pre>
-<p>Asobi never interprets, echoes, or logs it. It reaches your game's
-<code>join/3</code> callback, which decides whether to accept. Games that implement
-only <code>join/2</code> are unaffected and a supplied <code>ctx</code> is ignored.</p>
+<p>Asobi never interprets, echoes, or logs it. It reaches your game's join
+callback, which decides whether to accept.</p>
+<p>In Lua, declare a third parameter:</p>
+<pre><code class="language-lua">function join(player_id, state, ctx)
+	if ctx.code ~= state.room_code then
+		return state              -- refuse: player is not added
+	end
+	state.players[player_id] = true
+	return state
+end
+</code></pre>
+<p>In Erlang, export <code>join/3</code> (<code>join(PlayerId, Ctx, GameState)</code>) alongside or
+instead of <code>join/2</code>.</p>
+<p>Either way a game that takes only <code>(player_id, state)</code> is unaffected and a
+supplied <code>ctx</code> is ignored.</p>
 <p>This is how you build join codes, invites, passwords and party checks:
 without it there is no channel from a client to your game before
 membership exists, so <code>join/2</code> can implement an allowlist but never a code.</p>

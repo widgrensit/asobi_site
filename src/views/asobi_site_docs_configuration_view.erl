@@ -217,6 +217,16 @@ lives in <code>sys.config</code> under the <code>{asobi, [...]}</code> key.</p>
 <td><code>#{}</code></td>
 <td>Bot configuration. Read by <a href="https://github.com/widgrensit/asobi_lua">asobi_lua</a>, not by asobi — see <a href="https://hexdocs.pm/asobi/lua-bots.html">Bots</a></td>
 </tr>
+<tr>
+<td><code>listed</code></td>
+<td><code>false</code> for matches, <code>true</code> for worlds</td>
+<td>Whether instances of this mode appear in discovery (<code>match.list</code> / <code>world.list</code>). <strong>Matches are unlisted by default</strong> — a matchmaker-spawned match is already assigned to its players, so opt in explicitly.</td>
+</tr>
+<tr>
+<td><code>quick_play</code></td>
+<td><code>true</code></td>
+<td>Worlds only. Whether <code>world.find_or_create</code> may place a player into an existing world of this mode. Independent of <code>listed</code> — see <a href="/docs/world-server#visibility">World Server</a>.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="matchmaker" tabindex="-1">Matchmaker</h2>
