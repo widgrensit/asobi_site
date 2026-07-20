@@ -61,11 +61,20 @@ order until <code>match_size</code> is reached.</li>
 expanding window (configurable via <code>skill_window</code> and
 <code>skill_expand_rate</code>).</li>
 </ul>
-<p>The built-in strategies map to modules: the default <code>fill</code> strategy is
-<code>asobi_matchmaker_fill</code> and <code>skill_based</code> is <code>asobi_matchmaker_skill</code>.
-Strategy is configured per game mode only - there is no top-level
-<code>matchmaker_strategy</code> key.</p>
-<h2 id="custom-strategies" tabindex="-1">Custom Strategies</h2>
+<p>Select one with the <code>strategy</code> global in your mode script:</p>
+<pre><code class="language-lua">-- ranked.lua
+match_size = 4
+strategy   = &quot;skill_based&quot;   -- &quot;fill&quot; (default) or &quot;skill_based&quot;
+</code></pre>
+<p>The built-in strategies map to modules: <code>fill</code> is <code>asobi_matchmaker_fill</code>
+and <code>skill_based</code> is <code>asobi_matchmaker_skill</code>. Strategy is configured per
+game mode only - there is no top-level <code>matchmaker_strategy</code> key.</p>
+<p><strong>Writing a new strategy is Erlang only.</strong> <code>strategy</code> takes either a
+built-in name or an Erlang module name, and there is no Lua callback for
+grouping tickets. If your matching rules do not fit <code>fill</code> or
+<code>skill_based</code>, you need an Erlang module in the release alongside your Lua
+scripts.</p>
+<h2 id="custom-strategies-erlang" tabindex="-1">Custom Strategies (Erlang)</h2>
 <p>Implement <code>asobi_matchmaker_strategy</code> (a single <code>match/2</code> callback):</p>
 <pre><code class="language-erlang">-module(my_matchmaker).
 -behaviour(asobi_matchmaker_strategy).
@@ -80,16 +89,15 @@ match(Tickets, Config) -&gt;
     group_by_size(Tickets, Size).
 </code></pre>
 <p>Wire it up per mode:</p>
-<pre><code class="language-erlang">{asobi, [
+<div class="tabbed-code"><input type="radio" name="mm-tab1" id="mm-tab1-1" checked><div class="tabbed-code-labels" role="tablist"><label for="mm-tab1-1">Erlang</label></div><div class="tabbed-code-panels"><pre class="tabbed-code-panel"><code class="language-erlang">{asobi, [
     {game_modes, #{
-        ~&quot;ranked&quot; =&gt; #{
+        ~"ranked" =&gt; #{
             module     =&gt; my_arena,
             match_size =&gt; 4,
             strategy   =&gt; my_matchmaker
         }
     }}
-]}
-</code></pre>
+]}</code></pre></div></div>
 <h2 id="configuration" tabindex="-1">Configuration</h2>
 <pre><code class="language-erlang">{asobi, [
     {matchmaker, #{
@@ -111,7 +119,7 @@ let friends find your session in a browser instead, see
 size, which changes what <code>match_size</code> means for every strategy module. It
 is not shipped, and a <code>party</code> field on a ticket is not accepted.</p>
 <h2 id="cancelling" tabindex="-1">Cancelling</h2>
-<div class="tabbed-code"><input type="radio" name="mm-tab1" id="mm-tab1-1" checked><input type="radio" name="mm-tab1" id="mm-tab1-2"><div class="tabbed-code-labels" role="tablist"><label for="mm-tab1-1">WebSocket (JSON)</label><label for="mm-tab1-2">Erlang</label></div><div class="tabbed-code-panels"><pre class="tabbed-code-panel"><code class="language-json">{"type": "matchmaker.remove", "payload": {"ticket_id": "..."}}</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">asobi_matchmaker:remove(PlayerId, TicketId).</code></pre></div></div>
+<div class="tabbed-code"><input type="radio" name="mm-tab2" id="mm-tab2-1" checked><input type="radio" name="mm-tab2" id="mm-tab2-2"><div class="tabbed-code-labels" role="tablist"><label for="mm-tab2-1">WebSocket (JSON)</label><label for="mm-tab2-2">Erlang</label></div><div class="tabbed-code-panels"><pre class="tabbed-code-panel"><code class="language-json">{"type": "matchmaker.remove", "payload": {"ticket_id": "..."}}</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">asobi_matchmaker:remove(PlayerId, TicketId).</code></pre></div></div>
 <p>Or via REST:</p>
 <pre><code class="language-bash">curl -X DELETE http://localhost:8084/api/v1/matchmaker/&lt;ticket_id&gt; \
   -H 'Authorization: Bearer &lt;token&gt;'
