@@ -25,23 +25,23 @@ social login (Google, Apple, Microsoft, Discord), Steam, and anonymous
 <p>Players can link multiple providers to a single account.</p>
 <blockquote>
 <p>Auth endpoints return an <code>access_token</code> (short-lived) and a <code>refresh_token</code>
-(used against <code>/auth/refresh</code>). The <code>session_token</code> shown in the shorthand
-examples below is the access token; use it as the <code>Bearer</code> credential.</p>
+(used against <code>/auth/refresh</code>). Use the <code>access_token</code> as the <code>Bearer</code>
+credential.</p>
 </blockquote>
 <div class="docs-callout docs-callout-info"><p class="docs-callout-title">Windows</p><p>Run the <code>curl</code> examples in Git Bash or WSL, or use PowerShell's
 <code>Invoke-RestMethod</code> with the same URL and a JSON <code>-Body</code>. Authenticated calls
 add <code>-Headers @{ Authorization = 'Bearer &lt;token&gt;' }</code>.</p>
 </div>
 <h2 id="username-password" tabindex="-1">Username &amp; Password</h2>
-<p>The simplest method. Register and login to receive a session token:</p>
+<p>The simplest method. Register and login to receive a token pair:</p>
 <pre><code class="language-bash">curl -X POST http://localhost:8084/api/v1/auth/register \
   -H 'Content-Type: application/json' \
   -d '{&quot;username&quot;: &quot;player1&quot;, &quot;password&quot;: &quot;secret123&quot;}'
 </code></pre>
-<pre><code class="language-json">{&quot;player_id&quot;: &quot;...&quot;, &quot;session_token&quot;: &quot;...&quot;, &quot;username&quot;: &quot;player1&quot;}
+<pre><code class="language-json">{&quot;player_id&quot;: &quot;...&quot;, &quot;access_token&quot;: &quot;...&quot;, &quot;refresh_token&quot;: &quot;...&quot;, &quot;username&quot;: &quot;player1&quot;}
 </code></pre>
-<p>Use the session token in subsequent requests:</p>
-<pre><code>Authorization: Bearer &lt;session_token&gt;
+<p>Use the access token in subsequent requests:</p>
+<pre><code>Authorization: Bearer &lt;access_token&gt;
 </code></pre>
 <h2 id="refresh-rotation" tabindex="-1">Refresh &amp; Rotation</h2>
 <p>Access tokens are short-lived. When one expires (a <code>401</code>), exchange the refresh
@@ -78,7 +78,8 @@ to obtain an ID token, then sends it to Asobi for validation.</p>
 <p>First-time response (new account created):</p>
 <pre><code class="language-json">{
   &quot;player_id&quot;: &quot;...&quot;,
-  &quot;session_token&quot;: &quot;...&quot;,
+  &quot;access_token&quot;: &quot;...&quot;,
+  &quot;refresh_token&quot;: &quot;...&quot;,
   &quot;username&quot;: &quot;google_abc12345_4821&quot;,
   &quot;created&quot;: true
 }
@@ -86,7 +87,8 @@ to obtain an ID token, then sends it to Asobi for validation.</p>
 <p>Returning player response:</p>
 <pre><code class="language-json">{
   &quot;player_id&quot;: &quot;...&quot;,
-  &quot;session_token&quot;: &quot;...&quot;,
+  &quot;access_token&quot;: &quot;...&quot;,
+  &quot;refresh_token&quot;: &quot;...&quot;,
   &quot;username&quot;: &quot;player1&quot;
 }
 </code></pre>
@@ -172,8 +174,10 @@ display name from their Steam profile.</p>
 social sign-in - and claim a real account later without losing progress. It is
 the &quot;device-based auth&quot; option: the client generates a secret once, stores it on
 the device, and presents it to resume the same account on every launch.</p>
-<p>Guest auth is <strong>opt-in</strong> and disabled by default. Enable it in <code>sys.config</code>
-(see <a href="#configuration-2">Configuration</a>) before the endpoints respond.</p>
+<p>Guest auth is <strong>opt-in</strong> and disabled by default. It turns on only when two
+independent parties agree (see <a href="#configuration-2">Configuration</a>): the <strong>game</strong>
+declares <code>guest_auth = true</code> in its Lua config, and the <strong>operator</strong> supplies a
+verifier pepper. Either one alone leaves the endpoints returning <code>403</code>.</p>
 <h3 id="how-it-works" tabindex="-1">How it works</h3>
 <ol>
 <li>On first launch the client generates a random <code>device_secret</code> (&gt;= 32 bytes
@@ -271,9 +275,9 @@ Player id, progress, wallets, and inventory are preserved.</p>
 <td>The account was already claimed; log in with its real credentials</td>
 </tr>
 <tr>
-<td><code>404</code></td>
+<td><code>403</code></td>
 <td><code>guest_auth_disabled</code></td>
-<td>Guest auth is not enabled in config</td>
+<td>Guest auth is off - the game did not declare <code>guest_auth</code>, or no pepper is present</td>
 </tr>
 <tr>
 <td><code>404</code></td>
@@ -318,8 +322,18 @@ Player id, progress, wallets, and inventory are preserved.</p>
 </tbody>
 </table>
 <h3 id="configuration-2" tabindex="-1">Configuration</h3>
+<p>Guest auth is on <strong>iff both</strong> halves below are satisfied; either alone fails
+closed with <code>403 guest_auth_disabled</code>. The toggle belongs to the game, the pepper
+to the operator (ADR 0004: guest auth is declared by the game, peppered by the
+operator).</p>
+<p><strong>1. The game declares the toggle.</strong> <code>guest_auth</code> is a boolean game global,
+declared like <code>match_size</code> or <code>bots</code> - in <code>match.lua</code> for a single-mode game, or
+<code>config.lua</code> for a multi-mode game:</p>
+<pre><code class="language-lua">guest_auth = true
+</code></pre>
+<p><strong>2. The operator supplies the pepper</strong> (and any abuse controls). The pepper is
+the one value that must never live in a bundle:</p>
 <pre><code class="language-erlang">{asobi, [
-    {guest_auth, true},
     %% Required. A key-id -&gt; pepper map (&gt;= 32 bytes each). Keep old keys for the
     %% guest retention window so existing guests can still resume after rotation.
     {guest_verifier_pepper, #{&lt;&lt;&quot;v1&quot;&gt;&gt; =&gt; &lt;&lt;&quot;a-32-byte-or-longer-secret......&quot;&gt;&gt;}},
@@ -333,6 +347,10 @@ Player id, progress, wallets, and inventory are preserved.</p>
     {guest_reap_after, 2592000}          %% e.g. 30 days
 ]}
 </code></pre>
+<p>There is no <code>ASOBI_GUEST_AUTH</code> env var. A self-hoster owns both sides: set
+<code>guest_auth = true</code> in Lua and provide the pepper via
+<code>ASOBI_GUEST_VERIFIER_PEPPER</code>. On managed cloud the pepper is provisioned per
+environment, so the same bundle is off in dev (no pepper) and on in prod.</p>
 <p>The pepper is a server-side secret that makes a stolen database of verifiers
 useless without it - store it like any other secret (env/secret manager), not in
 source. Guest creation is additionally bounded by a global rate limiter and the
@@ -344,7 +362,7 @@ the same player).</p>
 <h3 id="link-a-provider" tabindex="-1">Link a Provider</h3>
 <p>Requires an authenticated session.</p>
 <pre><code class="language-bash">curl -X POST http://localhost:8084/api/v1/auth/link \
-  -H 'Authorization: Bearer &lt;session_token&gt;' \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
   -H 'Content-Type: application/json' \
   -d '{&quot;provider&quot;: &quot;discord&quot;, &quot;token&quot;: &quot;eyJhbGciOi...&quot;}'
 </code></pre>
@@ -353,24 +371,24 @@ the same player).</p>
 <h3 id="unlink-a-provider" tabindex="-1">Unlink a Provider</h3>
 <p>Asobi prevents unlinking the last auth method to avoid locking the player out.</p>
 <pre><code class="language-bash">curl -X DELETE http://localhost:8084/api/v1/auth/unlink \
-  -H 'Authorization: Bearer &lt;session_token&gt;' \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
   -H 'Content-Type: application/json' \
   -d '{&quot;provider&quot;: &quot;discord&quot;}'
 </code></pre>
 <pre><code class="language-json">{&quot;success&quot;: true}
 </code></pre>
 <h2 id="websocket-authentication" tabindex="-1">WebSocket Authentication</h2>
-<p>After obtaining a session token (from any auth method), connect to the
+<p>After obtaining an access token (from any auth method), connect to the
 WebSocket and authenticate:</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;session.connect&quot;,
-  &quot;payload&quot;: {&quot;token&quot;: &quot;&lt;session_token&gt;&quot;}
+  &quot;payload&quot;: {&quot;token&quot;: &quot;&lt;access_token&gt;&quot;}
 }
 </code></pre>
 <p>The token works the same regardless of which provider was used to obtain it.</p>
 <h2 id="sdk-integration" tabindex="-1">SDK Integration</h2>
 <p>The same Google sign-in flow across the SDKs. The platform SDK returns an ID
-token; hand it to Asobi and the session token is stored internally.</p>
+token; hand it to Asobi and the access token is stored internally.</p>
 <div class="tabbed-code"><input type="radio" name="auth-tab0" id="auth-tab0-1" checked><input type="radio" name="auth-tab0" id="auth-tab0-2"><input type="radio" name="auth-tab0" id="auth-tab0-3"><input type="radio" name="auth-tab0" id="auth-tab0-4"><div class="tabbed-code-labels" role="tablist"><label for="auth-tab0-1">Unity (C#)</label><label for="auth-tab0-2">Godot (GDScript)</label><label for="auth-tab0-3">Dart / Flutter / Flame</label><label for="auth-tab0-4">Defold (Lua)</label></div><div class="tabbed-code-panels"><pre class="tabbed-code-panel"><code class="language-csharp">string idToken = googleSignIn.IdToken;
 var response = await asobi.Auth.OAuth("google", idToken);
 // response.SessionToken is now set automatically</code></pre><pre class="tabbed-code-panel"><code class="language-gdscript">var id_token = google_sign_in.get_id_token()

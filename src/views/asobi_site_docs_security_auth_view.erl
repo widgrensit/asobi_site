@@ -77,7 +77,7 @@ is secured to leak nothing useful even if the identity table is dumped:</p>
 <ul>
 <li><strong>Fails closed.</strong> The controller serves guest routes only when
 <code>guest_auth</code> is <code>true</code> <strong>and</strong> a <code>guest_verifier_pepper</code> is
-configured; otherwise every guest endpoint returns <code>404 guest_auth_disabled</code>.</li>
+configured; otherwise every guest endpoint returns <code>403 guest_auth_disabled</code>.</li>
 <li><strong>The device secret is never stored.</strong> The database holds a
 <em>verifier</em>, not the secret. On creation the server draws a 16-byte
 salt from <code>crypto:strong_rand_bytes/1</code> and combines it with a
@@ -191,8 +191,10 @@ with no live members.</li>
 <li><strong>Per-player world creation</strong> — capped via pg group; default 5
 worlds per player, 1000 globally. Tunable via <code>world_max_per_player</code>
 / <code>world_max</code> env.</li>
-<li><strong>Matchmaker</strong> — party entries that don't match the requester are
-silently dropped; ticket reads / cancellations require ownership.</li>
+<li><strong>Matchmaker</strong> — ticket reads and cancellations require ownership, so
+one player cannot read or cancel another's ticket. A ticket carries only
+the submitting player, so it cannot pull a non-consenting player into a
+match.</li>
 </ul>
 <h2 id="test-coverage" tabindex="-1">Test coverage</h2>
 <p>Regressions for the items above live under <code>test/</code>:</p>
@@ -201,7 +203,7 @@ silently dropped; ticket reads / cancellations require ownership.</li>
 (bad alg, missing x5c, swapped signature, expired cert, untrusted
 root, …).</li>
 <li><code>asobi_world_lobby_SUITE.erl</code> — F-9 per-player + global world caps.</li>
-<li><code>asobi_matchmaker_api_SUITE.erl</code> — F-7/F-8 party consent + ticket
+<li><code>asobi_matchmaker_api_SUITE.erl</code> — ticket ownership + party-not-accepted
 ownership.</li>
 <li><code>asobi_social_api_SUITE.erl</code> — F-10 chat history membership (DM,
 group, non-member denial).</li>

@@ -217,6 +217,16 @@ lives in <code>sys.config</code> under the <code>{asobi, [...]}</code> key.</p>
 <td><code>#{}</code></td>
 <td>Bot configuration. Read by <a href="https://github.com/widgrensit/asobi_lua">asobi_lua</a>, not by asobi — see <a href="https://hexdocs.pm/asobi/lua-bots.html">Bots</a></td>
 </tr>
+<tr>
+<td><code>listed</code></td>
+<td><code>false</code> for matches, <code>true</code> for worlds</td>
+<td>Whether instances of this mode appear in discovery (<code>match.list</code> / <code>world.list</code>). <strong>Matches are unlisted by default</strong> — a matchmaker-spawned match is already assigned to its players, so opt in explicitly.</td>
+</tr>
+<tr>
+<td><code>quick_play</code></td>
+<td><code>true</code></td>
+<td>Worlds only. Whether <code>world.find_or_create</code> may place a player into an existing world of this mode. Independent of <code>listed</code> — see <a href="/docs/world-server#visibility">World Server</a>.</td>
+</tr>
 </tbody>
 </table>
 <h2 id="matchmaker" tabindex="-1">Matchmaker</h2>
@@ -302,11 +312,13 @@ redirect that providers call back to matches what you registered:</p>
 Without it Apple receipt verification is refused.</p>
 <h2 id="guest-anonymous-auth" tabindex="-1">Guest (anonymous) auth</h2>
 <p>Guest auth lets a device create a throwaway player without credentials and
-upgrade it to a real account later. It is <strong>opt-in and fails closed</strong>: the
-guest endpoints return <code>404 guest_auth_disabled</code> until <code>guest_auth</code> is <code>true</code>
-<strong>and</strong> a <code>guest_verifier_pepper</code> is set.</p>
-<pre><code class="language-erlang">{guest_auth, true},
-%% Required. A key-id -&gt; pepper map (&gt;= 32 bytes each). Keep old key ids for the
+upgrade it to a real account later. It is <strong>opt-in and fails closed</strong>: the guest
+endpoints return <code>403 guest_auth_disabled</code> until the <strong>game</strong> declares
+<code>guest_auth = true</code> in its Lua config <strong>and</strong> the <strong>operator</strong> sets a
+<code>guest_verifier_pepper</code> (ADR 0004). The toggle is a game global, not a
+<code>sys.config</code> key - see <a href="/docs/authentication#guest-anonymous">Authentication</a>. This
+page covers the operator half: the pepper and abuse controls.</p>
+<pre><code class="language-erlang">%% Required. A key-id -&gt; pepper map (&gt;= 32 bytes each). Keep old key ids for the
 %% guest retention window so existing guests can still resume after rotation.
 {guest_verifier_pepper, #{~&quot;v1&quot; =&gt; ~&quot;a-32-byte-or-longer-secret......&quot;}},
 {guest_verifier_key_id, ~&quot;v1&quot;},
@@ -328,14 +340,9 @@ guest endpoints return <code>404 guest_auth_disabled</code> until <code>guest_au
 </thead>
 <tbody>
 <tr>
-<td><code>guest_auth</code></td>
-<td><code>false</code></td>
-<td>Master switch. Both this and a pepper are required</td>
-</tr>
-<tr>
 <td><code>guest_verifier_pepper</code></td>
 <td>none</td>
-<td>Key-id -&gt; pepper map (each pepper &gt;= 32 bytes) or a single &gt;= 32-byte binary</td>
+<td>Key-id -&gt; pepper map (each pepper &gt;= 32 bytes) or a single &gt;= 32-byte binary. Presence is the operator's on switch</td>
 </tr>
 <tr>
 <td><code>guest_verifier_key_id</code></td>
@@ -380,6 +387,21 @@ by the per-IP auth limiter plus the global <code>guest_global</code> create limi
 <pre><code class="language-erlang">{world_max_per_player, 5},   %% default 5
 {world_max, 1000}            %% default 1000
 </code></pre>
+<h2 id="join-rate" tabindex="-1">Join rate</h2>
+<p>Joins are bounded per player, not per IP:</p>
+<pre><code class="language-erlang">{rate_limits, #{
+    join =&gt; #{algorithm =&gt; sliding_window, limit =&gt; 10, window =&gt; 60000}
+}}
+</code></pre>
+<p>Joining is how a client reaches a world's roster and leaving is free, so an
+unbounded join rate lets one account enumerate every live world by joining,
+reading <code>world.joined</code>, and leaving. The default (10 per minute) is generous
+for real play and turns a sweep of a full deployment from seconds into hours
+per identity. Exceeding it returns <code>join_rate_limited</code> and emits
+<code>[asobi, join, rate_limited]</code>.</p>
+<p>This bounds the cost of a sweep; it does not make worlds private. For that,
+implement <code>join/3</code> in your game module and reject unauthorised joins - see
+<a href="/docs/protocols/websocket">WebSocket Protocol</a>.</p>
 <p>A player at the per-player cap gets <code>429</code>; once the global cap is reached
 further creates get <code>503</code>.</p>
 <h2 id="terrain-provider-allowlist" tabindex="-1">Terrain provider allowlist</h2>

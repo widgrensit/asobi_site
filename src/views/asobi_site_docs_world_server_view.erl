@@ -211,6 +211,11 @@ end
 <td>Handle player join, return state</td>
 </tr>
 <tr>
+<td><code>join(player_id, state, ctx)</code></td>
+<td>no</td>
+<td>Same, plus the client's join context. Declare the third parameter and it is used instead — see <a href="/docs/protocols/websocket#join-context">Join context</a></td>
+</tr>
+<tr>
 <td><code>leave(player_id, state)</code></td>
 <td>yes</td>
 <td>Handle player leave, return state</td>
@@ -467,8 +472,39 @@ post_tick(_TickN, State) -&gt;
 <td>600</td>
 <td>Ticks between zone snapshots (see <a href="#snapshots">Snapshots</a>)</td>
 </tr>
+<tr>
+<td><code>listed</code></td>
+<td><code>true</code></td>
+<td>Whether worlds of this mode appear in <code>world.list</code> / <code>GET /api/v1/worlds</code></td>
+</tr>
+<tr>
+<td><code>quick_play</code></td>
+<td><code>true</code></td>
+<td>Whether <code>world.find_or_create</code> may place a player into an existing world of this mode</td>
+</tr>
 </tbody>
 </table>
+<p>#&gt; Using a world as a persistent hub is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
+<h2 id="visibility" tabindex="-1">Visibility</h2>
+<p><code>listed</code> and <code>quick_play</code> are independent axes, so a mode can be browsable
+but out of quick-play rotation, or reachable by quick-play while hidden from
+the browser.</p>
+<pre><code class="language-erlang">~&quot;tutorial&quot; =&gt; #{
+    type =&gt; world,
+    module =&gt; my_tutorial,
+    listed =&gt; false,      %% never shows up in the browser
+    quick_play =&gt; false   %% and never absorbs a quick-play request
+}
+</code></pre>
+<p>Neither flag gates joining. A client that already knows a <code>world_id</code> can
+still <code>world.join</code> it. Both flags control discovery only.</p>
+<p>Both are properties of the <strong>mode</strong>, not of a world instance, so a player
+cannot host a private world at runtime. A mode is either discoverable or it
+is not, for every world it spawns. Player-hosted private games need join
+authorisation, which does not exist yet.</p>
+<p>With <code>quick_play =&gt; false</code>, <code>world.find_or_create</code> returns
+<code>quick_play_disabled</code> rather than creating a world, since it could never
+find the one it just made.</p>
 <h3 id="procedural-generation" tabindex="-1">Procedural Generation</h3>
 <p>Implement <code>generate_world/2</code> to provide initial state for each zone:</p>
 <pre><code class="language-erlang">generate_world(Seed, _Config) -&gt;
