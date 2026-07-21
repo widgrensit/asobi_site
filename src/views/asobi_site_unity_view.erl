@@ -155,21 +155,6 @@ render(Bindings) ->
                             ]}
                         ]}
                     ]}
-                ]},
-
-                {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Demo Project"]},
-                    {p, [], [
-                        ~"Check out the full multiplayer arena shooter demo built with this SDK:"
-                    ]},
-                    {a,
-                        [
-                            {href, ~"https://github.com/widgrensit/asobi-unity-demo"},
-                            {class, ~"guide-github"}
-                        ],
-                        [
-                            ~"Unity Demo Project"
-                        ]}
                 ]}
             ]}
         ]}

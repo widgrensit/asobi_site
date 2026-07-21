@@ -184,14 +184,6 @@ func _process(_delta: float) -> void:
                     {a, [{href, ~"/godot"}], [~"Full SDK reference"]}
                 ]},
                 {li, [], [
-                    {a, [{href, ~"https://github.com/widgrensit/asobi-godot-demo"}], [
-                        ~"asobi-godot-demo"
-                    ]},
-                    ~" - a working arena demo (login/lobby/arena scenes, bots, ",
-                    {code, [], [~"_process"]},
-                    ~" input)."
-                ]},
-                {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* Lua API"]},
                     ~" - write the server-side gameplay your client connects to."
                 ]},

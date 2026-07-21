@@ -160,12 +160,6 @@ class ArenaGame extends FlameGame with HasAsobiInput {
             {h2, [], [~"What's next"]},
             {ul, [], [
                 {li, [], [
-                    {a, [{href, ~"https://github.com/widgrensit/asobi-flame-demo"}], [
-                        ~"asobi-flame-demo"
-                    ]},
-                    ~" - a full Flame arena game."
-                ]},
-                {li, [], [
                     {a, [{href, ~"/docs/quickstart/dart"}, az_navigate], [~"Dart quickstart"]},
                     ~" - the underlying client API."
                 ]},
