@@ -79,9 +79,7 @@ render(Bindings) ->
                     {code, [], [~"GameObject"]},
                     ~", ...) you must marshal to the main thread first, or Unity throws \"can only be called from the main thread\". Copy the ",
                     {code, [], [~"UnityMainThread"]},
-                    ~" helper from the ",
-                    {a, [{href, ~"https://github.com/widgrensit/asobi-unity-demo"}], [~"demo"]},
-                    ~" and wrap those calls in ",
+                    ~" helper and wrap those calls in ",
                     {code, [], [~"UnityMainThread.Enqueue(() => ...)"]},
                     ~"."
                 ]}
@@ -232,14 +230,6 @@ public class AsobiClientBehaviour : MonoBehaviour
                 {li, [], [
                     {a, [{href, ~"/unity"}], [~"Full SDK reference"]},
                     ~" - every method on every namespace."
-                ]},
-                {li, [], [
-                    {a, [{href, ~"https://github.com/widgrensit/asobi-unity-demo"}], [
-                        ~"asobi-unity-demo"
-                    ]},
-                    ~" - a working arena shooter (main-thread marshaling, input in ",
-                    {code, [], [~"Update"]},
-                    ~", subscribe/unsubscribe)."
                 ]},
                 {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* Lua API"]},

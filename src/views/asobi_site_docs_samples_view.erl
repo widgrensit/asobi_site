@@ -161,18 +161,15 @@ samples() ->
     [
         Base#{
             engine => ~"Godot",
-            key => ~"godot",
-            repo => ~"https://github.com/widgrensit/asobi-godot-demo"
+            key => ~"godot"
         },
         Base#{
             engine => ~"Defold",
-            key => ~"defold",
-            repo => ~"https://github.com/widgrensit/asobi-defold-demo"
+            key => ~"defold"
         },
         Base#{
             engine => ~"Unity",
-            key => ~"unity",
-            repo => ~"https://github.com/widgrensit/asobi-unity-demo"
+            key => ~"unity"
         }
     ].
 
@@ -184,8 +181,7 @@ sample_card(S) ->
         tags := Tags,
         docs := Docs,
         engine := Engine,
-        key := Key,
-        repo := Repo
+        key := Key
     } = S,
     ?html(
         {'div', [{class, ~"sample-card"}], [
@@ -212,7 +208,6 @@ sample_card(S) ->
                     iolist_to_binary([~"asobi init arena --template ", Key, ~"\nasobi dev"])
                 ),
                 {'div', [{class, ~"sample-links"}], [
-                    {a, [{href, Repo}], [~"Source"]},
                     {a, [{href, Docs}, az_navigate], [~"How it works"]},
                     {a, [{href, ~"/docs/cloud"}, az_navigate], [~"Deploy to cloud"]}
                 ]}

@@ -189,12 +189,6 @@ void UMyClass::HandleWsConnected() {
             {h2, [], [~"What's next"]},
             {ul, [], [
                 {li, [], [{a, [{href, ~"/unreal"}, az_navigate], [~"Full Unreal SDK reference"]}]},
-                {li, [], [
-                    {a, [{href, ~"https://github.com/widgrensit/asobi-unreal-demo"}], [
-                        ~"asobi-unreal-demo"
-                    ]},
-                    ~" - a working arena (auth -> WS -> matchmaker -> 30 Hz input)."
-                ]},
                 {li, [], [{a, [{href, ~"/docs/authentication"}, az_navigate], [~"Authentication"]}]}
             ]}
         ]}

@@ -61,25 +61,6 @@ render(Bindings) ->
                     {'div', [{class, ~"guide-code"}], [
                         {pre, [], [{code, [], [WorldSnippet]}]}
                     ]}
-                ]},
-
-                {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Demo project"]},
-                    {p, [], [~"A minimal top-down arena demo is available:"]},
-                    {'div', [{class, ~"guide-code"}], [
-                        {pre, [], [
-                            {code, [], [
-                                ~"git clone --recursive https://github.com/widgrensit/asobi-unreal-demo.git"
-                            ]}
-                        ]}
-                    ]},
-                    {p, [], [
-                        ~"Open AsobiUnrealDemo.uproject in UE 5.7+, hit Play. See ",
-                        {a, [{href, ~"https://github.com/widgrensit/asobi-unreal-demo"}], [
-                            ~"asobi-unreal-demo"
-                        ]},
-                        ~" on GitHub."
-                    ]}
                 ]}
             ]}
         ]}

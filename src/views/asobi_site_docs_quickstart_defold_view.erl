@@ -183,12 +183,6 @@ end
             {ul, [], [
                 {li, [], [{a, [{href, ~"/defold"}], [~"Full SDK reference"]}]},
                 {li, [], [
-                    {a, [{href, ~"https://github.com/widgrensit/asobi-defold-demo"}], [
-                        ~"asobi-defold-demo"
-                    ]},
-                    ~" - a working arena demo."
-                ]},
-                {li, [], [
                     {a, [{href, ~"/docs/lua/api"}, az_navigate], [~"game.* Lua API"]}
                 ]},
                 {li, [], [
