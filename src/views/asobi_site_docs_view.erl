@@ -91,6 +91,11 @@ asobi deploy prod lua
             {h2, [], [~"Start here"]},
             {'div', [{class, ~"docs-grid"}], [
                 card(
+                    ~"/docs/learn/orientation",
+                    ~"Build your first backend",
+                    ~"A guided path from an empty folder to a live server-authoritative game - server, client, identity, storage, matches, and worlds, one step at a time."
+                ),
+                card(
                     ~"/docs/quickstart",
                     ~"Quick start",
                     ~"Run the server, write a Lua game, connect a client - first match in under 5 minutes."

@@ -1708,6 +1708,20 @@ code {
     border-left-color: var(--emerald);
     background: color-mix(in oklab, var(--emerald) 12%, var(--ink-0));
 }
+.docs-next {
+    margin: var(--sp-6) 0 0;
+    padding: var(--sp-5) var(--sp-6);
+    border: 1px solid color-mix(in oklab, var(--indigo) 25%, transparent);
+    border-radius: var(--r-2);
+    background: color-mix(in oklab, var(--indigo) 6%, var(--ink-0));
+    font-size: var(--fs-sm);
+    color: var(--text-2);
+}
+
+.docs-next a {
+    font-weight: 600;
+}
+
 .docs-callout-warning {
     border-left-color: var(--tan);
     background: color-mix(in oklab, var(--tan) 16%, var(--ink-0));

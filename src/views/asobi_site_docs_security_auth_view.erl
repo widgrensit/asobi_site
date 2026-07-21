@@ -112,6 +112,62 @@ closed if the count can't be read.</li>
 valuable - purchases, competitive ranking, cross-device identity -
 should require a claimed account, not a guest session.</p>
 </div>
+<h2 id="registration-mode" tabindex="-1">Registration mode</h2>
+<p>Registration is <strong>open by default</strong> and that is deliberate (see ADR 0002):
+one asobi deployment serves one game, the endpoint URL is the game
+identity, and a downloadable client cannot prove it is &quot;your&quot; client. The
+<code>registration</code> app-env setting bounds anonymous signup as a <em>deployment</em>
+decision:</p>
+<pre><code class="language-erlang">{registration, open}         %% default
+%% {registration, oauth_only}
+%% {registration, closed}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Mode</th>
+<th>Password register</th>
+<th>OAuth first-time</th>
+<th>Guest first-time</th>
+<th>Existing players</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>open</code> (default)</td>
+<td>✅</td>
+<td>✅</td>
+<td>✅ (if <code>guest_auth</code>)</td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>oauth_only</code></td>
+<td>❌ <code>403</code></td>
+<td>✅</td>
+<td>governed by <code>guest_auth</code></td>
+<td>✅</td>
+</tr>
+<tr>
+<td><code>closed</code></td>
+<td>❌ <code>403</code></td>
+<td>❌ <code>403</code></td>
+<td>❌ <code>403</code></td>
+<td>✅ login/refresh/resume</td>
+</tr>
+</tbody>
+</table>
+<p><code>oauth_only</code> refuses only password registration; guest signup keeps
+following its own <code>guest_auth</code> toggle. <code>closed</code> freezes every new-player
+path while leaving all existing players able to authenticate. An
+unrecognised value falls back to <code>open</code> and logs a warning.</p>
+<blockquote>
+<p><strong>Footgun (flip before release).</strong> The shipped <code>examples/</code> quickstarts
+and <code>asobi_register_bench</code> register headless with username/password and
+rely on the <code>open</code> default - do not change it in dev/CI. Choosing a
+stricter posture is a production deployment decision, the same way Photon
+documents flipping <code>AllowAnonymous</code> before release. asobi logs the active
+mode at boot (<code>event =&gt; registration_mode</code>) so the posture is visible.</p>
+</blockquote>
 <h2 id="per-route-rate-limits" tabindex="-1">Per-route rate limits</h2>
 <p><code>asobi_rate_limit_plugin</code> is wired as a <code>pre_request</code> plugin in
 <code>config/{dev,prod}_sys.config.src</code>. It selects a Seki limiter group
@@ -167,6 +223,34 @@ the limits via the <code>asobi, rate_limits</code> env in their sys config:</p>
 <p>The dev / test sys config bumps all three to 1000 because CT bursts
 register/login calls against <code>127.0.0.1</code> and the production-default
 auth cap would fail the suites.</p>
+<h2 id="client-gate-pre-auth" tabindex="-1">Client gate (pre-auth)</h2>
+<p><code>asobi_client_gate</code> is a pluggable &quot;is this traffic allowed in&quot; seam on the
+anonymous auth-create routes (<code>/auth/register</code>, <code>/auth/oauth</code>,
+<code>/auth/guest</code>). It is distinct from <code>asobi_auth_plugin</code> (&quot;who is the
+player&quot;): a gate carries <strong>no</strong> player identity - its return type is
+deliberately narrow so an implementation cannot leak or forge identity.</p>
+<pre><code class="language-erlang">-callback verify(asobi_client_gate:context()) -&gt; skip | {deny, Reason :: binary()}.
+</code></pre>
+<p>The input is a <strong>minimized context</strong>, not the raw request - <code>#{ip, headers, path, token}</code>. The request map still holds the registration plaintext
+password at this point, and a traffic gate has no need for it; handing over
+only IP / headers / path / a <code>client_gate_token</code> field keeps a verbose or
+buggy third-party gate from logging or forwarding credentials.</p>
+<p>Wire an implementation with <code>{client_gate, my_gate_module}</code> in app env;
+<strong>unset is a no-op</strong>, so bots, dedicated servers, CI, headless clients and
+<code>asobi_register_bench</code> all keep working by default. <code>asobi_client_gate_plugin</code>
+runs immediately after the rate limiter and before the password KDF, so a
+denial (<code>403 registration_gate_denied</code>) never pays the pbkdf2 cost
+(asobi#157), and a register flood is shed by the cheap in-memory limiter
+before it can trigger an outbound siteverify.</p>
+<p>A configured gate that <strong>crashes, hangs, or returns garbage fails closed</strong>
+by default (<code>403 client_gate_unavailable</code>) - a security control that
+silently fails open is bypassable by knocking over the vendor. The gate call
+is bounded by <code>{client_gate_timeout, Ms}</code> (default 5000) so a stalled
+siteverify cannot pin the request process. Trade strictness for availability
+with <code>{client_gate_on_error, skip}</code>.</p>
+<p>CAPTCHA / Turnstile / hCaptcha is the first <em>consumer</em> of this seam and
+ships <strong>outside</strong> core (asobi_engine or a contrib plugin): a vendor-specific
+external round-trip must not couple asobi's public request path to a SaaS.</p>
 <h2 id="ddos-dos-surface-notes" tabindex="-1">DDoS / DoS surface notes</h2>
 <p>These are the deliberate per-call upper bounds in the runtime that
 exist purely to bound the cost of a single hostile request:</p>

@@ -251,6 +251,34 @@ there (not under <code>asobi</code>). See the Nova docs for token/refresh TTL se
 <code>register</code> 3/1000, <code>iap</code> 10/1000, <code>api</code> 300/1000, <code>ws_connect</code> 60/1000, and the
 global (not per-IP) guest-create bound <code>guest_global</code> 100/1000. Override any
 group under <code>rate_limits</code>; unset groups keep their default.</p>
+<h2 id="websocket-origin-allowlist" tabindex="-1">WebSocket Origin allowlist</h2>
+<p>By default the <code>/ws</code> upgrade accepts any <code>Origin</code> — web builds are served from
+arbitrary studio and hosting domains, so a strict default would break them.</p>
+<p>To harden a deployment against cross-site WebSocket hijacking, set an
+allowlist:</p>
+<pre><code class="language-erlang">{ws_allowed_origins, [
+    ~&quot;https://play.yourgame.com&quot;,
+    ~&quot;https://yourstudio.itch.io&quot;
+]}
+</code></pre>
+<p>When set, a browser upgrade whose <code>Origin</code> is not listed is closed with
+<code>1008 origin_rejected</code> and emits <code>[asobi, ws, origin_rejected]</code>. Leaving it
+unset (or empty) keeps the open default.</p>
+<p>Match is <strong>exact</strong> against the value the browser sends, so copy that verbatim:
+scheme + host + non-default port only — <strong>no trailing slash, no path, all
+lowercase, punycode (<code>xn--...</code>) for internationalised domains</strong>, and each
+entry a binary (<code>~&quot;...&quot;</code>), not a string. A trailing slash, an explicit <code>:443</code>,
+or an uppercase host silently matches nothing and locks out real users. A
+value that is not a list of binaries is treated as a misconfiguration and
+<strong>fails closed</strong> (rejects everything) with a logged error, rather than
+silently reverting to allow-all.</p>
+<p>This is independent of <a href="#cors">CORS</a>: CORS governs XHR/fetch, not the WebSocket
+handshake, so configuring one does not affect the other.</p>
+<p>Native clients (Defold, Unity, Unreal, etc.) send no <code>Origin</code> header and are
+never affected — an absent <code>Origin</code> always passes, since a non-browser client
+cannot be a CSWSH vector. The socket also does nothing until it presents a
+valid token in the first <code>session.connect</code> frame, so this is defence in depth,
+not the primary auth gate.</p>
 <h2 id="cors" tabindex="-1">CORS</h2>
 <p>CORS is handled by <code>nova_cors_plugin</code> in the Nova plugin chain — configure
 it under <code>{nova, [{plugins, [...]}]}</code>:</p>
