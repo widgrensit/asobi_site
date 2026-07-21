@@ -23,6 +23,23 @@ render(Bindings) ->
             {~"/docs/quickstart/love2d", ~"LÖVE"}
         ]},
         {~"Learn", [
+            {group, ~"Build your first backend", [
+                {~"/docs/learn/orientation", ~"0. What you are building"},
+                {~"/docs/learn/bundle", ~"1. Your backend bundle"},
+                {~"/docs/learn/install-sdk", ~"2. Install the client SDK"},
+                {~"/docs/learn/connect", ~"3. Connect and prove it"},
+                {~"/docs/learn/identity", ~"4. Guest vs account"},
+                {~"/docs/learn/storage", ~"5. Storing data"},
+                {~"/docs/learn/match-setup", ~"6. Set up a match"},
+                {~"/docs/learn/match-join", ~"7. Connect to a match"},
+                {~"/docs/learn/match-run", ~"8. Run a match"},
+                {~"/docs/learn/match-end", ~"9. End a match"},
+                {~"/docs/learn/world-create", ~"10. Create a world"},
+                {~"/docs/learn/world-join", ~"11. Connect to a world"},
+                {~"/docs/learn/world-run", ~"12. Run a world"},
+                {~"/docs/learn/world-end", ~"13. End a world"},
+                {~"/docs/learn/where-next", ~"Where next"}
+            ]},
             {~"/docs/tutorials/tic-tac-toe", ~"Tic-tac-toe"},
             {~"/docs/tutorials/hot-reload", ~"Live-edit your game (hot reload)"},
             {~"/docs/samples", ~"Samples"}
