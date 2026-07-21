@@ -93,6 +93,7 @@ routes(_Environment) ->
                 docs(~"/docs/changelog", asobi_site_docs_changelog_view),
                 docs(~"/docs/tutorials/hot-reload", asobi_site_docs_tutorial_hot_reload_view),
                 docs(~"/docs/large-worlds", asobi_site_docs_large_worlds_view),
+                docs(~"/docs/phases", asobi_site_docs_phases_view),
                 docs(~"/docs/comparison", asobi_site_docs_comparison_view),
                 docs(~"/docs/glossary", asobi_site_docs_glossary_view),
                 docs(~"/docs/architecture", asobi_site_docs_architecture_view),

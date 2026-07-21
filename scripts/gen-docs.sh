@@ -41,6 +41,7 @@ asobi|security-auth|asobi_site_docs_security_auth_view|docs-sec-auth|Auth & rate
 asobi|clustering|asobi_site_docs_clustering_view|docs-clustering|Clustering — Asobi docs|Clustering|cluster
 asobi|security-known-limitations|asobi_site_docs_security_known_limits_view|docs-sec-known|Known limitations — Asobi docs|Security / Known limitations|seclim
 asobi|large-worlds|asobi_site_docs_large_worlds_view|docs-large-worlds|Large worlds — Asobi docs|Large worlds|worlds
+asobi|phases|asobi_site_docs_phases_view|docs-phases|Phases and seasons — Asobi docs|Phases and seasons|phases
 asobi|comparison|asobi_site_docs_comparison_view|docs-comparison|How Asobi compares — Asobi docs|Comparison|compare
 asobi|glossary|asobi_site_docs_glossary_view|docs-glossary|Glossary — Asobi docs|Glossary|glossary
 asobi|architecture|asobi_site_docs_architecture_view|docs-architecture|Architecture — Asobi docs|Architecture|arch
