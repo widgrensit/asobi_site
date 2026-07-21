@@ -65,8 +65,8 @@ render(Bindings) ->
                     ]},
                     {ul, [], [
                         {li, [], [
-                            {strong, [], [~"Clever Cloud "]},
-                            ~"(France) - website hosting."
+                            {strong, [], [~"Hetzner "]},
+                            ~"(Germany) - website hosting."
                         ]},
                         {li, [], [
                             {strong, [], [~"Plausible Analytics "]},

@@ -52,11 +52,11 @@ render(Bindings) ->
                     ]},
                     {ul, [], [
                         {li, [], [
-                            {strong, [], [~"Clever Cloud "]},
-                            ~"(France) - compute, managed Postgres, S3-compatible object storage."
+                            {strong, [], [~"Hetzner Online "]},
+                            ~"(Germany) - compute, database hosting, and S3-compatible object storage."
                         ]},
                         {li, [], [
-                            {strong, [], [~"Hetzner or equivalent EU provider "]},
+                            {strong, [], [~"Equivalent EU provider "]},
                             ~"(Germany, Finland) - fallback compute region if required for capacity."
                         ]},
                         {li, [], [
@@ -71,7 +71,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Location"]},
                     {p, [], [
-                        ~"All regular processing in the EU. Primary region: Clever Cloud Paris. Backups remain in the EU."
+                        ~"All regular processing in the EU. Primary region: Hetzner, Germany. Backups remain in the EU."
                     ]}
                 ]},
 
