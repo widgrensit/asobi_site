@@ -36,7 +36,36 @@ render(Bindings) ->
                         {width, ~"640"},
                         {height, ~"480"}
                     ],
-                    []}
+                    []},
+                {'div', [{class, ~"sample-source"}], [
+                    {p, [], [
+                        {strong, [], [~"Get the source. "]},
+                        ~"The Lua backend runs with Docker only, no account:"
+                    ]},
+                    {pre, [], [
+                        {code, [{class, ~"language-bash"}], [
+                            ~"git clone https://github.com/widgrensit/asobi_arena_lua\ncd asobi_arena_lua && docker compose up -d"
+                        ]}
+                    ]},
+                    {p, [], [
+                        {a, [{href, ~"https://github.com/widgrensit/asobi_arena_lua"}], [
+                            ~"asobi_arena_lua backend on GitHub \x{2192}"
+                        ]}
+                    ]},
+                    {p, [], [
+                        ~"The finished client for your engine: ",
+                        {a, [{href, ~"https://github.com/widgrensit/asobi-defold-demo"}], [
+                            ~"Defold"
+                        ]},
+                        ~", ",
+                        {a, [{href, ~"https://github.com/widgrensit/asobi-godot-demo"}], [~"Godot"]},
+                        ~", ",
+                        {a, [{href, ~"https://github.com/widgrensit/asobi-unity-demo"}], [~"Unity"]},
+                        ~", ",
+                        {a, [{href, ~"https://github.com/widgrensit/asobi-flame-demo"}], [~"Flame"]},
+                        ~"."
+                    ]}
+                ]}
             ]},
 
             {'div',
