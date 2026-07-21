@@ -49,6 +49,7 @@ render(Bindings) ->
             {~"/docs/lobbies", ~"Lobbies"},
             {~"/docs/world-server", ~"World server"},
             {~"/docs/large-worlds", ~"Large worlds"},
+            {~"/docs/phases", ~"Phases & seasons"},
             {~"/docs/voting", ~"Voting"},
             {~"/docs/economy", ~"Economy & IAP"},
             {~"/docs/leaderboards", ~"Leaderboards & tournaments"},

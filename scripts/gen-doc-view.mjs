@@ -121,6 +121,7 @@ const SITE_ROUTES = {
   'websocket-protocol': '/docs/protocols/websocket',
   'matchmaking': '/docs/matchmaking',
   'world-server': '/docs/world-server',
+  'phases': '/docs/phases',
   'voting': '/docs/voting',
   'economy': '/docs/economy',
   'iap': '/docs/economy',

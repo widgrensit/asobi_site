@@ -21,6 +21,14 @@ render(Bindings) ->
             ~"""
 <p>Asobi uses a single WebSocket connection per client at <code>/ws</code>. All messages
 are JSON with a common envelope format.</p>
+<blockquote>
+<p><strong>You probably do not call this directly.</strong> This page is the raw wire reference.
+Every official SDK (Defold, Godot, Unity, Unreal, Dart/Flame, JavaScript, LÖVE)
+wraps this protocol: each message you <em>send</em> is a function, each message the
+server <em>pushes</em> is a callback you register. Reach for this page only to write a
+client from scratch or to debug what is on the wire. For the calls in your
+language, see the realtime section of your <a href="https://asobi.dev/docs">SDK quickstart</a>.</p>
+</blockquote>
 <h2 id="message-format" tabindex="-1">Message Format</h2>
 <h3 id="client-to-server" tabindex="-1">Client to Server</h3>
 <pre><code class="language-json">{
@@ -51,6 +59,11 @@ the response so the client can correlate request/response pairs.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;payload&quot;: {}}
 </code></pre>
 <h2 id="matches" tabindex="-1">Matches</h2>
+<blockquote>
+<p>The <code>match.input</code> (client -&gt; server) and <code>match.state</code> (server -&gt; all clients)
+pair below is the core real-time loop. In an SDK these are one send function and
+one receive callback - see the realtime section of your <a href="https://asobi.dev/docs">SDK quickstart</a>.</p>
+</blockquote>
 <h3 id="matchlist" tabindex="-1"><code>match.list</code></h3>
 <p>Browse live, joinable matches. Filters are optional.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.list&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;has_capacity&quot;: true}}
@@ -261,7 +274,7 @@ membership without a per-frame registry lookup.</p>
 <tr>
 <td><code>dm:</code></td>
 <td>Direct messages</td>
-<td>Both participants only.</td>
+<td>The two named participants only.</td>
 </tr>
 <tr>
 <td><code>world:</code></td>
@@ -271,20 +284,27 @@ membership without a per-frame registry lookup.</p>
 <tr>
 <td><code>zone:</code></td>
 <td>A specific zone within a world</td>
-<td>Players currently inside that zone.</td>
+<td>Players currently joined to the world.</td>
 </tr>
 <tr>
 <td><code>prox:</code></td>
 <td>Proximity chat (radius around a position)</td>
-<td>Players within the configured radius.</td>
+<td>Players currently joined to the world.</td>
 </tr>
 <tr>
 <td><code>room:</code></td>
-<td>Group / lobby / custom rooms</td>
-<td>Group members, or open join per room policy.</td>
+<td>App-defined group chat</td>
+<td>Members of the group whose id equals the channel id. Not open-join.</td>
 </tr>
 </tbody>
 </table>
+<p>There is no open-join room policy and no <code>match:</code> scheme. <code>room:</code> is authorised
+as a group membership check: the runtime treats the full channel id as the group
+id, so a player must already belong to a group with that exact id. For pre-game
+lobby chat, gate on world membership with <code>world:&lt;world_id&gt;</code>, or use
+<code>game.broadcast</code>; see the <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a> guide.</p>
+<p>The worked examples below use a <code>world:</code> channel, which authorises on world
+membership you already hold after <code>world.join</code>.</p>
 <p>A single connection may join at most <strong>32 channels</strong> at once; a 33rd is rejected
 with <code>too_many_channels</code>. Idle channels with no members stop after 60s; rejoining
 is cheap. Message <code>content</code> is capped at 2000 bytes and empty or non-binary
@@ -293,18 +313,18 @@ content is rejected with <code>content_empty</code> / <code>content_too_large</c
 <code>?limit</code> to 200; non-members get <code>403</code>.</p>
 <h3 id="chatjoin" tabindex="-1"><code>chat.join</code></h3>
 <p>Join a chat channel. The channel id must be namespaced.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;chat.join&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;room:lobby&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.join&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;}}
 </code></pre>
 <h3 id="chatsend" tabindex="-1"><code>chat.send</code></h3>
 <p>Send a message to a channel.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;chat.send&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;room:lobby&quot;, &quot;content&quot;: &quot;Hello!&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.send&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;, &quot;content&quot;: &quot;Hello!&quot;}}
 </code></pre>
 <h3 id="chatmessage-server-push" tabindex="-1"><code>chat.message</code> (server push)</h3>
 <p>A new message in a joined channel.</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;chat.message&quot;,
   &quot;payload&quot;: {
-    &quot;channel_id&quot;: &quot;room:lobby&quot;,
+    &quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;,
     &quot;sender_id&quot;: &quot;...&quot;,
     &quot;content&quot;: &quot;Hello!&quot;,
     &quot;sent_at&quot;: &quot;2025-01-15T10:30:00Z&quot;
@@ -313,7 +333,7 @@ content is rejected with <code>content_empty</code> / <code>content_too_large</c
 </code></pre>
 <h3 id="chatleave" tabindex="-1"><code>chat.leave</code></h3>
 <p>Leave a chat channel.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;chat.leave&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;room:lobby&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.leave&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;}}
 </code></pre>
 <h2 id="voting" tabindex="-1">Voting</h2>
 <h3 id="votecast" tabindex="-1"><code>vote.cast</code></h3>
