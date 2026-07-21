@@ -53,7 +53,7 @@ render(Bindings) ->
                     {ul, [], [
                         {li, [], [
                             {strong, [], [~"Hetzner Online "]},
-                            ~"(Germany) - compute, database hosting, and S3-compatible object storage."
+                            ~"(Germany) - compute and S3-compatible object storage; our database runs on this compute (self-managed, no third-party database service)."
                         ]},
                         {li, [], [
                             {strong, [], [~"Equivalent EU provider "]},
