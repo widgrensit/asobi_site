@@ -1582,10 +1582,33 @@ code {
 .docs-nav-link:hover { color: var(--text); }
 .docs-nav-link.active { color: var(--indigo-deep); }
 .docs-nav-subheading {
-    display: block;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: var(--sp-2);
     padding: 4px 0 2px;
     font-size: var(--fs-sm);
     color: var(--text-2);
+    cursor: pointer;
+    list-style: none;
+}
+
+.docs-nav-subheading::-webkit-details-marker {
+    display: none;
+}
+
+.docs-nav-subheading:hover {
+    color: var(--text-1);
+}
+
+.docs-nav-subcaret {
+    font-size: 0.7rem;
+    color: var(--text-3);
+    transition: transform var(--dur-1) var(--ease);
+}
+
+.docs-nav-subgroup[open] .docs-nav-subcaret {
+    transform: rotate(180deg);
 }
 .docs-nav-sublinks {
     display: flex;

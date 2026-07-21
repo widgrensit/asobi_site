@@ -134,9 +134,17 @@ render(Bindings) ->
     ).
 
 entry({group, SubTitle, SubLinks}, Active) ->
+    Attrs =
+        case lists:keymember(Active, 1, SubLinks) of
+            true -> [{class, ~"docs-nav-subgroup"}, {open, ~"open"}];
+            false -> [{class, ~"docs-nav-subgroup"}]
+        end,
     ?html(
-        {'div', [{class, ~"docs-nav-subgroup"}], [
-            {span, [{class, ~"docs-nav-subheading"}], [SubTitle]},
+        {details, Attrs, [
+            {summary, [{class, ~"docs-nav-subheading"}], [
+                {span, [], [SubTitle]},
+                {span, [{class, ~"docs-nav-subcaret"}, {'aria-hidden', ~"true"}], [~"\x{25BE}"]}
+            ]},
             {'div', [{class, ~"docs-nav-sublinks"}], [
                 ?each(fun(Link) -> entry(Link, Active) end, SubLinks)
             ]}
