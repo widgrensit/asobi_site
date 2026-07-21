@@ -29,12 +29,12 @@ render(Bindings) ->
             {p, [], [
                 ~"In ",
                 {a, [{href, ~"/docs/learn/world-create"}, az_navigate], [~"step 10"]},
-                ~" you created a world and confirmed it exists. A world is a persistent, zoned space; a match is an ephemeral session. Now a client enters it."
+                ~" you created a world and confirmed it exists. A world is a persistent arena: an always-on, zoned shared space; a match is a bounded, ephemeral round. Now a client enters it."
             ]},
             {p, [], [
                 ~"The server stays authoritative. The client sends ",
                 {code, [], [~"world.join"]},
-                ~" as intent; the server decides placement, subscribes you to the 3x3 zone neighbourhood around your spawn, and pushes state. You never move your own dot; you ask, and the server broadcasts."
+                ~" as intent; the server decides placement, subscribes you to the 3x3 zone neighbourhood around your spawn, and pushes state. You never move your own fighter; you ask, and the server broadcasts."
             ]},
 
             {h2, [], [~"The one thing that trips people up"]},
@@ -290,7 +290,7 @@ client.realtime:join_world(world_id)
             nextstep(
                 ~"/docs/learn/world-run",
                 ~"Step 12: Run a world",
-                ~"Send world.input, and watch world.tick deltas (op a/u/r) move the dot for everyone in the zone."
+                ~"Send world.input, and watch world.tick deltas (op a/u/r) move your fighter for everyone in the zone."
             )
         ]}
     ).

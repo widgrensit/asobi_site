@@ -26,11 +26,11 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Set up a match and its modes"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Define a match server-side so the grid has a mode a client can create and join."
+                ~"Define a match server-side so the arena has a mode a client can create and join."
             ]},
 
             {p, [], [
-                ~"A match is an ephemeral session: it spins up, players join, the server runs the simulation, and it ends. Everything here is server-authoritative. The client sends intent, the server decides, the server broadcasts state. You define both halves of that in Lua: a mode name, and the script that implements it."
+                ~"A match is an arena round: an ephemeral, bounded fight that spins up, players join, the server runs the simulation, and it ends. Everything here is server-authoritative. The client sends intent, the server decides, the server broadcasts state. You define both halves of that in Lua: a mode name, and the script that implements it."
             ]},
             {p, [], [~"Two files do the work:"]},
             {ul, [], [
@@ -61,7 +61,7 @@ render(Bindings) ->
                 ~". That is the whole registration step - drop the file in and the mode exists."
             ]},
             {p, [], [
-                ~"Here is the grid, server-side. The dot lives in shared match state, the server moves it in response to input, and every player sees the same grid."
+                ~"Here is the arena, server-side. Your fighter lives in shared match state, the server moves it in response to input, and every player sees the same arena."
             ]},
             code(
                 ~"lua",
@@ -71,9 +71,9 @@ render(Bindings) ->
 
                 function init(config)
                     return {
-                        w = 16,
-                        h = 16,
-                        dot = { x = 8, y = 8 }
+                        arena_w = 16,
+                        arena_h = 16,
+                        fighter = { x = 8, y = 8 }
                     }
                 end
 
@@ -86,9 +86,9 @@ render(Bindings) ->
                 end
 
                 function handle_input(player_id, input, state)
-                    local d = state.dot
-                    d.x = math.max(1, math.min(state.w, d.x + (input.move_x or 0)))
-                    d.y = math.max(1, math.min(state.h, d.y + (input.move_y or 0)))
+                    local f = state.fighter
+                    f.x = math.max(1, math.min(state.arena_w, f.x + (input.move_x or 0)))
+                    f.y = math.max(1, math.min(state.arena_h, f.y + (input.move_y or 0)))
                     return state
                 end
 
@@ -97,7 +97,7 @@ render(Bindings) ->
                 end
 
                 function get_state(player_id, state)
-                    return { w = state.w, h = state.h, dot = state.dot }
+                    return { arena_w = state.arena_w, arena_h = state.arena_h, fighter = state.fighter }
                 end
                 """
             ),
@@ -122,13 +122,13 @@ render(Bindings) ->
                 {code, [], [~"get_state"]},
                 ~". ",
                 {code, [], [~"tick"]},
-                ~" runs at 10 Hz by default; here it is a no-op because the dot only moves on input. The client sends ",
+                ~" runs at 10 Hz by default; here it is a no-op because your fighter only moves on input. The client sends ",
                 {code, [], [~"move_x"]},
                 ~"/",
                 {code, [], [~"move_y"]},
                 ~" deltas in ",
                 {code, [], [~"{-1, 0, 1}"]},
-                ~", and the server clamps the shared dot to the grid. For the full callback contract, including the optional ",
+                ~", and the server clamps your fighter to the arena. For the full callback contract, including the optional ",
                 {code, [], [~"join/3"]},
                 ~" context and vote hooks, see the ",
                 {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"Lua scripting guide"]},
@@ -154,23 +154,23 @@ render(Bindings) ->
                 ~"""
                 -- lua/config.lua
                 return {
-                    grid = "grid/match.lua"
+                    arena = "arena/match.lua"
                 }
                 """
             ),
             code(
                 ~"text",
                 ~"""
-                my_grid/
+                my_arena/
                 └── lua/
                     ├── config.lua
-                    └── grid/
+                    └── arena/
                         └── match.lua
                 """
             ),
             {p, [], [
                 ~"Now the mode is ",
-                {code, [], [~"\"grid\""]},
+                {code, [], [~"\"arena\""]},
                 ~", not ",
                 {code, [], [~"\"default\""]},
                 ~", and that is the name a client will queue for. Add more rows to add more modes:"
@@ -180,8 +180,8 @@ render(Bindings) ->
                 ~"""
                 -- lua/config.lua
                 return {
-                    grid  = "grid/match.lua",
-                    arena = "arena/match.lua"
+                    arena = "arena/match.lua",
+                    duel  = "duel/match.lua"
                 }
                 """
             ),
@@ -237,13 +237,13 @@ render(Bindings) ->
                 code(
                     ~"json",
                     ~"""
-                    {"msg":"lua game config loaded","modes":["grid"]}
+                    {"msg":"lua game config loaded","modes":["arena"]}
                     """
                 ),
                 {p, [], [
                     {code, [], [~"modes"]},
                     ~" lists exactly what you registered - ",
-                    {code, [], [~"[\"grid\"]"]},
+                    {code, [], [~"[\"arena\"]"]},
                     ~" for the manifest above, or ",
                     {code, [], [~"[\"default\"]"]},
                     ~" if you kept a single top-level ",
@@ -256,7 +256,7 @@ render(Bindings) ->
                 code(
                     ~"text",
                     ~"""
-                    GET /api/v1/matches/live?mode=grid
+                    GET /api/v1/matches/live?mode=arena
                     """
                 ),
                 {p, [], [

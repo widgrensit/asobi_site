@@ -23,15 +23,15 @@ render(Bindings) ->
             ]},
             {h1, [], [~"End a world"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Goal: end your grid world cleanly, on the server's terms, and watch every client receive ",
+                ~"Goal: end your persistent arena cleanly, on the server's terms, and watch every client receive ",
                 {code, [], [~"world.finished"]},
                 ~"."
             ]},
 
             {p, [], [
-                ~"A match was a short session that finished when the round was over. A world is a persistent space, so it needs a rule for when it is ",
+                ~"An arena round was a short session that finished when the round was over. A persistent arena is always on, so it needs a rule for when it is ",
                 {em, [], [~"done"]},
-                ~". There are exactly two ways a world ends, and both are decided by the server."
+                ~". There are exactly two ways a persistent arena ends, and both are decided by the server."
             ]},
             {ol, [], [
                 {li, [], [
@@ -53,12 +53,12 @@ render(Bindings) ->
                 ~" push to whoever is still connected, then tears the world down. The client never ends a world; it only sends intent and reacts to the broadcast."
             ]},
             {p, [], [
-                ~"This is the last step of the arc. By the end of it your grid world starts, runs, and stops on its own."
+                ~"This is the last step of the arc. By the end of it your persistent arena starts, runs, and stops on its own."
             ]},
 
             {h2, [], [~"Finish from ", {code, [], [~"post_tick"]}]},
             {p, [], [
-                ~"Your grid world already advances in ",
+                ~"Your persistent arena already advances in ",
                 {code, [], [~"post_tick(tick, state)"]},
                 ~" (step 12). To end it, set ",
                 {code, [], [~"_finished = true"]},
@@ -202,7 +202,7 @@ render(Bindings) ->
                         ~" locally, or your deployed environment)."
                     ]},
                     {li, [], [
-                        ~"Join the grid world from a client with a ",
+                        ~"Join the arena from a client with a ",
                         {code, [], [~"world.finished"]},
                         ~" handler registered."
                     ]},
@@ -245,7 +245,7 @@ render(Bindings) ->
                     ]}
                 ]},
                 {p, [], [
-                    ~"If both endings fire and the world disappears from the list, the world ends cleanly. That is the whole loop: create, join, run, end. You have a working grid backend."
+                    ~"If both endings fire and the world disappears from the list, the persistent arena ends cleanly. That is the whole loop: create, join, run, end. You have a working arena backend."
                 ]}
             ]),
 

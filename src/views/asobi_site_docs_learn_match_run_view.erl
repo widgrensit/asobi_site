@@ -23,16 +23,16 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Run a match: the input and state loop"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Goal: close the loop - a click on one client moves the shared dot, and every client in the match sees it move."
+                ~"Goal: close the loop - a click on one client moves your fighter, and every client in the arena round sees it move."
             ]},
 
             {p, [], [
-                ~"This is the payoff. You have two clients in one match (step 7). Now wire the loop:"
+                ~"This is the payoff. You have two clients in one arena round (step 7). Now wire the loop:"
             ]},
             {ol, [], [
                 {li, [], [~"Client sends intent with ", {code, [], [~"send_match_input"]}, ~"."]},
                 {li, [], [
-                    ~"Server (", {code, [], [~"match.lua"]}, ~") decides and moves the dot."
+                    ~"Server (", {code, [], [~"match.lua"]}, ~") decides and moves your fighter."
                 ]},
                 {li, [], [
                     ~"Server broadcasts the new state as ", {code, [], [~"match.state"]}, ~"."
@@ -40,7 +40,7 @@ render(Bindings) ->
                 {li, [], [~"Every client renders it."]}
             ]},
             {p, [], [
-                ~"The client never moves the dot itself. It asks; the server decides; the server tells everyone. See the ",
+                ~"The client never moves your fighter itself. It asks; the server decides; the server tells everyone. See the ",
                 {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [~"websocket-protocol"]},
                 ~" guide for the full ",
                 {code, [], [~"match.*"]},
@@ -52,7 +52,7 @@ render(Bindings) ->
                 ~"This is identical on Cloud and self-hosted - it is your game bundle, and the bundle does not change between deployments. Write it once."
             ]},
             {p, [], [
-                ~"The dot lives in match state. ",
+                ~"Your fighter lives in match state. ",
                 {code, [], [~"handle_input"]},
                 ~" applies a move intent. ",
                 {code, [], [~"get_state"]},
@@ -68,7 +68,7 @@ render(Bindings) ->
                 local W, H = 16, 16
 
                 function init(config)
-                    return { dot = { x = 8, y = 8 } }
+                    return { fighter = { x = 8, y = 8 } }
                 end
 
                 function join(player_id, state)
@@ -80,7 +80,7 @@ render(Bindings) ->
                 end
 
                 function handle_input(player_id, input, state)
-                    local d = state.dot
+                    local d = state.fighter
                     d.x = math.max(0, math.min(W - 1, d.x + (input.move_x or 0)))
                     d.y = math.max(0, math.min(H - 1, d.y + (input.move_y or 0)))
                     return state
@@ -91,14 +91,14 @@ render(Bindings) ->
                 end
 
                 function get_state(player_id, state)
-                    return { grid_w = W, grid_h = H, dot = state.dot }
+                    return { arena_w = W, arena_h = H, fighter = state.fighter }
                 end
                 """
             ),
             {p, [], [
                 ~"The client sends ",
                 {code, [], [~"{ move_x = 1, move_y = 0 }"]},
-                ~"; the server clamps it to the grid and moves the one shared dot. Nothing about position is trusted from the client. Callback shapes are documented in the ",
+                ~"; the server clamps it to the arena and moves your fighter. The arena is 16 by 16. Nothing about position is trusted from the client. Callback shapes are documented in the ",
                 {a, [{href, ~"/docs/lua/callbacks"}, az_navigate], [~"lua-scripting"]},
                 ~" guide."
             ]},
@@ -185,7 +185,7 @@ render(Bindings) ->
                             local rt = client.realtime
 
                             rt:on("match_state", function(state)
-                                render_grid(state.dot)
+                                render(state.fighter)
                             end)
 
                             rt:join_match(match_id)
@@ -203,7 +203,7 @@ render(Bindings) ->
                             Asobi.realtime.join_match(match_id)
 
                             func _on_state(payload: Dictionary) -> void:
-                                render_grid(payload["dot"])
+                                render(payload["fighter"])
 
                             # on a click
                             Asobi.realtime.send_match_input({ "move_x": 1, "move_y": 0 })
@@ -217,7 +217,7 @@ render(Bindings) ->
                             client.Realtime.OnMatchState += rawJson =>
                             {
                                 var state = JsonUtility.FromJson<GridState>(rawJson);
-                                RenderGrid(state.dot);
+                                Render(state.fighter);
                             };
 
                             await client.Realtime.JoinMatchAsync(matchId);
@@ -237,7 +237,7 @@ render(Bindings) ->
                             // UFUNCTION handler
                             void UMyClass::HandleMatchState(const FString& StateJson)
                             {
-                                RenderGrid(StateJson);
+                                Render(StateJson);
                             }
 
                             // on a click
@@ -250,7 +250,7 @@ render(Bindings) ->
                         body =>
                             ~"""
                             client.realtime.onMatchState.stream.listen((MatchState state) {
-                              renderGrid(state);
+                              render(state);
                             });
 
                             await client.realtime.joinMatch(matchId);
@@ -265,7 +265,7 @@ render(Bindings) ->
                         body =>
                             ~"""
                             ws.on("match.state", (payload) => {
-                              renderGrid(payload.dot);
+                              render(payload.fighter);
                             });
 
                             await ws.send("match.join", { match_id });
@@ -280,7 +280,7 @@ render(Bindings) ->
                         body =>
                             ~"""
                             client.realtime:on("match_state", function(state)
-                                render_grid(state.dot)
+                                render(state.fighter)
                             end)
 
                             client.realtime:join_match(match_id)
@@ -297,20 +297,20 @@ render(Bindings) ->
             }),
 
             checkpoint([
-                {p, [], [~"Run two clients joined to the same match."]},
+                {p, [], [~"Run two clients joined to the same arena round."]},
                 {ol, [], [
                     {li, [], [~"Click a direction on client A."]},
                     {li, [], [
                         ~"Client A sends ",
                         {code, [], [~"send_match_input"]},
-                        ~"; the server moves the dot and broadcasts ",
+                        ~"; the server moves your fighter and broadcasts ",
                         {code, [], [~"match.state"]},
                         ~"."
                     ]},
-                    {li, [], [~"The dot moves on BOTH client A and client B."]}
+                    {li, [], [~"Your fighter moves on BOTH client A and client B."]}
                 ]},
                 {p, [], [
-                    ~"If it moves on A but not B, both clients are not in the same match - recheck step 7. If it moves on neither, the state handler was registered after join, or (LOVE) the per-frame ",
+                    ~"If it moves on A but not B, both clients are not in the same arena round - recheck step 7. If it moves on neither, the state handler was registered after join, or (LOVE) the per-frame ",
                     {code, [], [~"update()"]},
                     ~" pump is missing."
                 ]}

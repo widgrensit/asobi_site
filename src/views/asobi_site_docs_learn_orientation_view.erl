@@ -23,28 +23,31 @@ render(Bindings) ->
             ]},
             {h1, [], [~"What you are building"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Understand the destination before you build it: a tiny shared-grid backend with a server-moved dot."
+                ~"Understand the destination before you build it: you are building the movement core of the Arena Shooter sample, a top-down arena where the server moves your fighter and every client sees it move."
             ]},
 
             {h2, [], [~"The thing you will build"]},
             {p, [], [
-                ~"A shared grid. One dot. Every connected client sees the same grid and the same dot in the same cell."
+                ~"The Arena Shooter sample is a top-down co-op arena: fighters move, aim, and shoot; matchmaking fills empty slots with bots; boons drop, players vote on a modifier between rounds, and a kills leaderboard tracks who is winning. You will build only the movement core. The full sample layers shooting, bots, boons, round voting, and the leaderboard on top of exactly this."
             ]},
             {p, [], [
-                ~"A player clicks a cell. The client does not move the dot. It sends the click to the server as an intent. The server decides where the dot goes and broadcasts the new position. Every client redraws."
+                ~"An arena. One fighter. Every connected client sees the same arena and your fighter at the same position."
             ]},
             {p, [], [
-                ~"That is the whole track. Each step adds one piece and ends with a checkpoint you run to see it work. By the end you have a real backend: guests, stored state, matches, and worlds, all around this one grid."
+                ~"A player presses a movement key. The client does not move the fighter. It sends the input to the server as an intent, a move_x/move_y delta. The server decides where the fighter goes and broadcasts the new position. Every client redraws."
+            ]},
+            {p, [], [
+                ~"That is the whole track. Each step adds one piece and ends with a checkpoint you run to see it work. By the end you have a real backend: guests, stored state, matches, and worlds, all around this one arena."
             ]},
 
             {h2, [], [~"The two pieces"]},
             {p, [], [
                 {strong, [], [~"1. A server bundle. "]},
-                ~"A directory of Lua scripts that holds your game logic - who joins, what a click does, where the dot ends up. You deploy this bundle; you do not run a server codebase. Asobi runs it for you."
+                ~"A directory of Lua scripts that holds your game logic - who joins, what an input does, where the fighter ends up. You deploy this bundle; you do not run a server codebase. Asobi runs it for you."
             ]},
             {p, [], [
                 {strong, [], [~"2. A client. "]},
-                ~"Your game, using an Asobi SDK (Defold, Godot, Unity, Unreal, Dart, JavaScript, or LOVE). The client draws the grid, sends clicks, and renders whatever state the server sends back."
+                ~"Your game, using an Asobi SDK (Defold, Godot, Unity, Unreal, Dart, JavaScript, or LOVE). The client draws the arena, sends inputs, and renders whatever state the server sends back."
             ]},
             {p, [], [~"The client never owns the truth. It sends intent; it renders state."]},
 
@@ -52,11 +55,11 @@ render(Bindings) ->
             code(
                 ~"text",
                 ~"""
-client click  --->  server decides  --->  server broadcasts  --->  every client renders
+client input  --->  server decides  --->  server broadcasts  --->  every client renders
 """
             ),
             {p, [], [
-                ~"The dot's position lives on the server. A client cannot place the dot; it can only ask. This is what stops two players disagreeing about the game, and it is why the interesting code is in Lua, not in the client."
+                ~"The fighter's position lives on the server. A client cannot place the fighter; it can only ask. This is what stops two players disagreeing about the game, and it is why the interesting code is in Lua, not in the client."
             ]},
 
             {h2, [], [~"Two ways to deploy (chosen later)"]},
