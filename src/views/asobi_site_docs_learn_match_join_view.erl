@@ -23,13 +23,13 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Connect to a match"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Get two clients into the same match, so the next step has somewhere to move the dot."
+                ~"Get two clients into the same match, so the next step has somewhere to move your fighter."
             ]},
 
             {p, [], [
                 ~"In ",
                 {a, [{href, ~"/docs/learn/match-setup"}, az_navigate], [~"step 6"]},
-                ~" you gave your grid a mode and confirmed a match can be created. A match is an ephemeral session. A client does not own it: the client sends the intent to join, the server binds the match to that session, and from then on the server routes that client's input and broadcasts state to it."
+                ~" you gave your arena a mode and confirmed a match can be created. A match is an arena round: a bounded, ephemeral fight. A client does not own it: the client sends the intent to join, the server binds the match to that session, and from then on the server routes that client's input and broadcasts state to it."
             ]},
             {p, [], [~"There are two ways a client ends up in a match."]},
             {ul, [], [
@@ -82,7 +82,7 @@ render(Bindings) ->
             {p, [], [
                 ~"Assume you have already connected and authenticated (steps 3-4). ",
                 {code, [], [~"mode"]},
-                ~" is the grid mode from step 6."
+                ~" is the arena mode from step 6."
             ]},
 
             {p, [], [
@@ -273,7 +273,7 @@ render(Bindings) ->
 
             checkpoint([
                 {p, [], [
-                    ~"Run two clients against the same server. In each, register the matched handler, then enqueue both for the grid mode:"
+                    ~"Run two clients against the same server. In each, register the matched handler, then enqueue both for the arena mode:"
                 ]},
                 {ul, [], [
                     {li, [], [~"client A: ", {code, [], [~"add_to_matchmaker(mode)"]}]},
@@ -294,7 +294,7 @@ render(Bindings) ->
             nextstep(
                 ~"/docs/learn/match-run",
                 ~"Step 8 - Run a match",
-                ~"Send an input from one client, the server moves the dot, and the new match.state renders on both."
+                ~"Send an input from one client, the server moves your fighter, and the new match.state renders on both."
             )
         ]}
     ).

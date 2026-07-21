@@ -35,9 +35,9 @@ render(Bindings) ->
                 ~": a small directory of game scripts that Asobi loads and runs. The bundle holds your rules; the platform supplies the database, authentication, matchmaking, and WebSockets around it."
             ]},
             {p, [], [
-                ~"This is the server-authoritative half of the grid backend from ",
+                ~"This is the server-authoritative half of the arena backend from ",
                 {a, [{href, ~"/docs/learn/orientation"}, az_navigate], [~"Orientation"]},
-                ~": the client will send intent, but the dot only moves because a script in this bundle decides it moves."
+                ~": the client will send intent, but your fighter only moves because a script in this bundle decides it moves."
             ]},
 
             {h2, [], [~"What is in the bundle"]},
@@ -47,7 +47,7 @@ render(Bindings) ->
             code(
                 ~"text",
                 ~"""
-                my_grid/
+                my_arena/
                 ├── lua/
                 │   └── match.lua
                 └── docker-compose.yml
@@ -166,12 +166,12 @@ render(Bindings) ->
             code(
                 ~"text",
                 ~"""
-                my_grid/
+                my_arena/
                 ├── lua/
                 │   ├── config.lua
-                │   ├── grid/
+                │   ├── arena/
                 │   │   └── match.lua
-                │   └── arena/
+                │   └── world/
                 │       └── match.lua
                 └── docker-compose.yml
                 """
@@ -181,8 +181,8 @@ render(Bindings) ->
                 ~"""
                 -- lua/config.lua
                 return {
-                  grid  = "grid/match.lua",
-                  arena = "arena/match.lua"
+                  arena = "arena/match.lua",
+                  world = "world/match.lua"
                 }
                 """
             ),
@@ -200,8 +200,8 @@ render(Bindings) ->
             code(
                 ~"bash",
                 ~"""
-                asobi init my_grid
-                cd my_grid
+                asobi init my_arena
+                cd my_arena
                 """
             ),
             {p, [], [
@@ -235,7 +235,7 @@ render(Bindings) ->
                 services:
                   postgres:
                     image: postgres:17
-                    environment: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: my_grid }
+                    environment: { POSTGRES_USER: postgres, POSTGRES_PASSWORD: postgres, POSTGRES_DB: my_arena }
                     healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 5s }
 
                   asobi:
@@ -243,7 +243,7 @@ render(Bindings) ->
                     depends_on: { postgres: { condition: service_healthy } }
                     ports: ["8084:8084"]
                     volumes: ["./lua:/app/game:ro"]
-                    environment: { ASOBI_DB_HOST: postgres, ASOBI_DB_NAME: my_grid }
+                    environment: { ASOBI_DB_HOST: postgres, ASOBI_DB_NAME: my_arena }
                 """
             ),
             code(~"bash", ~"docker compose up -d\n"),

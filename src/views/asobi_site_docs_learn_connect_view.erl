@@ -26,7 +26,7 @@ render(Bindings) ->
                 ~"Goal: open the realtime socket and confirm the server accepted it, and nothing else."
             ]},
             {p, [], [
-                ~"This is the confidence anchor. Before you register anything, match anyone, or move a dot, you want one fact on your screen: the socket is up and the server knows who you are. That is the whole job of this step."
+                ~"This is the confidence anchor. Before you register anything, match anyone, or move your fighter, you want one fact on your screen: the socket is up and the server knows who you are. That is the whole job of this step."
             ]},
 
             {h2, [], [~"The handshake"]},
@@ -173,7 +173,7 @@ render(Bindings) ->
                 {strong, [], [~"JavaScript. "]},
                 ~"This SDK uses the raw wire event name (",
                 {code, [], [~"session.connected"]},
-                ~", with the dot) and hands you the untyped payload, so ",
+                ~", with the fighter) and hands you the untyped payload, so ",
                 {code, [], [~"payload.player_id"]},
                 ~" is right there (README; websocket.ts). There is no ",
                 {code, [], [~"client.realtime"]},

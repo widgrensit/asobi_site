@@ -23,15 +23,15 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Run a world: ticks and deltas"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Move your dot in one client and watch the change arrive on every other client, streamed as per-tick deltas from the server."
+                ~"Move your fighter in one client and watch the change arrive on every other client, streamed as per-tick deltas from the server."
             ]},
 
             {p, [], [
-                ~"In step 11 you joined a world and received the initial snapshot. Now you run the loop. It is the same server-authoritative rule as a match: the client sends intent, the server decides, the server broadcasts state. The only difference is the shape of the broadcast. A world does not resend the whole grid every tick. It sends ",
+                ~"In step 11 you joined a world and received the initial snapshot. Now you run the loop. It is the same server-authoritative rule as an arena round: the client sends intent, the server decides, the server broadcasts state. The only difference is the shape of the broadcast. A persistent arena does not resend the whole arena every tick. It sends ",
                 {strong, [], [~"deltas"]},
                 ~" - just what changed - and it sends them ",
                 {strong, [], [~"per zone"]},
-                ~", so a client only hears about the part of the grid it is standing in."
+                ~", so a client only hears about the part of the arena it is standing in."
             ]},
 
             {h2, [], [~"The loop"]},
@@ -67,7 +67,7 @@ render(Bindings) ->
                 {a, [{href, ~"/docs/world-server"}, az_navigate], [~"world-server"]},
                 ~" for the server ",
                 {code, [], [~"world.lua"]},
-                ~" callbacks that move the dot."
+                ~" callbacks that move the fighter."
             ]},
 
             {h2, [], [~"The delta shape"]},
@@ -103,19 +103,19 @@ render(Bindings) ->
                     {code, [], [~"op: \"a\""]},
                     ~" - ",
                     {strong, [], [~"added"]},
-                    ~". A full entity state; a dot just entered your view."
+                    ~". A full entity state; a fighter just entered your view."
                 ]},
                 {li, [], [
                     {code, [], [~"op: \"u\""]},
                     ~" - ",
                     {strong, [], [~"updated"]},
-                    ~". Only the changed fields; here the dot moved one cell right."
+                    ~". Only the changed fields; here the fighter moved one cell right."
                 ]},
                 {li, [], [
                     {code, [], [~"op: \"r\""]},
                     ~" - ",
                     {strong, [], [~"removed"]},
-                    ~". The id only; a dot left your view or was deleted."
+                    ~". The id only; a fighter left your view or was deleted."
                 ]}
             ]},
             {p, [], [
@@ -143,7 +143,7 @@ render(Bindings) ->
 
             {h2, [], [~"The server side is unchanged"]},
             {p, [], [
-                ~"The dot is moved in ",
+                ~"The fighter is moved in ",
                 {code, [], [~"world.lua"]},
                 ~", which you wrote in Part 6. The client sends ",
                 {code, [], [~"world.input"]},
@@ -360,7 +360,7 @@ end
                     {li, [], [
                         ~"In client A, send one ",
                         {code, [], [~"world.input"]},
-                        ~" that moves your dot."
+                        ~" that moves your fighter."
                     ]},
                     {li, [], [
                         ~"In client B, watch a ",

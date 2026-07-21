@@ -23,18 +23,18 @@ render(Bindings) ->
             ]},
             {h1, [], [~"Create a world (and when to pick one)"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Register a persistent grid world, understand when a world beats a match, and prove one comes into being."
+                ~"Register a persistent arena, understand when a world beats a match, and prove one comes into being."
             ]},
 
             {p, [], [
-                ~"So far the grid has lived inside a ",
+                ~"So far the arena has lived inside a ",
                 {strong, [], [~"match"]},
-                ~". A match is an ephemeral session: a fixed roster joins, the dot moves, the match finishes, and the state is gone. That is the right shape for a round of play with a clear start and end."
+                ~". A match is an arena round: a bounded, ephemeral fight. A fixed roster joins, your fighter moves, the round finishes, and the state is gone. That is the right shape for a round of play with a clear start and end."
             ]},
             {p, [], [
                 ~"A ",
                 {strong, [], [~"world"]},
-                ~" is the other shape: a persistent, zoned, shared space. It exists independently of any one player. People wander in and out; the grid stays. Under the hood the world is split into zone processes so it can carry many more players than a match, each player only receiving updates from the zones they can see."
+                ~" is the other shape: a persistent arena. It is an always-on, zoned, shared space that never ends. It exists independently of any one player. People wander in and out; the arena stays. Under the hood the world is split into zone processes so it can carry many more players than a match, each player only receiving updates from the zones they can see."
             ]},
 
             {h2, [], [~"Match or world?"]},
@@ -53,7 +53,7 @@ render(Bindings) ->
                 ]}
             ]},
             {p, [], [
-                ~"For the grid: a match is fine for a two-player round. Reach for a world when the grid becomes a room players drift through and it should still be there when they come back. The rest of this part builds the world version of the grid."
+                ~"For the arena: a match is fine for a two-player round. Reach for a world when the arena becomes a persistent space players drift through and it should still be there when they come back. Matches are bounded rounds; a world is a persistent arena. The rest of this part builds the persistent-arena version."
             ]},
             {p, [], [
                 ~"See ",
@@ -118,7 +118,7 @@ render(Bindings) ->
                 {code, [], [~"spawn_position"]},
                 ~" returns the ",
                 {code, [], [~"{x, y}"]},
-                ~" where a joining player's dot appears. Moving the dot and broadcasting deltas comes in the next two steps; here the world just has to exist and accept a spawn."
+                ~" where a joining player's fighter appears. Moving your fighter and broadcasting deltas comes in the next two steps; here the world just has to exist and accept a spawn."
             ]},
 
             {'div', [{class, ~"docs-callout docs-callout-warning"}], [
@@ -168,7 +168,7 @@ render(Bindings) ->
                 ~"""
                 -- lua/config.lua
                 return {
-                    grid = "world.lua"
+                    hub = "world.lua"
                 }
                 """
             ),
@@ -178,7 +178,7 @@ render(Bindings) ->
                 ~" is present, Asobi reads it instead of looking for a top-level ",
                 {code, [], [~"match.lua"]},
                 ~". The mode is now named ",
-                {code, [], [~"grid"]},
+                {code, [], [~"hub"]},
                 ~", and clients create worlds of it by that name."
             ]},
             {p, [], [
@@ -193,7 +193,7 @@ render(Bindings) ->
                 ~", so ",
                 {code, [], [~"world.find_or_create"]},
                 ~" may place a caller into an existing ",
-                {code, [], [~"grid"]},
+                {code, [], [~"hub"]},
                 ~" world. Both are covered in ",
                 {a, [{href, ~"/docs/world-server"}, az_navigate], [~"World server"]},
                 ~" if you need to change them."
@@ -210,7 +210,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {code, [], [~"world.find_or_create {mode}"]},
-                    ~" - return the first non-full world of that mode, or make one if none exists. This is the \"drop me into a shared room\" call, and what you almost always want for the grid."
+                    ~" - return the first non-full world of that mode, or make one if none exists. This is the \"drop me into a shared arena\" call, and what you almost always want for the arena."
                 ]}
             ]},
             {p, [], [
@@ -259,7 +259,7 @@ render(Bindings) ->
                 code(
                     ~"json",
                     ~"""
-                    {"type": "world.find_or_create", "payload": {"mode": "grid"}}
+                    {"type": "world.find_or_create", "payload": {"mode": "hub"}}
                     """
                 ),
                 {p, [], [
@@ -270,25 +270,25 @@ render(Bindings) ->
                 code(
                     ~"json",
                     ~"""
-                    {"type": "world.joined", "payload": {"world_id": "...", "mode": "grid", "grid_size": 5, "max_players": 500, "player_count": 1, "status": "running"}}
+                    {"type": "world.joined", "payload": {"world_id": "...", "mode": "hub", "grid_size": 5, "max_players": 500, "player_count": 1, "status": "running"}}
                     """
                 ),
                 {p, [], [~"Confirm it independently by listing worlds of the mode:"]},
                 code(
                     ~"json",
                     ~"""
-                    {"type": "world.list", "payload": {"mode": "grid"}}
+                    {"type": "world.list", "payload": {"mode": "hub"}}
                     """
                 ),
                 code(
                     ~"json",
                     ~"""
-                    {"type": "world.list", "payload": {"worlds": [{"world_id": "...", "mode": "grid", "player_count": 1, "max_players": 500}]}}
+                    {"type": "world.list", "payload": {"worlds": [{"world_id": "...", "mode": "hub", "player_count": 1, "max_players": 500}]}}
                     """
                 ),
                 {p, [], [
                     ~"One ",
-                    {code, [], [~"grid"]},
+                    {code, [], [~"hub"]},
                     ~" world in the list means the mode loaded correctly and a live world exists. If you instead get ",
                     {code, [], [~"mode_not_found"]},
                     ~", re-check ",

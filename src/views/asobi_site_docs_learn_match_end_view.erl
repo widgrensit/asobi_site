@@ -23,30 +23,30 @@ render(Bindings) ->
             ]},
             {h1, [], [~"End a match"]},
             {p, [{class, ~"docs-lede"}], [
-                ~"Goal: the server decides the match is over, computes a result, and both clients receive it."
+                ~"Goal: the server decides the arena round is over, computes a result, and both clients receive it."
             ]},
 
             {p, [], [
-                ~"So far the match runs forever: clients send input, the server moves the dot, the server broadcasts ",
+                ~"So far the round runs forever: clients send input, the server moves your fighter across the arena, the server broadcasts ",
                 {code, [], [~"match.state"]},
-                ~". Now the server ends the match on its own terms and hands every player a final result table."
+                ~". Now the server ends the round on its own terms and hands every player a final result table."
             ]},
             {p, [], [
-                ~"This is a server decision. A client never ends a match. The server detects the end condition inside the tick loop, builds the result, and the platform pushes ",
+                ~"This is a server decision. A client never ends a round. The server detects the end condition inside the tick loop, builds the result, and the platform pushes ",
                 {code, [], [~"match.finished"]},
                 ~" to everyone."
             ]},
 
-            {h2, [], [~"How a match finishes"]},
+            {h2, [], [~"How an arena round finishes"]},
             {p, [], [
-                ~"Your match ends the moment ",
+                ~"Your round ends the moment ",
                 {code, [], [~"tick(state)"]},
                 ~" marks the state finished. Set two fields on the state table:"
             ]},
             {ul, [], [
                 {li, [], [
                     {code, [], [~"state._finished = true"]},
-                    ~" - stop the match after this tick."
+                    ~" - stop the round after this tick."
                 ]},
                 {li, [], [
                     {code, [], [~"state._result = {...}"]},
@@ -56,26 +56,26 @@ render(Bindings) ->
             {p, [], [
                 ~"The platform reads those fields after ",
                 {code, [], [~"tick"]},
-                ~" returns, closes the match, and pushes ",
+                ~" returns, closes the round, and pushes ",
                 {code, [], [~"_result"]},
                 ~" to all players as the ",
                 {code, [], [~"match.finished"]},
                 ~" event. The table shape is yours; clients receive it as JSON."
             ]},
 
-            {h2, [], [~"Compute a result for the grid"]},
+            {h2, [], [~"Compute a result for the arena"]},
             {p, [], [
-                ~"Keep the through-line: one shared dot on a grid, moved by player input. Give the match an end condition and a score. Here the dot chases a target cell, each player earns a point for the move that lands on it, and the match ends after a fixed number of ticks."
+                ~"Keep the through-line: one fighter in the arena, moved by player input. The arena is 16 by 16. Give the round an end condition and a score. Here the fighter chases a target cell, each player earns a point for the move that lands on it, and the round ends after a fixed number of ticks."
             ]},
             code(
                 ~"lua",
                 ~"""
-                local GRID = 16
+                local ARENA = 16
                 local MATCH_TICKS = 300
 
                 function init(config)
                     return {
-                        dot = { x = 8, y = 8 },
+                        fighter = { x = 8, y = 8 },
                         target = { x = 3, y = 12 },
                         scores = {},
                         tick_count = 0
@@ -88,13 +88,13 @@ render(Bindings) ->
                 end
 
                 function handle_input(player_id, input, state)
-                    local dot = state.dot
-                    dot.x = math.max(0, math.min(GRID - 1, dot.x + (input.move_x or 0)))
-                    dot.y = math.max(0, math.min(GRID - 1, dot.y + (input.move_y or 0)))
+                    local fighter = state.fighter
+                    fighter.x = math.max(0, math.min(ARENA - 1, fighter.x + (input.move_x or 0)))
+                    fighter.y = math.max(0, math.min(ARENA - 1, fighter.y + (input.move_y or 0)))
 
-                    if dot.x == state.target.x and dot.y == state.target.y then
+                    if fighter.x == state.target.x and fighter.y == state.target.y then
                         state.scores[player_id] = state.scores[player_id] + 1
-                        state.target = { x = math.random(0, GRID - 1), y = math.random(0, GRID - 1) }
+                        state.target = { x = math.random(0, ARENA - 1), y = math.random(0, ARENA - 1) }
                     end
                     return state
                 end
@@ -137,7 +137,7 @@ render(Bindings) ->
             {p, [], [
                 ~"At 10 ticks per second (the match default), ",
                 {code, [], [~"MATCH_TICKS = 300"]},
-                ~" ends the match after 30 seconds. Change the condition to whatever ends your game: a score cap, one player left, a captured flag."
+                ~" ends the round after 30 seconds. Change the condition to whatever ends your game: a score cap, one fighter left, a captured flag."
             ]},
 
             {details, [], [
@@ -163,7 +163,7 @@ render(Bindings) ->
 
             {h2, [], [~"Cloud and self-hosted are identical here"]},
             {p, [], [
-                ~"Ending a match is pure game logic. It runs the same whether you deploy to Asobi Cloud with ",
+                ~"Ending an arena round is pure game logic. It runs the same whether you deploy to Asobi Cloud with ",
                 {code, [], [~"asobi deploy"]},
                 ~" or run your own release of asobi + asobi_lua. There is no config, secret, or database difference for this step. Edit ",
                 {code, [], [~"match.lua"]},
@@ -188,7 +188,7 @@ render(Bindings) ->
                 {a, [{href, ~"/docs/learn/match-run"}, az_navigate], [~"Run a match"]},
                 ~": register a handler for the ",
                 {code, [], [~"match.finished"]},
-                ~" event before the match ends. See ",
+                ~" event before the round ends. See ",
                 {a, [{href, ~"/docs/protocols/websocket"}, az_navigate], [
                     ~"WebSocket protocol - match.finished"
                 ]},
@@ -197,11 +197,11 @@ render(Bindings) ->
 
             checkpoint([
                 {p, [], [
-                    ~"With two clients still joined to the same match from the previous step:"
+                    ~"With two clients still joined to the same round from the previous step:"
                 ]},
                 {ol, [], [
                     {li, [], [
-                        ~"Let the match run to ",
+                        ~"Let the round run to ",
                         {code, [], [~"MATCH_TICKS"]},
                         ~" (or lower the constant to end it sooner)."
                     ]},
@@ -239,7 +239,7 @@ render(Bindings) ->
             nextstep(
                 ~"/docs/learn/world-create",
                 ~"Create a world",
-                ~"Matches are ephemeral - they start, run, and finish. Next you meet worlds: persistent shared spaces that outlive any single session."
+                ~"Arena rounds are ephemeral - they start, run, and finish. Next you meet worlds: persistent arenas that outlive any single session."
             )
         ]}
     ).

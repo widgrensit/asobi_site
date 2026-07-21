@@ -27,7 +27,24 @@ render(Bindings) ->
             ]},
 
             {p, [], [
-                ~"You built a backend, one concept at a time. You pushed a Lua bundle, connected a client and proved it talked, resolved a guest identity that survives a restart, stored and re-read a value, ran a match (join, input, server-moved dot, broadcast state, finish), and ran a world (join, tick deltas, finish). That is the complete server-authoritative loop: the client sends intent, the server decides, the server broadcasts state. Nothing below changes that rule."
+                ~"You have built the movement core of the Arena Shooter sample: a top-down arena where the server moves your fighter and every client sees it move. Play the full sample - movement plus shooting, bots, boons, modifier voting, and a kills leaderboard - on the ",
+                {a, [{href, ~"/docs/samples"}, az_navigate], [~"samples page"]},
+                ~"."
+            ]},
+            {p, [], [
+                ~"The full sample layers four features on top of exactly the loop you wrote, each on its own public reference door: ",
+                {a, [{href, ~"/docs/matchmaking"}, az_navigate], [~"matchmaking"]},
+                ~" fills empty arena slots and groups fighters into rounds, ",
+                {a, [{href, ~"/docs/lua/bots"}, az_navigate], [~"bots"]},
+                ~" take the slots no human filled, ",
+                {a, [{href, ~"/docs/voting"}, az_navigate], [~"voting"]},
+                ~" runs the between-rounds modifier pick, and ",
+                {a, [{href, ~"/docs/leaderboards"}, az_navigate], [~"leaderboards"]},
+                ~" tracks kills across the arena. Shooting and boons are ordinary bundle logic on the same server-authoritative loop - client intent in, server-decided state out."
+            ]},
+
+            {p, [], [
+                ~"You built a backend, one concept at a time. You pushed a Lua bundle, connected a client and proved it talked, resolved a guest identity that survives a restart, stored and re-read a value, ran an arena round (join, input, server-moved fighter, broadcast state, finish), and ran a persistent arena (join, tick deltas, finish). That is the complete server-authoritative loop: the client sends intent, the server decides, the server broadcasts state. Nothing below changes that rule."
             ]},
             {p, [], [
                 ~"The track stops here on purpose. The rest of Asobi is not a longer tutorial - it is a set of features you switch on when you need them, each documented in its own reference guide. You already know how to read them: every one is the same \"client sends a frame, server decides, server pushes state\" shape you have been writing all along."

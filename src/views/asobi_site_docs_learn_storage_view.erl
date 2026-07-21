@@ -27,7 +27,7 @@ render(Bindings) ->
                 ~"persist a value from your Lua game, restart the server, and read it back - without writing a line of SQL."
             ]},
             {p, [], [
-                ~"Your grid dot moves while a match runs, but the moment the server stops that state is gone. This step makes it survive. You will not maintain a database to do it."
+                ~"Your fighter moves while a match runs, but the moment the server stops that state is gone. This step makes it survive. You will not maintain a database to do it."
             ]},
 
             {h2, [], [~"The mental model"]},
@@ -42,7 +42,7 @@ render(Bindings) ->
                 ]},
                 {li, [], [
                     {strong, [], [~"Shared"]},
-                    ~" - one global value the whole game reads and writes (the dot's last resting position, a server-wide counter)."
+                    ~" - one global value the whole game reads and writes (the fighter's last resting position, a server-wide counter)."
                 ]}
             ]},
             {p, [], [
@@ -62,7 +62,7 @@ game.storage.player_get(player_id, collection, key)         -- read per-player
             {p, [], [
                 {code, [], [~"collection"]},
                 ~" is a namespace you pick (e.g. ",
-                {code, [], [~"\"grid\""]},
+                {code, [], [~"\"arena\""]},
                 ~"); ",
                 {code, [], [~"key"]},
                 ~" is a string; ",
@@ -79,9 +79,9 @@ game.storage.player_get(player_id, collection, key)         -- read per-player
                 ~" table (step 8); if you want it to persist, write it to storage."
             ]},
 
-            {h2, [], [~"Persist the dot"]},
+            {h2, [], [~"Persist the fighter"]},
             {p, [], [
-                ~"Restore the dot when a match starts, and save it as it moves. In ",
+                ~"Restore the fighter when a match starts, and save it as it moves. In ",
                 {code, [], [~"match.lua"]},
                 ~":"
             ]},
@@ -91,25 +91,25 @@ game.storage.player_get(player_id, collection, key)         -- read per-player
 local W, H = 16, 16
 
 function init(config)
-  local saved = game.storage.get("grid", "dot")
+  local saved = game.storage.get("arena", "fighter")
   return {
-    dot = saved or { x = 0, y = 0 }
+    fighter = saved or { x = 0, y = 0 }
   }
 end
 
 function handle_input(player_id, input, state)
-  local d = state.dot
-  d.x = math.max(0, math.min(W - 1, d.x + (input.move_x or 0)))
-  d.y = math.max(0, math.min(H - 1, d.y + (input.move_y or 0)))
+  local f = state.fighter
+  f.x = math.max(0, math.min(W - 1, f.x + (input.move_x or 0)))
+  f.y = math.max(0, math.min(H - 1, f.y + (input.move_y or 0)))
 
-  local moves = game.storage.player_get(player_id, "grid", "moves") or 0
-  game.storage.player_set(player_id, "grid", "moves", moves + 1)
+  local moves = game.storage.player_get(player_id, "arena", "moves") or 0
+  game.storage.player_set(player_id, "arena", "moves", moves + 1)
 
   return state
 end
 
 function tick(state)
-  game.storage.set("grid", "dot", state.dot)
+  game.storage.set("arena", "fighter", state.fighter)
   return state
 end
 """
@@ -195,7 +195,7 @@ ASOBI_DB_PASSWORD=postgres
                 ]},
                 {ol, [], [
                     {li, [], [
-                        ~"Join a match and move the dot a few times so ",
+                        ~"Join a match and move the fighter a few times so ",
                         {code, [], [~"tick"]},
                         ~" writes it."
                     ]},
@@ -220,15 +220,15 @@ ASOBI_DB_PASSWORD=postgres
                             ~"lua",
                             ~"""
 function init(config)
-  local saved = game.storage.get("grid", "dot")
-  print("restored dot:", saved and saved.x, saved and saved.y)
-  return { dot = saved or { x = 0, y = 0 } }
+  local saved = game.storage.get("arena", "fighter")
+  print("restored fighter:", saved and saved.x, saved and saved.y)
+  return { fighter = saved or { x = 0, y = 0 } }
 end
 """
                         )
                     ]},
                     {li, [], [
-                        ~"Start a fresh match. The log shows the dot's last position from ",
+                        ~"Start a fresh match. The log shows the fighter's last position from ",
                         {strong, [], [~"before"]},
                         ~" the restart, not ",
                         {code, [], [~"0, 0"]},
@@ -237,7 +237,7 @@ end
                 ]},
                 {p, [], [
                     ~"Same experiment for per-player: ",
-                    {code, [], [~"print(game.storage.player_get(player_id, \"grid\", \"moves\"))"]},
+                    {code, [], [~"print(game.storage.player_get(player_id, \"arena\", \"moves\"))"]},
                     ~" should show the move count carried over."
                 ]},
                 {p, [], [
