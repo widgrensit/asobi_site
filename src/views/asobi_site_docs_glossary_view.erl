@@ -32,8 +32,9 @@ OTP behaviours. This is the library underneath everything.</p>
 library with a <a href="https://github.com/rvirding/luerl">Luerl</a> VM so you can
 write game logic in Lua without knowing Erlang. Ships as a Docker image at
 <code>ghcr.io/widgrensit/asobi_lua</code>. Most people start here.</p>
-<p><strong>asobi_arena_lua</strong> — the flagship end-to-end Lua example. Read it to see
-a full game, not a snippet.</p>
+<p><strong>Arena Shooter</strong> — the flagship end-to-end sample: a full multiplayer game
+(server-authoritative movement and combat, matchmaking with bots, boons,
+round voting, a leaderboard), not a snippet.</p>
 <h2 id="client-sdks" tabindex="-1">Client SDKs</h2>
 <p><strong>asobi-godot, asobi-defold, asobi-unity, asobi-unreal, asobi-js,
 asobi-dart, flame_asobi</strong> — one per engine, all talking to asobi over
