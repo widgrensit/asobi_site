@@ -456,6 +456,11 @@ self.client = asobi.create("pong-prod.acme.asobi.dev", 443, true)
                 {li, [], [
                     {a, [{href, ~"/docs/self-host"}, az_navigate], [~"Self-host"]},
                     ~" - run the same engine on your own infrastructure."
+                ]},
+                {li, [], [
+                    {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
+                    ~" - questions, or want to try Cloud before paying? ",
+                    ~"Ping us and we'll set you up with an environment."
                 ]}
             ]},
 

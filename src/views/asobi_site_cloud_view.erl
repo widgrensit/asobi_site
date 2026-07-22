@@ -173,16 +173,27 @@ render(Bindings) ->
                         ~" CLI. New to Asobi? The quick start walks you through it end to end."
                     ]},
                     {'div', [{class, ~"beta-cta"}], [
-                        {a,
-                            [
-                                {href, ~"https://console.asobi.dev"},
-                                {class, ~"btn btn-primary btn-lg"}
-                            ],
-                            [~"Create your environment \x{2192}"]},
+                        {'div', [{class, ~"beta-cta-actions"}], [
+                            {a,
+                                [
+                                    {href, ~"https://console.asobi.dev"},
+                                    {class, ~"btn btn-primary btn-lg"}
+                                ],
+                                [~"Create your environment \x{2192}"]},
+                            {a,
+                                [
+                                    {href, ~"https://discord.gg/vYSfYYyXpu"},
+                                    {class, ~"btn btn-secondary btn-lg"}
+                                ],
+                                [~"Or ask us on Discord"]}
+                        ]},
                         {p, [{class, ~"beta-cta-note"}], [
                             ~"Then follow the ",
                             {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"quick start"]},
-                            ~" to deploy your first game."
+                            ~" to deploy your first game. Want to try Cloud before ",
+                            ~"paying? Ping us on ",
+                            {a, [{href, ~"https://discord.gg/vYSfYYyXpu"}], [~"Discord"]},
+                            ~" and we\x{2019}ll set you up with an environment."
                         ]}
                     ]}
                 ]}
