@@ -117,6 +117,15 @@ render(Bindings) ->
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Switching and data egress"]},
+                    {p, [], [
+                        ~"You can export your game data at any time while subscribed and during the 30-day window after termination, and we charge no switching or egress fees. For customers in the EU, the EU Data Act (Regulation (EU) 2023/2854) provides additional switching rights; contact ",
+                        {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
+                        ~" to exercise them. If you self-host the open-source library instead, your data never passes through us at all."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Disclaimer and liability"]},
                     {p, [], [
                         ~"The service is provided \"as is\", without warranties beyond those that cannot be excluded. To the extent permitted by law, neither party is liable for indirect or consequential loss, and our total liability under these terms is capped at the fees you paid us in the 12 months before the claim arose. Nothing in these terms limits liability that cannot be limited under applicable law."

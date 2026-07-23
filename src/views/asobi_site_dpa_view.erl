@@ -15,26 +15,19 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Data Processing Agreement"]},
                     {p, [], [
-                        ~"A DPA covers us acting as a ",
-                        {em, [], [~"processor"]},
-                        ~" for your player/user data. This page summarises what the Asobi Cloud DPA will contain; the marketing site you are reading now doesn't process your user data and doesn't need a DPA."
+                        ~"Last updated: 23 July 2026. This DPA forms part of the ",
+                        {a, [{href, ~"/cloud-terms"}], [~"Asobi Cloud Terms of Service"]},
+                        ~" and applies automatically when you use Asobi Cloud. You (the customer) are the controller of your players' personal data; Widgrensit AB, Sweden, is the processor. If you need a countersigned copy, email ",
+                        {a, [{href, ~"mailto:dpa@asobi.dev"}], [~"dpa@asobi.dev"]},
+                        ~"."
                     ]}
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"When this applies"]},
+                    {h2, [], [~"Scope and duration"]},
                     {p, [], [
-                        ~"Only when you host your game on ",
-                        {strong, [], [~"Asobi Cloud"]},
-                        ~" (currently in closed beta). At that point you are the controller of your players' personal data; Widgrensit AB is the processor, handling storage and real-time traffic on your behalf."
+                        ~"We process player personal data solely to run your game backend, for as long as your subscription lasts plus the wind-down period below. Categories:"
                     ]},
-                    {p, [], [
-                        ~"If you self-host the open-source Asobi library, you remain the sole controller and processor - no DPA is needed with us because we never see your data."
-                    ]}
-                ]},
-
-                {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Scope"]},
                     {ul, [], [
                         {li, [], [~"Player accounts, sessions, and identifiers."]},
                         {li, [], [~"Match state, chat, voting, and presence data."]},
@@ -42,13 +35,25 @@ render(Bindings) ->
                             ~"Wallet / inventory / IAP receipt metadata (not payment card data - IAP is via platform stores; no card data touches Asobi)."
                         ]},
                         {li, [], [~"Aggregated telemetry we need to run the service."]}
+                    ]},
+                    {p, [], [
+                        ~"Your own account and billing data is not covered here: for it we (and Paddle, as merchant of record) act as independent controllers - see the ",
+                        {a, [{href, ~"/privacy"}], [~"privacy policy"]},
+                        ~"."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Instructions"]},
+                    {p, [], [
+                        ~"We process player data only on your documented instructions - operating the service as configured by you is the standing instruction - and we tell you if an instruction looks unlawful. Personnel with access are bound by confidentiality."
                     ]}
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Sub-processors"]},
                     {p, [], [
-                        ~"EU-only, minimal list. Any addition will be notified in advance with an objection window."
+                        ~"You authorise the sub-processors below. Any addition will be notified in advance with an objection window."
                     ]},
                     {ul, [], [
                         {li, [], [
@@ -85,8 +90,18 @@ render(Bindings) ->
                             ~"Erlang/OTP process isolation - one crashed match cannot read another match's state."
                         ]},
                         {li, [], [
-                            ~"Breach notification: within 72 hours of discovery, per GDPR Art. 33."
+                            ~"Personal data is kept out of operational logs by design; log streams have bounded retention."
+                        ]},
+                        {li, [], [
+                            ~"Breach notification: without undue delay and within 72 hours of discovery, per GDPR Art. 33."
                         ]}
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Assistance and audits"]},
+                    {p, [], [
+                        ~"We assist you with data-subject requests (export and erasure of a player's data on your instruction) and with your GDPR Art. 32-36 obligations. We make available the information needed to demonstrate compliance and allow audits, normally satisfied by documentation; on-site audits are by arrangement, at your cost, no more than annually unless a breach occurred."
                     ]}
                 ]},
 
@@ -110,15 +125,6 @@ render(Bindings) ->
                             ~"Decision 2021/914"
                         ]},
                         ~"."
-                    ]}
-                ]},
-
-                {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Request a copy of the draft DPA"]},
-                    {p, [], [
-                        ~"Beta participants and evaluators can email ",
-                        {a, [{href, ~"mailto:dpa@asobi.dev"}], [~"dpa@asobi.dev"]},
-                        ~". The finalised, countersignable DPA will publish here when Asobi Cloud enters general availability."
                     ]}
                 ]}
             ]}

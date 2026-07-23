@@ -22,7 +22,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"First payment"]},
                     {p, [], [
-                        ~"If Asobi Cloud isn't for you, we refund your first subscription payment in full when you ask within 14 days of it - no questions asked."
+                        ~"If Asobi Cloud isn't for you, we refund your first subscription payment in full when you ask within 14 days of it - no questions asked. This applies once per account, to the first payment for your first environment, whatever its size."
                     ]}
                 ]},
 
