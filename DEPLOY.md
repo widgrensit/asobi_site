@@ -1,6 +1,33 @@
-# Deploying asobi_site to Clever Cloud
+# Deploying asobi_site
 
 The site is a Nova Erlang release (server-rendered, no Arizona) packaged as a Docker image.
+
+**Target setup: Hetzner k3s** (same cluster as asobi_saas) — see the next section. The Clever Cloud sections below describe the legacy setup and stay valid until cutover; after teardown they can be deleted.
+
+## Hetzner k3s
+
+Manifests live in `deploy/k8s/asobi-site.yaml`: Deployment (GHCR `:latest`, non-root uid 999, `/heartbeat` probes), Service, and a Traefik Ingress for `asobi.dev` + `www.asobi.dev` with cert-manager TLS (`letsencrypt-prod`). The image is the GHCR one built by `docker-publish.yml` on every push to `main` — unlike Clever there is no source build.
+
+### Cutover (one-time)
+
+1. Merge this branch so GHCR has the non-root image (`docker-publish.yml` rebuilds on merge).
+2. `kubectl --kubeconfig ~/.kube/asobi.yaml apply -f deploy/k8s/asobi-site.yaml`
+3. Verify the pod directly, before touching DNS:
+   `kubectl -n asobi port-forward deploy/asobi-site 18080:8080` then `curl -H 'Host: asobi.dev' http://localhost:18080/heartbeat`
+4. At deSEC, point `asobi.dev` (A/AAAA) and `www` at the cluster ingress IP (same records as `demo.asobi.dev`). Lower TTLs beforehand if you want a fast rollback window. The cert-manager HTTP-01 challenge completes only after DNS points here; expect a few minutes of cert warning on the new host, or pre-stage with a temporary hostname first.
+5. Watch `kubectl -n asobi get certificate asobi-site-tls` until Ready, then spot-check `https://asobi.dev` and `https://www.asobi.dev`.
+
+Rollback: repoint DNS at Clever (records unchanged there) — nothing on Clever is removed by the steps above.
+
+### Teardown (after a comfortable soak)
+
+1. Delete the Clever application (stops billing).
+2. Remove the Clever DNS instructions' leftovers at deSEC if any (ALIAS/CNAME targets).
+3. Delete the Clever sections from this file.
+
+### Redeploying
+
+Push to `main` → GHCR image updates → `kubectl -n asobi rollout restart deploy/asobi-site`. (Same gotcha as asobi_saas: merging does not deploy by itself.)
 
 **Clever Cloud source-builds the multi-stage `Dockerfile` from the repo** on each deploy: it compiles the release in the `erlang:28` builder stage and copies it into a slim runtime image. The `Dockerfile` must `COPY include` (the views' shared `asobi_site_view.hrl` lives there) or the release build fails with "can't find include file".
 
