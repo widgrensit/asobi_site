@@ -55,9 +55,15 @@ render(Bindings) ->
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Asobi Cloud beta"]},
+                    {h2, [], [~"Asobi Cloud"]},
                     {p, [], [
-                        ~"Asobi Cloud is in closed beta. Signing up via the /cloud form puts you on a waitlist; it does not create a contract. Beta participants are covered by a separate beta agreement communicated at onboarding, which will supersede these general terms for the beta relationship."
+                        ~"Use of the hosted service is governed by the ",
+                        {a, [{href, ~"/cloud-terms"}], [~"Asobi Cloud Terms of Service"]},
+                        ~" together with the ",
+                        {a, [{href, ~"/dpa"}], [~"DPA"]},
+                        ~" and the ",
+                        {a, [{href, ~"/refunds"}], [~"refund policy"]},
+                        ~" - not by these website terms."
                     ]}
                 ]},
 
