@@ -11,7 +11,7 @@ Manifests live in `deploy/k8s/asobi-site.yaml`: Deployment (GHCR `:latest`, non-
 ### Cutover (one-time)
 
 1. Merge this branch so GHCR has the non-root image (`docker-publish.yml` rebuilds on merge).
-2. `kubectl --kubeconfig ~/.kube/asobi.yaml apply -f deploy/k8s/asobi-site.yaml`
+2. `kubectl --kubeconfig ~/.kube/asobi.yaml apply -f deploy/k8s/` (Deployment/Service/Ingress + the NetworkPolicies in `asobi-site-policy.yaml` - the site pod accepts traffic only from traefik and can reach only DNS)
 3. Verify the pod directly, before touching DNS:
    `kubectl -n asobi port-forward deploy/asobi-site 18080:8080` then `curl -H 'Host: asobi.dev' http://localhost:18080/heartbeat`
 4. At deSEC, point `asobi.dev` (A/AAAA) and `www` at the cluster ingress IP (same records as `demo.asobi.dev`). Lower TTLs beforehand if you want a fast rollback window. The cert-manager HTTP-01 challenge completes only after DNS points here; expect a few minutes of cert warning on the new host, or pre-stage with a temporary hostname first.
