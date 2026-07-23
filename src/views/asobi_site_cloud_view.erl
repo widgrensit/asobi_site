@@ -29,7 +29,8 @@ render(Bindings) ->
                     {p, [{class, ~"hero-subtitle"}], [
                         ~"Managed Asobi, hosted in the EU. ",
                         ~"Open-source core so you can self-host the day we disappoint you. ",
-                        ~"Create your environment and deploy in minutes."
+                        ~"Create your environment and deploy in minutes. ",
+                        ~"Invite-only for now - an invite is a Discord message away."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
                         ~"Hathora shut down on 5 May 2026. Stormgate, Splitgate 2 and ",
@@ -167,8 +168,10 @@ render(Bindings) ->
                         ~"?"
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
-                        ~"Sign up on the console, create an environment, and deploy your Lua ",
-                        ~"with the ",
+                        ~"Asobi Cloud is invite-only while we onboard each studio personally - ",
+                        ~"ask on Discord and we'll set you up, usually the same day. ",
+                        ~"We aim to open signup more widely toward the end of 2026. ",
+                        ~"Already invited? Create an environment and deploy your Lua with the ",
                         {code, [], [~"asobi"]},
                         ~" CLI. New to Asobi? The quick start walks you through it end to end."
                     ]},
