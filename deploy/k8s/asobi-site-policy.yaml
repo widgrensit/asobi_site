@@ -1,0 +1,47 @@
+# Containment for the public marketing site pod, which shares the cluster with
+# the asobi_saas control plane and tenant engines. The site is the most exposed
+# and least privileged workload on the node - these policies make that lack of
+# privilege network-enforced, mirroring asobi_saas/deploy/k8s/asobi-envs-policy.yaml.
+# The site pod serves static-config Nova pages: it needs ingress from traefik
+# and DNS, nothing else. A compromised site pod cannot reach the console, the
+# CNPG pooler, or any env pod.
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: asobi-site-ingress
+  namespace: asobi
+spec:
+  podSelector:
+    matchLabels:
+      app: asobi-site
+  policyTypes: ["Ingress"]
+  ingress:
+    - from:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: TCP
+          port: 8080
+---
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: asobi-site-egress
+  namespace: asobi
+spec:
+  podSelector:
+    matchLabels:
+      app: asobi-site
+  policyTypes: ["Egress"]
+  egress:
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
