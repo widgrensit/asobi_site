@@ -222,7 +222,7 @@ code(Lang, Body) ->
 %% sys.config with {asobi_site, [{demo_backend_host, ~"demo.asobi.dev"}]} to
 %% repoint the demo (e.g. to an asobi_saas-provisioned env) without code changes.
 backend_host() ->
-    application:get_env(asobi_site, demo_backend_host, ~"play.asobi.dev").
+    application:get_env(asobi_site, demo_backend_host, ~"asobi-demo-live3.asobi-studio.asobi.dev").
 
 %% Host of the showcase backend the Live Patch demo connects to. Defaults to the
 %% shared showcase host; override in sys.config to point at a dedicated
