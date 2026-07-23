@@ -105,6 +105,8 @@ routes(_Environment) ->
                 page(~"/privacy", asobi_site_privacy_view, none),
                 page(~"/terms", asobi_site_terms_view, none),
                 page(~"/dpa", asobi_site_dpa_view, none),
+                page(~"/cloud-terms", asobi_site_cloud_terms_view, none),
+                page(~"/refunds", asobi_site_refunds_view, none),
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
             ]

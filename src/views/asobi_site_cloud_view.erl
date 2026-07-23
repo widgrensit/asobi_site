@@ -29,7 +29,8 @@ render(Bindings) ->
                     {p, [{class, ~"hero-subtitle"}], [
                         ~"Managed Asobi, hosted in the EU. ",
                         ~"Open-source core so you can self-host the day we disappoint you. ",
-                        ~"Create your environment and deploy in minutes."
+                        ~"Create your environment and deploy in minutes. ",
+                        ~"Invite-only for now - an invite is a Discord message away."
                     ]},
                     {p, [{class, ~"hero-notice"}], [
                         ~"Hathora shut down on 5 May 2026. Stormgate, Splitgate 2 and ",
@@ -60,8 +61,9 @@ render(Bindings) ->
                         {em, [], [~"EU-washed."]}
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
-                        ~"Everything you run on Asobi Cloud stays on French-sovereign ",
-                        ~"infrastructure. No US sub-processors. No CLOUD Act exposure. ",
+                        ~"Everything you run on Asobi Cloud stays on EU infrastructure - ",
+                        ~"no US cloud provider underneath your game. ",
+                        ~"EU-only infrastructure sub-processors, published in the DPA. ",
                         ~"DPA ready from day one."
                     ]},
                     {'div', [{class, ~"feature-grid"}], [
@@ -74,10 +76,12 @@ render(Bindings) ->
                             ]}
                         ]},
                         {'div', [{class, ~"feature-card"}], [
-                            {h3, [], [~"French-sovereign by default"]},
+                            {h3, [], [~"EU-sovereign by default"]},
                             {p, [], [
-                                ~"Hosted on Scaleway, a French cloud provider, in EU regions. ",
-                                ~"Explicit CLOUD Act protection in contract."
+                                ~"Hosted on Hetzner in Germany - a European provider on ",
+                                ~"European soil. The full sub-processor list is published in the ",
+                                {a, [{href, ~"/dpa"}], [~"DPA"]},
+                                ~", and it stays EU-only."
                             ]}
                         ]},
                         {'div', [{class, ~"feature-card"}], [
@@ -167,8 +171,10 @@ render(Bindings) ->
                         ~"?"
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
-                        ~"Sign up on the console, create an environment, and deploy your Lua ",
-                        ~"with the ",
+                        ~"Asobi Cloud is invite-only while we onboard each studio personally - ",
+                        ~"ask on Discord and we'll set you up, usually the same day. ",
+                        ~"We aim to open signup more widely toward the end of 2026. ",
+                        ~"Already invited? Create an environment and deploy your Lua with the ",
                         {code, [], [~"asobi"]},
                         ~" CLI. New to Asobi? The quick start walks you through it end to end."
                     ]},
