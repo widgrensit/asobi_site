@@ -61,8 +61,9 @@ render(Bindings) ->
                         {em, [], [~"EU-washed."]}
                     ]},
                     {p, [{class, ~"section-subtitle"}], [
-                        ~"Everything you run on Asobi Cloud stays on French-sovereign ",
-                        ~"infrastructure. No US sub-processors. No CLOUD Act exposure. ",
+                        ~"Everything you run on Asobi Cloud stays on EU infrastructure - ",
+                        ~"no US cloud provider underneath your game. ",
+                        ~"EU-only infrastructure sub-processors, published in the DPA. ",
                         ~"DPA ready from day one."
                     ]},
                     {'div', [{class, ~"feature-grid"}], [
@@ -75,10 +76,12 @@ render(Bindings) ->
                             ]}
                         ]},
                         {'div', [{class, ~"feature-card"}], [
-                            {h3, [], [~"French-sovereign by default"]},
+                            {h3, [], [~"EU-sovereign by default"]},
                             {p, [], [
-                                ~"Hosted on Scaleway, a French cloud provider, in EU regions. ",
-                                ~"Explicit CLOUD Act protection in contract."
+                                ~"Hosted on Hetzner in Germany - a European provider on ",
+                                ~"European soil. The full sub-processor list is published in the ",
+                                {a, [{href, ~"/dpa"}], [~"DPA"]},
+                                ~", and it stays EU-only."
                             ]}
                         ]},
                         {'div', [{class, ~"feature-card"}], [
