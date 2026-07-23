@@ -1,0 +1,96 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: asobi-site
+  namespace: asobi
+  labels:
+    app: asobi-site
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: asobi-site
+  template:
+    metadata:
+      labels:
+        app: asobi-site
+    spec:
+      containers:
+        - name: asobi-site
+          image: ghcr.io/widgrensit/asobi_site:latest
+          imagePullPolicy: Always
+          ports:
+            - name: http
+              containerPort: 8080
+          readinessProbe:
+            httpGet:
+              path: /heartbeat
+              port: http
+            initialDelaySeconds: 5
+            periodSeconds: 10
+          livenessProbe:
+            httpGet:
+              path: /heartbeat
+              port: http
+            initialDelaySeconds: 15
+            periodSeconds: 20
+          resources:
+            requests:
+              cpu: 50m
+              memory: 128Mi
+            limits:
+              memory: 512Mi
+          securityContext:
+            allowPrivilegeEscalation: false
+            readOnlyRootFilesystem: false
+            runAsNonRoot: true
+            runAsUser: 999
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: asobi-site
+  namespace: asobi
+spec:
+  selector:
+    app: asobi-site
+  ports:
+    - name: http
+      port: 8080
+      targetPort: http
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: asobi-site
+  namespace: asobi
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: traefik
+  tls:
+    - hosts:
+        - asobi.dev
+        - www.asobi.dev
+      secretName: asobi-site-tls
+  rules:
+    - host: asobi.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: asobi-site
+                port:
+                  number: 8080
+    - host: www.asobi.dev
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: asobi-site
+                port:
+                  number: 8080

@@ -25,7 +25,13 @@ RUN apt-get update && \
 
 WORKDIR /app
 
-COPY --from=builder /app/_build/prod/rel/asobi_site ./
+# uid 999 matches the runAsUser in deploy/k8s/asobi-site.yaml (kubelet
+# rejects a named user under runAsNonRoot)
+RUN groupadd -g 999 asobi && useradd -u 999 -g asobi -d /app asobi
+
+COPY --from=builder --chown=asobi:asobi /app/_build/prod/rel/asobi_site ./
+
+USER asobi
 
 ENV PORT=8080
 EXPOSE 8080
