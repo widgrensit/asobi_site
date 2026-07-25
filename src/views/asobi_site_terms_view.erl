@@ -26,7 +26,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Provider"]},
                     {p, [], [
-                        ~"The site is operated by Widgrensit AB, Sweden. Contact: ",
+                        ~"The site is operated by Widgrens IT AB, org.nr 559241-2752, [REGISTERED STREET ADDRESS], Uppsala, Sweden. VAT no. SE559241275201. Contact: ",
                         {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
                         ~"."
                     ]}
@@ -77,7 +77,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Liability"]},
                     {p, [], [
-                        ~"To the extent permitted by law, Widgrensit AB is not liable for indirect, incidental, consequential, or punitive damages arising from use of the site. Our total liability for direct damages, if any, is limited to 100 EUR."
+                        ~"To the extent permitted by law, Widgrens IT AB is not liable for indirect, incidental, consequential, or punitive damages arising from use of the site. Our total liability for direct damages, if any, is limited to 100 EUR."
                     ]}
                 ]},
 

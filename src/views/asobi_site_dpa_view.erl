@@ -15,9 +15,9 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Data Processing Agreement"]},
                     {p, [], [
-                        ~"Last updated: 23 July 2026. This DPA forms part of the ",
+                        ~"Last updated: 25 July 2026. This DPA forms part of the ",
                         {a, [{href, ~"/cloud-terms"}], [~"Asobi Cloud Terms of Service"]},
-                        ~" and applies automatically when you use Asobi Cloud. You (the customer) are the controller of your players' personal data; Widgrensit AB, Sweden, is the processor. If you need a countersigned copy, email ",
+                        ~" and applies automatically when you use Asobi Cloud. You (the customer) are the controller of your players' personal data; Widgrens IT AB, org.nr 559241-2752, Sweden, is the processor. If you need a countersigned copy, email ",
                         {a, [{href, ~"mailto:dpa@asobi.dev"}], [~"dpa@asobi.dev"]},
                         ~"."
                     ]}
@@ -114,6 +114,13 @@ render(Bindings) ->
                         {li, [], [
                             ~"Account-level: at end of contract, data is returned in a portable format and deleted within 30 days."
                         ]}
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Liability"]},
+                    {p, [], [
+                        ~"Each party is liable towards data subjects as allocated by Article 82 GDPR: we are liable for damage caused by processing only where we have not complied with GDPR obligations specifically directed to processors, or where we have acted outside or contrary to your lawful documented instructions. Between the parties, the liability provisions of the Cloud Terms of Service apply to this DPA, except that neither party's liability is limited towards data subjects where the GDPR does not permit it."
                     ]}
                 ]},
 

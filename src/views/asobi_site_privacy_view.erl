@@ -15,16 +15,18 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Privacy Policy"]},
                     {p, [], [
-                        ~"Last updated: 5 May 2026. This page tells you exactly what ",
+                        ~"Last updated: 25 July 2026. This page tells you exactly what ",
                         {code, [], [~"asobi.dev"]},
-                        ~" collects, why, where the data lives, and what you can ask us to do with it."
+                        ~" and the Asobi Cloud console at ",
+                        {code, [], [~"console.asobi.dev"]},
+                        ~" collect, why, where the data lives, and what you can ask us to do with it."
                     ]}
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Controller"]},
                     {p, [], [
-                        ~"Widgrensit AB, Sweden. Contact: ",
+                        ~"Widgrens IT AB, org.nr 559241-2752, Uppsala, Sweden. Contact: ",
                         {a, [{href, ~"mailto:privacy@asobi.dev"}], [~"privacy@asobi.dev"]},
                         ~"."
                     ]}
@@ -130,13 +132,48 @@ render(Bindings) ->
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
-                    {h2, [], [~"Asobi Cloud"]},
+                    {h2, [], [~"Asobi Cloud console accounts"]},
                     {p, [], [
-                        ~"When Asobi Cloud exits closed beta, a separate privacy policy will cover player data processed ",
-                        {em, [], [~"by game developers using the hosted service"]},
-                        ~". Our role there will be a processor under a ",
+                        ~"If you use the Asobi Cloud console we process, as controller:"
+                    ]},
+                    {ul, [], [
+                        {li, [], [
+                            {strong, [], [~"Account data "]},
+                            ~"- your GitHub username, display name, email address, and avatar, received from GitHub when you sign in (GitHub is your identity provider; we never see your GitHub password). Plus your team membership and role."
+                        ]},
+                        {li, [], [
+                            {strong, [], [~"Contract records "]},
+                            ~"- which terms version you accepted, when, and by whom."
+                        ]},
+                        {li, [], [
+                            {strong, [], [~"Billing state "]},
+                            ~"- your subscription and payment status, received from Paddle. Paddle is the merchant of record and an independent controller of your purchase and payment data (card details never reach us) - see ",
+                            {a, [{href, ~"https://www.paddle.com/legal/privacy"}], [
+                                ~"Paddle's privacy policy"
+                            ]},
+                            ~"."
+                        ]},
+                        {li, [], [
+                            {strong, [], [~"Operational logs "]},
+                            ~"- security-relevant console actions, with bounded retention."
+                        ]}
+                    ]},
+                    {p, [], [
+                        {strong, [], [~"Lawful bases: "]},
+                        ~"performing our contract with you (Art. 6(1)(b) GDPR) for account, contract, and billing data; legal obligations (Art. 6(1)(c), e.g. bookkeeping) for transaction records; and our legitimate interest in securing the service (Art. 6(1)(f)) for logs."
+                    ]},
+                    {p, [], [
+                        {strong, [], [~"Cookies: "]},
+                        ~"the console sets strictly necessary session cookies to keep you signed in - nothing else, no tracking. The marketing site still sets none at all."
+                    ]},
+                    {p, [], [
+                        {strong, [], [~"Retention: "]},
+                        ~"account data for the life of your account plus the 30-day wind-down; records we must keep under Swedish bookkeeping law for 7 years; logs per their bounded retention windows."
+                    ]},
+                    {p, [], [
+                        ~"Your players' personal data is a separate matter: there the game studio is the controller and we are the processor under the ",
                         {a, [{href, ~"/dpa"}, az_navigate], [~"Data Processing Agreement"]},
-                        ~"; this page only covers the marketing site you're reading now."
+                        ~"."
                     ]}
                 ]}
             ]}

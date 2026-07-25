@@ -38,13 +38,15 @@ render(_Bindings) ->
                     {'div', [{class, ~"footer-col"}], [
                         {h4, [], [~"Legal"]},
                         {a, [{href, ~"/terms"}, az_navigate], [~"Terms"]},
+                        {a, [{href, ~"/cloud-terms"}, az_navigate], [~"Cloud Terms"]},
+                        {a, [{href, ~"/refunds"}, az_navigate], [~"Refunds"]},
                         {a, [{href, ~"/privacy"}, az_navigate], [~"Privacy"]},
                         {a, [{href, ~"/dpa"}, az_navigate], [~"DPA"]}
                     ]}
                 ]}
             ]},
             {'div', [{class, ~"footer-bottom"}], [
-                {p, [], [~"Apache 2.0 - Widgrensit AB, Sweden"]}
+                {p, [], [~"Apache 2.0 - Widgrens IT AB, org.nr 559241-2752, Uppsala, Sweden"]}
             ]}
         ]}
     ).
