@@ -196,6 +196,25 @@ device secret is revoked.</li>
 cryptographic RNG, store it in secure device storage, and never log or transmit
 it anywhere but this endpoint. A guest account is only as safe as that secret,
 so it is low-assurance until upgraded.</p>
+<h3 id="managing-the-device-credential" tabindex="-1">Managing the device credential</h3>
+<p>You do not have to generate or store the <code>{device_id, device_secret}</code> pair by
+hand. Every SDK ships a device-credential helper that handles steps 1 and 3 for
+you: it generates the pair with a CSPRNG on first run, persists it in the
+platform's secure/save storage, and re-presents the same pair on later
+launches. Prefer the helper over rolling your own storage.</p>
+<pre><code class="language-lua">-- Create-or-resume with a managed credential: generates and persists on the
+-- first run, reuses it afterwards. No device_id/device_secret handling in your
+-- own code.
+local data, err = asobi.auth.guest_device(client)
+</code></pre>
+<p>The lower-level pieces are exposed too: <code>generate</code> (a fresh in-memory pair),
+<code>load_or_create</code> (load the persisted pair, or make and store one on first run),
+and <code>clear</code> (forget the stored pair). Sign-out keeps the pair on purpose, so the
+same guest resumes on the next launch; after an upgrade the server-side verifier
+is already revoked, so call <code>clear</code> to drop the now-dead local pair.</p>
+<p>Names vary by SDK: <code>guest_device</code> (the snake-case SDKs), <code>guestDevice</code> (Dart and
+JS), <code>GuestDevice</code>/<code>GuestDeviceAsync</code> (Unreal and Unity). See the SDK's README
+for the exact name and the storage location on each platform.</p>
 <h3 id="create-or-resume" tabindex="-1">Create or resume</h3>
 <pre><code class="language-bash">curl -X POST http://localhost:8084/api/v1/auth/guest \
   -H 'Content-Type: application/json' \
