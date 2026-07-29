@@ -46,11 +46,24 @@ groups tickets into matches using a per-mode strategy module.</p>
     "mode": "arena",
     "properties": {"skill": 1200, "region": "eu-west"}
   }
-}</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">{ok, TicketId} = asobi_matchmaker:add(PlayerId, #{mode =&gt; &lt;&lt;"arena"&gt;&gt;, properties =&gt; #{skill =&gt; 1200, region =&gt; &lt;&lt;"eu-west"&gt;&gt;}}).</code></pre></div></div>
+}</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">{ok, TicketId, Meta} = asobi_matchmaker:add(PlayerId, #{mode =&gt; &lt;&lt;"arena"&gt;&gt;, properties =&gt; #{skill =&gt; 1200, region =&gt; &lt;&lt;"eu-west"&gt;&gt;}}).</code></pre></div></div>
+<p>The reply (the <code>matchmaker.queued</code> message over WS, the JSON body over REST)
+carries <code>ticket_id</code>, <code>status: &quot;pending&quot;</code>, and <strong><code>players_needed</code></strong> — the mode's
+<code>match_size</code>, or <code>null</code> if the mode declares none. Show it as &quot;waiting for N
+players&quot; so a queued client isn't staring at silence. The <code>Meta</code> map in the
+Erlang return holds the same <code>players_needed</code>.</p>
 <p>A ticket supports <code>mode</code> and <code>properties</code>. A
 query-language extension (numeric ranges, required keys, automatic skill
 window expansion) is on the roadmap but not shipped — do that filtering
 inside your strategy module instead.</p>
+<p>The matchmaker holds <strong>one live ticket per player per mode</strong>: submitting again
+while already queued returns your existing ticket rather than a second one, so a
+double-tapped &quot;find match&quot; cannot match you with yourself. An unregistered
+<code>mode</code> is rejected with <code>unknown_mode</code>, and a full queue with <code>queue_full</code>.</p>
+<p>If a match cannot start (for example the game's Lua <code>init</code> crashes), the
+matchmaker retries a few times, then sends the queued players a
+<code>matchmaker_failed</code> event with <code>reason: &quot;match_start_failed&quot;</code> rather than leaving
+them queued forever. Handle <code>matchmaker_failed</code> in your client.</p>
 <h2 id="strategies" tabindex="-1">Strategies</h2>
 <p>Strategy is selected per mode via the <code>strategy</code> key in <code>game_modes</code>. Two
 are built in:</p>
@@ -102,10 +115,20 @@ match(Tickets, Config) -&gt;
 <pre><code class="language-erlang">{asobi, [
     {matchmaker, #{
         tick_interval =&gt; 1000,       %% ms between matchmaker ticks
-        max_wait_seconds =&gt; 60       %% max wait before timeout
+        max_wait_seconds =&gt; 60,      %% max wait before timeout
+        max_queue =&gt; 10000           %% max live tickets before add returns queue_full
     }}
 ]}
 </code></pre>
+<p><code>match_size</code>, <code>strategy</code>, and the rest of a mode's shape are read into
+<code>game_modes</code> <strong>once at server boot</strong>. Editing them in a mode script and
+hot-reloading does not change them for the matchmaker — restart the server to
+pick up a new <code>match_size</code>.</p>
+<p><strong>Testing solo:</strong> the matchmaker forms a match only once <code>match_size</code> players
+have queued, so a single client against a <code>match_size = 2</code> mode waits for a
+second. Set <code>match_size = 1</code> to match instantly on your own, or run two clients.
+Do not re-submit the same client to force it — that now returns your existing
+ticket, not a second one.</p>
 <h2 id="playing-with-friends" tabindex="-1">Playing With Friends</h2>
 <blockquote>
 <p>Gathering players before a game starts is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
