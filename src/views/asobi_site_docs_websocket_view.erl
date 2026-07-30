@@ -122,6 +122,18 @@ that ignores it stays open to anyone holding a <code>world_id</code>.</p>
 <p>Send game input to the match server.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.input&quot;, &quot;payload&quot;: {&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 10, &quot;y&quot;: 5}}
 </code></pre>
+<p>Input sent while not in a match or world is dropped. The first drop (at
+most one per 5 seconds per connection) is answered with an error event so
+the client can tell input is going nowhere:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;payload&quot;: {&quot;type&quot;: &quot;match.input&quot;, &quot;reason&quot;: &quot;not_in_match&quot;}}
+</code></pre>
+<h3 id="gameerror-server-push" tabindex="-1"><code>game.error</code> (server push)</h3>
+<p>A Lua callback error, sent to the player whose input triggered it. Only
+emitted when the runtime runs with dev errors enabled
+(<code>ASOBI_DEV_ERRORS=true</code>); production runtimes keep script errors
+server-side.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;game.error&quot;, &quot;payload&quot;: {&quot;callback&quot;: &quot;handle_input&quot;, &quot;script&quot;: &quot;match.lua&quot;, &quot;message&quot;: &quot;bad arithmetic + on nil, 1&quot;}}
+</code></pre>
 <h3 id="matchstate-server-push" tabindex="-1"><code>match.state</code> (server push)</h3>
 <p>Server broadcasts game state updates to all players in the match.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.state&quot;, &quot;payload&quot;: {&quot;players&quot;: {...}, &quot;tick&quot;: 42}}

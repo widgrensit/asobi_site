@@ -38,9 +38,11 @@ script cannot reach them:</p>
 <li><strong>Package machinery:</strong> the entire <code>package</code> library, plus the default
 <code>require</code></li>
 <li><strong>Unstructured logging:</strong> <code>print</code>, <code>eprint</code> — Luerl's defaults bypass
-the structured logger and write straight to BEAM stdout. There is
-currently no in-script logging API; surface diagnostics through game
-state or broadcast events instead.</li>
+the structured logger and write straight to BEAM stdout. Use
+<code>game.log(level, message[, meta])</code> instead: it routes a structured,
+size-bounded line through the host logger behind a rate limit (per
+match/zone plus a node-wide backstop), closing the two holes <code>print</code>
+was removed for. See the Lua scripting guide's &quot;Logging&quot; section.</li>
 </ul>
 <p><code>os.clock</code>, <code>os.date</code>, <code>os.difftime</code>, and <code>os.time</code> remain available so
 games can timestamp.</p>
