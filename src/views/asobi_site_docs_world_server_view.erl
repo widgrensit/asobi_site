@@ -453,6 +453,11 @@ post_tick(_TickN, State) -&gt;
 <td>Zones visible in each direction from player's zone</td>
 </tr>
 <tr>
+<td><code>rehome_margin</code></td>
+<td>0.15</td>
+<td>Fraction of <code>zone_size</code> an entity (player or NPC) must clear past its zone's edge before re-homing to the neighbouring zone (see below)</td>
+</tr>
+<tr>
 <td><code>max_players</code></td>
 <td>500</td>
 <td>Maximum concurrent players per world</td>
@@ -485,6 +490,35 @@ post_tick(_TickN, State) -&gt;
 </tbody>
 </table>
 <p>#&gt; Using a world as a persistent hub is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
+<p>An entity - player or NPC - must clear its zone's edge by <code>rehome_margin</code> (a
+fraction of <code>zone_size</code>) before re-homing to the neighbouring zone, so an
+entity parked on or jittering across a boundary doesn't re-home every tick.
+This means an entity's tracked zone can lag its true position by up to that
+margin near a boundary - an entity in a zone's entity map is not necessarily
+strictly within its rectangle.</p>
+<p><code>game.zone.query_radius</code>/<code>query_rect</code> only search the calling zone's own
+entity map, so this lag has a direction that matters: an area geometrically
+inside zone A's rectangle can be occupied by an entity zone B still owns,
+because it hasn't cleared the margin yet. A query issued from zone A over
+that area misses it entirely. For NPCs this is a live gap, not just a
+terrain-lookup rounding concern - query_radius/query_rect are exactly how
+game code typically finds NPCs near a point, and the margin means that gap
+can persist (an NPC parked just past its zone's edge stays invisible to the
+neighbour's queries indefinitely, not just for the tick it takes to cross).
+Account for this if your NPC AI queries by position near zone edges - a
+terrain lookup or other bounding use should account for the same slack.</p>
+<p>The margin only bounds this slack for positions inside the world rectangle.
+An entity outside it entirely is clamped into the edge zone by <code>pos_to_zone</code>
+and stays owned by that zone at any distance past the edge - validate
+positions in your movement handler if your game trusts the zone rectangle as
+a hard bound. Also note that a band-parked NPC only stays visible to a
+neighbouring zone's <em>subscribers</em> (not its <code>query_radius</code>/<code>query_rect</code>
+callers) while <code>view_radius &gt;= 1</code> keeps that neighbour touched every tick -
+at <code>view_radius = 0</code> the owning zone can idle out and persist the NPC under
+coordinates a player standing metres away never loads.</p>
+<p>See <a href="/docs/configuration">Configuration</a> for the matching <code>rehome</code> rate limit on
+how often a player may re-home at all - NPCs re-home directly without going
+through that limiter, since asobi_zone owns them outright.</p>
 <h2 id="visibility" tabindex="-1">Visibility</h2>
 <p><code>listed</code> and <code>quick_play</code> are independent axes, so a mode can be browsable
 but out of quick-play rotation, or reachable by quick-play while hidden from
@@ -537,6 +571,31 @@ Lua entities default to <code>true</code>.</li>
 <p>At runtime, Lua scripts spawn from a template with
 <code>game.zone.spawn(&quot;goblin&quot;, x, y, {overrides})</code>, where the optional table
 overrides fields from the template's <code>base_state</code>.</p>
+<p>If <code>template_id</code> doesn't match a key returned by <code>spawn_templates</code>, nothing
+spawns: <code>game.zone.spawn</code> has no return value to report the failure. The zone
+logs a <code>zone_spawn_failed</code> warning with the <code>world_id</code> and <code>coords</code>, and
+emits <code>[asobi, error]</code> with <code>kind =&gt; unknown_spawn_template</code>.</p>
+<h3 id="updating-templates-in-an-already-running-zone" tabindex="-1">Updating templates in an already-running zone</h3>
+<p><code>spawn_templates/1</code> is only ever called once, at zone creation - a template
+added later (e.g. via a script hot-reload) never reaches a zone that's
+already running; it stays invisible to that zone until the zone is recreated.</p>
+<p>The optional <code>spawn_templates_hint/1</code> Erlang callback closes this: it runs
+every tick, and returning <code>{changed, NewTemplates}</code> pushes an updated
+template set into the live zone immediately. Return <code>unchanged</code> in the
+common case - this runs on the hot path, so a game module implementing it
+owns the cost of deciding whether anything actually changed (e.g. only doing
+real work right after its own hot-reload check fires), not this callback
+being a place to unconditionally re-derive templates every tick.</p>
+<p><code>NewTemplates</code> <strong>replaces</strong> the zone's whole template set, the same as
+<code>spawn_templates/1</code>'s result does at creation - it is not a delta. Include
+every template that should still be spawnable, not only the ones that
+changed, or the rest silently stop being spawnable.</p>
+<pre><code class="language-erlang">spawn_templates_hint(ZoneState) -&gt;
+    case just_reloaded(ZoneState) of
+        false -&gt; unchanged;
+        true -&gt; {changed, current_templates(ZoneState)}
+    end.
+</code></pre>
 <pre><code class="language-lua">function spawn_templates(config)
     return {
         goblin = {

@@ -45,8 +45,11 @@ list to your bot script:</p>
 match_size = 4
 max_players = 8
 strategy = &quot;fill&quot;
-bots = { script = &quot;bots/chaser.lua&quot; }
+bots = { script = &quot;bots/chaser.lua&quot;, min_players = 4 }
 </code></pre>
+<p><code>bots.min_players</code> is optional and defaults to <code>match_size</code>. <code>bots.enabled</code>
+is also optional and defaults to <code>true</code> (set it to <code>false</code> to keep the
+table around, e.g. to declare <code>min_players</code>, while disabling bot-fill).</p>
 <pre><code class="language-lua">-- bots/chaser.lua
 names = {&quot;Spark&quot;, &quot;Blitz&quot;, &quot;Volt&quot;, &quot;Neon&quot;, &quot;Pulse&quot;}
 
@@ -57,9 +60,10 @@ end
 <p>The platform reads <code>names</code> from your bot script at runtime. Bot names are
 prefixed with <code>bot_</code> (e.g., <code>bot_Spark</code>).</p>
 <p>The spawner checks the queue every 8 seconds (a fixed interval, not tunable) and
-fills a waiting match with bots up to the mode's <code>min_players</code>. Both settings
-below live in the game mode's <code>bots</code> map — there are no bot environment
-variables.</p>
+fills a waiting match with bots up to the mode's <code>min_players</code>, capped at
+<code>max_players</code> so a small <code>match_size</code>/<code>max_players</code> mode never overshoots into
+a second, bot-only match. Both settings below live in the game mode's <code>bots</code>
+map — there are no bot environment variables.</p>
 <h3 id="erlang-sysconfig" tabindex="-1">Erlang (sys.config)</h3>
 <p>For Erlang OTP projects, configure bots in <code>sys.config</code>:</p>
 <pre><code class="language-erlang">{game_modes, #{

@@ -22,7 +22,7 @@ render(Bindings) ->
         {h1, [], [~"If asobi disappears tomorrow"]},
         {raw,
             ~"""
-<p>This is a one-page runbook for keeping your game alive if Widgrensit AB
+<p>This is a one-page runbook for keeping your game alive if Widgrens IT AB
 (the company behind asobi) vanishes, pivots to AI, gets acquired, or
 otherwise ceases to exist. <strong>We wrote it because you shouldn't have to
 trust us.</strong></p>

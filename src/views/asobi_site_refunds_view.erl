@@ -15,7 +15,16 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Refund Policy"]},
                     {p, [], [
-                        ~"Last updated: 23 July 2026. This policy applies to Asobi Cloud subscriptions. Payments are processed by Paddle as merchant of record; approved refunds are issued by Paddle to your original payment method."
+                        ~"Last updated: 3 August 2026. This policy applies to Asobi Cloud subscriptions. Payments are processed by Paddle as merchant of record; approved refunds are issued by Paddle to your original payment method."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Provider"]},
+                    {p, [], [
+                        ~"Asobi Cloud is operated by Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. VAT no. SE559241275201. Contact: ",
+                        {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
+                        ~"."
                     ]}
                 ]},
 
@@ -36,7 +45,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Billing errors and outages"]},
                     {p, [], [
-                        ~"Duplicate or incorrect charges are refunded in full. If a material outage on our side kept your environment down for an extended period, contact us and we will put it right - typically with a credit or partial refund for the affected period."
+                        ~"Duplicate or incorrect charges are refunded in full. If a fault on our side kept your environment unavailable for more than 24 cumulative hours in a calendar month, contact us and we will put it right - with a credit or partial refund proportionate to the downtime, at minimum. Shorter interruptions (maintenance, deploys) are part of normal operation and not refundable."
                     ]}
                 ]},
 

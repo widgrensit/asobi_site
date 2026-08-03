@@ -92,6 +92,48 @@ to obtain an ID token, then sends it to Asobi for validation.</p>
   &quot;username&quot;: &quot;player1&quot;
 }
 </code></pre>
+<h3 id="error-responses" tabindex="-1">Error Responses</h3>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th><code>error</code></th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>400</code></td>
+<td><code>missing_required_fields</code></td>
+<td><code>provider</code> or <code>token</code> missing</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td><code>invalid_token</code></td>
+<td>Token failed provider validation</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td><code>unsupported_provider</code></td>
+<td><code>provider</code> isn't one of the values below</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td><em>(registration reason)</em></td>
+<td>New-account registration is closed for this provider (<code>asobi_registration:check/1</code>)</td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td><code>already_registering</code></td>
+<td>Two first-sign-ins for the same provider identity raced; retry - the retry logs in to the account the other request created</td>
+</tr>
+<tr>
+<td><code>500</code></td>
+<td><code>registration_failed</code></td>
+<td>Account creation failed for a reason other than the race above (logged server-side)</td>
+</tr>
+</tbody>
+</table>
 <h3 id="supported-providers" tabindex="-1">Supported Providers</h3>
 <table>
 <thead>
@@ -225,7 +267,7 @@ for the exact name and the storage location on each platform.</p>
   &quot;player_id&quot;: &quot;...&quot;,
   &quot;access_token&quot;: &quot;...&quot;,
   &quot;refresh_token&quot;: &quot;...&quot;,
-  &quot;username&quot;: &quot;guest_019f615cbc4a&quot;,
+  &quot;username&quot;: &quot;guest_9c41e0b7a2d5f318&quot;,
   &quot;created&quot;: true,
   &quot;guest&quot;: true
 }

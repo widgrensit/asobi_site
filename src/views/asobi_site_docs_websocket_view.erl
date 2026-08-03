@@ -46,6 +46,45 @@ language, see the realtime section of your <a href="https://asobi.dev/docs">SDK 
 </code></pre>
 <p>The <code>cid</code> field is optional. When provided, the server echoes it back in
 the response so the client can correlate request/response pairs.</p>
+<h2 id="custom-events" tabindex="-1">Custom events</h2>
+<p>The events listed on this page are the ones asobi itself emits. They are not
+the whole <code>type</code> space: a game script owns the leaf name under <code>match.</code> and
+<code>world.</code>, so a client must never switch exhaustively on the list below.</p>
+<p><code>game.broadcast</code> from a match script:</p>
+<pre><code class="language-lua">game.broadcast(&quot;round_start&quot;, { phase = &quot;combat&quot; })
+</code></pre>
+<p>reaches every player in that match as:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.round_start&quot;, &quot;payload&quot;: {&quot;phase&quot;: &quot;combat&quot;}}
+</code></pre>
+<p>The same call from a world script produces <code>world.round_start</code> and reaches
+every player in the world. There is no <code>cid</code> - these are pushes, never
+replies.</p>
+<p>The runtime validates the leaf name before it goes on the wire:</p>
+<ul>
+<li>1 to 64 bytes.</li>
+<li><code>A-Z</code>, <code>a-z</code>, <code>0-9</code>, <code>_</code> and <code>-</code> only. <code>.</code> is excluded, so a script cannot
+mint a deeper <code>world.foo.bar</code> sub-namespace.</li>
+<li>Not one of asobi's own leaf names, otherwise a script could forge a frame
+byte-identical to an authoritative event such as <code>world.tick</code> or
+<code>match.finished</code>. The reserved set is
+<code>asobi_ws_handler:reserved_event_names/0</code>:</li>
+</ul>
+<p>&lt;!-- BEGIN reserved-event-names (verified against asobi_ws_handler:reserved_event_names/0 by asobi_protocol_coverage_tests) --&gt;</p>
+<pre><code>finished            joined              left                list
+matched             matchmaker_expired  matchmaker_failed   phase_changed
+state               terrain             tick                vote_result
+vote_start          vote_tally          vote_vetoed
+</code></pre>
+<p>&lt;!-- END reserved-event-names --&gt;</p>
+<p>The payload is also capped at 64 KiB encoded, the same bound as an inbound
+frame, because it fans out to every player. A payload that cannot be encoded
+as JSON at all is rejected on the same path.</p>
+<p>A broadcast that fails any of these is dropped and logged server-side. The
+client is told nothing, so do not wait for an error frame that will not come.</p>
+<p>Client SDKs handle this open namespace with a generic fallback: any
+<code>match.*</code>/<code>world.*</code> type with no dedicated callback has its prefix stripped
+and is handed to a catch-all match/world event handler. Every official SDK
+has one; a client written from scratch needs one too.</p>
 <h2 id="connection" tabindex="-1">Connection</h2>
 <h3 id="sessionconnect" tabindex="-1"><code>session.connect</code></h3>
 <p>Authenticate the WebSocket connection. Must be the first message sent.</p>
@@ -306,15 +345,23 @@ membership without a per-frame registry lookup.</p>
 <tr>
 <td><code>room:</code></td>
 <td>App-defined group chat</td>
-<td>Members of the group whose id equals the channel id. Not open-join.</td>
+<td>Members of the group whose id is the part of the channel id after <code>room:</code>. Not open-join.</td>
 </tr>
 </tbody>
 </table>
 <p>There is no open-join room policy and no <code>match:</code> scheme. <code>room:</code> is authorised
-as a group membership check: the runtime treats the full channel id as the group
-id, so a player must already belong to a group with that exact id. For pre-game
-lobby chat, gate on world membership with <code>world:&lt;world_id&gt;</code>, or use
+as a group membership check: the runtime strips the <code>room:</code> prefix and looks up
+the remainder as a group id, so <code>room:&lt;group_id&gt;</code> authorises exactly the members
+of <code>&lt;group_id&gt;</code>, not members of a group literally named <code>&quot;room:&lt;group_id&gt;&quot;</code>. For
+pre-game lobby chat, gate on world membership with <code>world:&lt;world_id&gt;</code>, or use
 <code>game.broadcast</code>; see the <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a> guide.</p>
+<p>For a group created with <code>open=true</code>, anyone can join without an invite
+(<code>POST /api/v1/groups/:id/join</code> never rejects with <code>group_closed</code>). Membership
+is still required to read <code>room:&lt;group_id&gt;</code> - joining is what's unrestricted,
+not reading. Once joined, a member sees the group's full retained history (up
+to the last 200 messages, per the <code>history</code> limit below), including messages
+sent before they joined. This is intentional and matches how public channels
+work in Slack/Discord: it is not a bug or a cutoff to add later.</p>
 <p>The worked examples below use a <code>world:</code> channel, which authorises on world
 membership you already hold after <code>world.join</code>.</p>
 <p>A single connection may join at most <strong>32 channels</strong> at once; a 33rd is rejected

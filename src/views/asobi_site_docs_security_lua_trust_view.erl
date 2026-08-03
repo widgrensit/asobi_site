@@ -112,13 +112,13 @@ in those callbacks crashes the child, the parent gen_server receives a
 </tr>
 <tr>
 <td><code>phases/1</code></td>
-<td>world</td>
+<td>match, world</td>
 <td>yes</td>
-<td>2000 ms</td>
+<td>1000-2000 ms</td>
 </tr>
 <tr>
 <td><code>on_phase_*/2</code></td>
-<td>world</td>
+<td>match, world</td>
 <td>yes</td>
 <td>200 ms</td>
 </tr>

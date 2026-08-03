@@ -15,7 +15,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Terms of Service"]},
                     {p, [], [
-                        ~"Last updated: 23 July 2026. These terms cover the use of the ",
+                        ~"Last updated: 3 August 2026. These terms cover the use of the ",
                         {code, [], [~"asobi.dev"]},
                         ~" website. The open-source Asobi library is covered by its licence; the hosted service is covered by the ",
                         {a, [{href, ~"/cloud-terms"}], [~"Asobi Cloud Terms of Service"]},
@@ -26,7 +26,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Provider"]},
                     {p, [], [
-                        ~"The site is operated by Widgrensit AB, Sweden. Contact: ",
+                        ~"The site is operated by Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. VAT no. SE559241275201. Contact: ",
                         {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
                         ~"."
                     ]}
@@ -77,7 +77,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Liability"]},
                     {p, [], [
-                        ~"To the extent permitted by law, Widgrensit AB is not liable for indirect, incidental, consequential, or punitive damages arising from use of the site. Our total liability for direct damages, if any, is limited to 100 EUR."
+                        ~"To the extent permitted by law, Widgrens IT AB is not liable for indirect, incidental, consequential, or punitive damages arising from use of the site. Our total liability for direct damages, if any, is limited to 100 EUR."
                     ]}
                 ]},
 
