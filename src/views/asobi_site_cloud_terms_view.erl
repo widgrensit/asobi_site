@@ -29,7 +29,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"Provider"]},
                     {p, [], [
-                        ~"Asobi Cloud is operated by Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. VAT no. SE559241275201. Contact: ",
+                        ~"Asobi Cloud is operated by Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. Contact: ",
                         {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
                         ~"."
                     ]}
