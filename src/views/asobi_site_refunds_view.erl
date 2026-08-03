@@ -15,7 +15,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Refund Policy"]},
                     {p, [], [
-                        ~"Last updated: 25 July 2026. This policy applies to Asobi Cloud subscriptions. Payments are processed by Paddle as merchant of record; approved refunds are issued by Paddle to your original payment method."
+                        ~"Last updated: 3 August 2026. This policy applies to Asobi Cloud subscriptions. Payments are processed by Paddle as merchant of record; approved refunds are issued by Paddle to your original payment method."
                     ]}
                 ]},
 

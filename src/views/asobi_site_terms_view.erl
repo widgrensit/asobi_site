@@ -15,7 +15,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Terms of Service"]},
                     {p, [], [
-                        ~"Last updated: 23 July 2026. These terms cover the use of the ",
+                        ~"Last updated: 3 August 2026. These terms cover the use of the ",
                         {code, [], [~"asobi.dev"]},
                         ~" website. The open-source Asobi library is covered by its licence; the hosted service is covered by the ",
                         {a, [{href, ~"/cloud-terms"}], [~"Asobi Cloud Terms of Service"]},

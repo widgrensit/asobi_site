@@ -15,7 +15,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Data Processing Agreement"]},
                     {p, [], [
-                        ~"Last updated: 25 July 2026. This DPA forms part of the ",
+                        ~"Last updated: 3 August 2026. This DPA forms part of the ",
                         {a, [{href, ~"/cloud-terms"}], [~"Asobi Cloud Terms of Service"]},
                         ~" and applies automatically when you use Asobi Cloud. You (the customer) are the controller of your players' personal data; the processor is Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. VAT no. SE559241275201. If you need a countersigned copy, email ",
                         {a, [{href, ~"mailto:dpa@asobi.dev"}], [~"dpa@asobi.dev"]},

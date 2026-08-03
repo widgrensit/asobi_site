@@ -18,7 +18,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Asobi Cloud Terms of Service"]},
                     {p, [], [
-                        ~"Last updated: 25 July 2026. These terms govern your use of Asobi Cloud - the hosted service at ",
+                        ~"Last updated: 3 August 2026. These terms govern your use of Asobi Cloud - the hosted service at ",
                         {code, [], [~"console.asobi.dev"]},
                         ~" and the game-backend environments we run for you. The ",
                         {a, [{href, ~"/terms"}], [~"website terms"]},

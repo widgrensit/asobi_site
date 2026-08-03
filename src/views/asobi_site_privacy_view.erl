@@ -15,7 +15,7 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Privacy Policy"]},
                     {p, [], [
-                        ~"Last updated: 25 July 2026. This page tells you exactly what ",
+                        ~"Last updated: 3 August 2026. This page tells you exactly what ",
                         {code, [], [~"asobi.dev"]},
                         ~" and the Asobi Cloud console at ",
                         {code, [], [~"console.asobi.dev"]},
