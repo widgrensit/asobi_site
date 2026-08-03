@@ -307,19 +307,22 @@ it under <code>{nova, [{plugins, [...]}]}</code>:</p>
 <h3 id="oauthoidc" tabindex="-1">OAuth/OIDC</h3>
 <pre><code class="language-erlang">{oidc_providers, #{
     google =&gt; #{
+        issuer =&gt; ~&quot;https://accounts.google.com&quot;,
         client_id =&gt; ~&quot;...&quot;,
-        client_secret =&gt; ~&quot;...&quot;,
-        discovery_url =&gt; ~&quot;https://accounts.google.com/.well-known/openid-configuration&quot;
+        client_secret =&gt; ~&quot;...&quot;
     },
-    discord =&gt; #{
+    apple =&gt; #{
+        issuer =&gt; ~&quot;https://appleid.apple.com&quot;,
         client_id =&gt; ~&quot;...&quot;,
-        client_secret =&gt; ~&quot;...&quot;,
-        authorize_url =&gt; ~&quot;https://discord.com/api/oauth2/authorize&quot;,
-        token_url =&gt; ~&quot;https://discord.com/api/oauth2/token&quot;,
-        userinfo_url =&gt; ~&quot;https://discord.com/api/users/@me&quot;
+        client_secret =&gt; ~&quot;...&quot;
     }
 }}
 </code></pre>
+<p>Every provider needs <code>issuer</code>, <code>client_id</code>, and <code>client_secret</code> - asobi discovers
+the rest (authorize/token/JWKS endpoints) from the issuer's
+<code>.well-known/openid-configuration</code> document. A provider entry missing
+<code>issuer</code> fails asobi's boot - see <a href="/docs/authentication">Authentication</a> for
+the full supported-provider table and per-provider setup notes.</p>
 <p><code>base_url</code> is the public origin asobi uses to build OAuth/OIDC redirect URIs
 (defaults to <code>~&quot;http://localhost:8082&quot;</code>). Set it to your deployed URL so the
 redirect that providers call back to matches what you registered:</p>
@@ -432,6 +435,23 @@ implement <code>join/3</code> in your game module and reject unauthorised joins 
 <a href="/docs/protocols/websocket">WebSocket Protocol</a>.</p>
 <p>A player at the per-player cap gets <code>429</code>; once the global cap is reached
 further creates get <code>503</code>.</p>
+<h2 id="zone-crossing-rate" tabindex="-1">Zone crossing rate</h2>
+<p>For <code>world</code>-mode games, re-homing a player across a zone boundary is bounded
+per player, not per IP:</p>
+<pre><code class="language-erlang">{rate_limits, #{
+    rehome =&gt; #{algorithm =&gt; sliding_window, limit =&gt; 5, window =&gt; 1000}
+}}
+</code></pre>
+<p>Each crossing updates part of the player's interest ring and resends a full
+zone snapshot to any newly-subscribed zone, so an unbounded rate lets one
+client force that work every tick by parking on (or jittering across) a zone
+boundary. The default (5/sec) bounds the worst case on top of the crossing's
+own hysteresis margin (see <a href="/docs/world-server">World Server</a>); it caps sustained
+crossing speed at <code>limit * zone_size</code> units/sec, so a fast-moving game (a
+vehicle, flight sim, or racer) on a small <code>zone_size</code> may need to raise this.
+Denied crossings are not dropped input - the player's position still updates
+within their current zone, they just don't re-home that tick. Exceeding the
+limit emits <code>[asobi, rehome, rate_limited]</code>.</p>
 <h2 id="terrain-provider-allowlist" tabindex="-1">Terrain provider allowlist</h2>
 <p>For Lua large-world games, only allowlisted terrain generators can be named
 from Lua. This is an <code>asobi_lua</code> key (not <code>asobi</code>):</p>

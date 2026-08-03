@@ -106,14 +106,17 @@ broadcast, so co-member notification is the game's decision throughout, and
 what a lobby shows differs per game - a bare count, a full roster, nothing
 until it fills.</p>
 <p><code>game.broadcast</code> from your join callback is the whole of it, as above. It
-reaches every player currently in the match.</p>
+reaches every player currently in the match, and the example above arrives
+client-side as <code>{&quot;type&quot;: &quot;match.lobby_update&quot;, &quot;payload&quot;: {&quot;players&quot;: ...}}</code>.
+Naming rules and the SDK-side handler for these are in
+<a href="/docs/protocols/websocket#custom-events">Custom events</a>.</p>
 <h3 id="chat-in-a-lobby" tabindex="-1">Chat in a lobby</h3>
 <p>There is no <code>match:</code> chat channel scheme. <code>world:&lt;WorldId&gt;</code> exists and is
 gated on world membership; matches have no equivalent. Use <code>game.broadcast</code>
 with your own message shape.</p>
-<p>The <code>room:</code> scheme is documented as open-join but is not - it resolves to a
-group membership check. See
-<a href="https://github.com/widgrensit/asobi/issues/209">asobi#209</a>.</p>
+<p>The <code>room:</code> scheme is not open-join - it resolves to a group membership check.
+<code>room:&lt;group_id&gt;</code> now correctly authorises the members of <code>&lt;group_id&gt;</code>
+(<a href="https://github.com/widgrensit/asobi/issues/209">asobi#209</a>, resolved).</p>
 <h3 id="the-60-second-timeout" tabindex="-1">The 60-second timeout</h3>
 <p>A match that does not reach <code>min_players</code> within 60 seconds stops itself.
 That value is currently fixed (<code>?WAITING_TIMEOUT</code> in <code>asobi_match_server</code>)

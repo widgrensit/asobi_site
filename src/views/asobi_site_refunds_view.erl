@@ -20,6 +20,15 @@ render(Bindings) ->
                 ]},
 
                 {'div', [{class, ~"guide-section"}], [
+                    {h2, [], [~"Provider"]},
+                    {p, [], [
+                        ~"Asobi Cloud is operated by Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. VAT no. SE559241275201. Contact: ",
+                        {a, [{href, ~"mailto:legal@asobi.dev"}], [~"legal@asobi.dev"]},
+                        ~"."
+                    ]}
+                ]},
+
+                {'div', [{class, ~"guide-section"}], [
                     {h2, [], [~"First payment"]},
                     {p, [], [
                         ~"If Asobi Cloud isn't for you, we refund your first subscription payment in full when you ask within 14 days of it - no questions asked. This applies once per account, to the first payment for your first environment, whatever its size."

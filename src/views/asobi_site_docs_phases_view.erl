@@ -112,7 +112,10 @@ function on_phase_ended(phase_name, state)
 end
 </code></pre>
 <p><code>game.broadcast</code> is how the phase reaches your own clients with your own
-shape. See the callback reference for the full callback list.</p>
+shape. The two calls above arrive as <code>{&quot;type&quot;: &quot;match.round_start&quot;}</code> and
+<code>{&quot;type&quot;: &quot;match.round_over&quot;}</code> (<code>world.*</code> from a world script); see
+<a href="/docs/protocols/websocket#custom-events">Custom events</a> for the naming rules.
+See the callback reference for the full callback list.</p>
 <h3 id="what-the-client-sees-on-the-wire" tabindex="-1">What the client sees on the wire</h3>
 <p>A <strong>world</strong> pushes <code>world.phase_changed</code> on every transition and again
 roughly every three seconds while a phase runs. The payload is the phase

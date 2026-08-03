@@ -70,7 +70,7 @@ contract, config, and error codes.</p>
   -d '{&quot;device_id&quot;: &quot;b64-device-id&quot;, &quot;device_secret&quot;: &quot;b64-32-random-bytes&quot;}'
 </code></pre>
 <pre><code class="language-json">{&quot;player_id&quot;: &quot;...&quot;, &quot;access_token&quot;: &quot;...&quot;, &quot;refresh_token&quot;: &quot;...&quot;,
- &quot;username&quot;: &quot;guest_019f615cbc4a&quot;, &quot;created&quot;: true, &quot;guest&quot;: true}
+ &quot;username&quot;: &quot;guest_9c41e0b7a2d5f318&quot;, &quot;created&quot;: true, &quot;guest&quot;: true}
 </code></pre>
 <h2 id="players" tabindex="-1">Players</h2>
 <pre><code>GET /api/v1/players/:id        Get player profile

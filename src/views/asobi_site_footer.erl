@@ -46,7 +46,9 @@ render(_Bindings) ->
                 ]}
             ]},
             {'div', [{class, ~"footer-bottom"}], [
-                {p, [], [~"Apache 2.0 - Widgrens IT AB, org.nr 559241-2752, Uppsala, Sweden"]}
+                {p, [], [
+                    ~"Apache 2.0 - Widgrens IT AB, org.nr 559241-2752, Melongatan 15, 754 49 Uppsala, Sweden. VAT no. SE559241275201."
+                ]}
             ]}
         ]}
     ).

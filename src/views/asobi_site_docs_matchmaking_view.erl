@@ -52,6 +52,31 @@ carries <code>ticket_id</code>, <code>status: &quot;pending&quot;</code>, and <s
 <code>match_size</code>, or <code>null</code> if the mode declares none. Show it as &quot;waiting for N
 players&quot; so a queued client isn't staring at silence. The <code>Meta</code> map in the
 Erlang return holds the same <code>players_needed</code>.</p>
+<blockquote>
+<p><strong>Testing solo?</strong> A match only forms once <code>match_size</code> players have queued
+(default <strong>2</strong> if your mode doesn't set one). One client queuing alone gets
+<code>players_needed: 1</code> and then waits forever — that's expected, not a bug. Set
+<code>match_size = 1</code> in your mode script to match instantly by yourself, or run
+two clients. See <a href="#configuration">Configuration</a> for where <code>match_size</code>
+lives and why changing it needs a server restart.</p>
+</blockquote>
+<blockquote>
+<p><strong>Always pass <code>mode</code> as a named/keyed field, never a bare positional
+value</strong> — <code>{mode = &quot;arena&quot;}</code> in Lua, <code>mode: &quot;arena&quot;</code> in JSON/TS, a typed
+<code>mode</code> parameter elsewhere. A malformed options shape (e.g. Lua's
+<code>{&quot;arena&quot;}</code>, which sets index <code>1</code>, not a <code>mode</code> field) silently falls back
+to <code>&quot;default&quot;</code> instead of erroring. A multi-mode game gets <code>400 unknown_mode</code>
+for it - <code>default</code> is just another key, and a <code>config.lua</code> manifest never
+maps it. A <strong>single-mode</strong> game does not: its loader registers <code>default</code>
+automatically, so the malformed call silently queues for the only mode
+there is, with no error at all - the SDK-level guards below are your only
+protection in that case. The Lua SDKs (asobi-defold, asobi-love2d) now
+raise a loud error on this exact mistake; the typed SDKs (Dart, Unity,
+Unreal, Godot) prevent it at compile/parse time via a required <code>mode</code>
+parameter. asobi-js's WS transport is intentionally schema-less (see its
+README), so a hand-rolled WS payload there is not protected by any SDK —
+double-check the key name if you're sending <code>matchmaker.add</code> by hand.</p>
+</blockquote>
 <p>A ticket supports <code>mode</code> and <code>properties</code>. A
 query-language extension (numeric ranges, required keys, automatic skill
 window expansion) is on the roadmap but not shipped — do that filtering
@@ -123,12 +148,8 @@ match(Tickets, Config) -&gt;
 <p><code>match_size</code>, <code>strategy</code>, and the rest of a mode's shape are read into
 <code>game_modes</code> <strong>once at server boot</strong>. Editing them in a mode script and
 hot-reloading does not change them for the matchmaker — restart the server to
-pick up a new <code>match_size</code>.</p>
-<p><strong>Testing solo:</strong> the matchmaker forms a match only once <code>match_size</code> players
-have queued, so a single client against a <code>match_size = 2</code> mode waits for a
-second. Set <code>match_size = 1</code> to match instantly on your own, or run two clients.
-Do not re-submit the same client to force it — that now returns your existing
-ticket, not a second one.</p>
+pick up a new <code>match_size</code> (see the solo-testing note above if you just want
+to test alone).</p>
 <h2 id="playing-with-friends" tabindex="-1">Playing With Friends</h2>
 <blockquote>
 <p>Gathering players before a game starts is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
