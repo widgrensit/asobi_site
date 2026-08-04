@@ -48,7 +48,7 @@ public ETS, spawn arbitrary processes, reach clustered nodes, and crash the
 lobby. Treat the game-module source as part of the trusted compute base — code
 review and sign its releases the same way you would the asobi binary itself. For
 untrusted scripting (community maps, modder content), use the
-<a href="https://github.com/widgrensit/asobi_lua/blob/main/guides/security-sandbox.md">Lua sandbox</a>:
+<a href="/docs/security/lua-sandbox">Lua sandbox</a>:
 Luerl runs scripts in a hardened state with OS/IO/code-loading APIs stripped and
 a wall-clock budget per callback.</p>
 <p>If you need callback isolation in your custom game module, run the

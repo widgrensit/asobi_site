@@ -178,7 +178,11 @@ automatically replicates group membership across all connected nodes.</p>
 <p><strong>What works across nodes today:</strong></p>
 <ul>
 <li><strong>Presence</strong> — <code>pg:get_members(nova_scope, {player, Id})</code> returns pids on all
-nodes. Sending messages to those pids works transparently.</li>
+nodes. Sending messages to those pids works transparently. Delivery targets
+and the online set are separate: <code>asobi_presence:track/2</code> records both,
+<code>track_bot/2</code> records only the delivery target, so bots receive broadcasts
+without ever counting toward <code>online_count/0</code>. Everything <code>send/2</code> delivers
+is one of the shapes in <code>t:asobi_presence:message/0</code>.</li>
 <li><strong>Session revocation</strong> — <code>asobi_presence:disconnect/2</code> reaches sessions on any
 node.</li>
 <li><strong>Chat</strong> — <code>nova_pubsub</code> uses <code>pg</code> underneath, so chat messages cross nodes.</li>

@@ -400,6 +400,13 @@ post_tick(_TickN, State) -&gt;
 </tr>
 </tbody>
 </table>
+<h3 id="entity-keys" tabindex="-1">Entity keys</h3>
+<p>Entity maps are yours: asobi stores whatever a callback returns and only
+reads <code>x</code>, <code>y</code>, <code>type</code> and <code>persistent</code> from them, for zone crossings,
+spatial queries, hibernation and snapshots. Those four are read under either
+an atom key (<code>x</code>) or a binary one (<code>~&quot;x&quot;</code>), so a scripting bridge that hands
+entities back binary-keyed works the same as a native Erlang module. Mixing
+shapes within one entity is not supported - keep an entity's keys consistent.</p>
 <h3 id="configuration" tabindex="-1">Configuration</h3>
 <p>Register your world mode in <code>sys.config</code>:</p>
 <pre><code class="language-erlang">{asobi, [
@@ -702,7 +709,8 @@ game mode:</p>
             type =&gt; world,
             module =&gt; my_game,
             chat =&gt; #{
-                world =&gt; true,       %% global channel for everyone in the world
+                global =&gt; [~&quot;general&quot;, ~&quot;trade&quot;], %% game-wide, spans every world
+                world =&gt; true,       %% one channel for everyone in this world
                 zone =&gt; true,        %% auto-join/leave as players move between zones
                 proximity =&gt; 2       %% chat with players within N zones of you
             }
@@ -726,6 +734,11 @@ chat_proximity = 2
 </tr>
 </thead>
 <tbody>
+<tr>
+<td><strong>Global</strong></td>
+<td>Every player in the game, across all worlds</td>
+<td>Join on world join, leave on world leave</td>
+</tr>
 <tr>
 <td><strong>World</strong></td>
 <td>All players in the world instance</td>
@@ -762,10 +775,17 @@ delta is updated</li>
 as <code>chat.message</code> events. Clients just need to know the channel IDs,
 which follow a predictable format:</p>
 <ul>
+<li>Global: <code>global:{name}</code></li>
 <li>World: <code>world:{world_id}</code></li>
 <li>Zone: <code>zone:{world_id}:{x},{y}</code></li>
 <li>Proximity: <code>prox:{world_id}:{x},{y}</code></li>
 </ul>
+<p>A global channel carries no world id on purpose: every world of every mode
+that declares the same name resolves the same channel process, so one message
+is one broadcast and one row of history, not one per world. Only names
+declared in a mode's <code>chat.global</code> are authorised, so a client cannot mint
+new ones; names are up to 64 bytes of <code>a-z A-Z 0-9 _ - .</code> and anything else
+is dropped with a warning at join time.</p>
 <h3 id="no-chat-config" tabindex="-1">No Chat Config</h3>
 <p>If you omit the <code>chat</code> key entirely, no chat channels are created. The
 world server runs without any chat overhead. Add channels later by

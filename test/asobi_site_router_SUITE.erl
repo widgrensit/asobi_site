@@ -8,7 +8,13 @@
 -include_lib("stdlib/include/assert.hrl").
 
 all() ->
-    [no_ws_route, has_core_routes, renders_all_routes, blog_post_runs_mount].
+    [
+        no_ws_route,
+        has_core_routes,
+        renders_all_routes,
+        blog_post_runs_mount,
+        erlang_getting_started_redirects
+    ].
 
 %%====================================================================
 
@@ -46,6 +52,13 @@ render_ok(Route, Req) ->
         false ->
             ok
     end.
+
+%% The Erlang getting-started page is retired, not deleted (asobi ADR 0008):
+%% asobi's examples/erlang-match README links it by name, so the URL has to
+%% keep resolving rather than 404.
+erlang_getting_started_redirects(_Config) ->
+    {_Path, Fun, _Opts} = lists:keyfind(~"/docs/erlang/getting-started", 1, routes()),
+    ?assertEqual({status, 301, #{~"location" => ~"/docs/erlang/api"}, ~""}, Fun(#{})).
 
 %% Regression guard: render_view/2 must detect and run mount/1 even when the
 %% view module has not been loaded yet (lazy code loading in the release was

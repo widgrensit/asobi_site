@@ -167,6 +167,12 @@ lives in <code>sys.config</code> under the <code>{asobi, [...]}</code> key.</p>
     }
 }}
 </code></pre>
+<p><code>{lua, ...}</code> needs a scripting runtime in the release. asobi itself has no Lua
+dependency: <a href="https://github.com/widgrensit/asobi_lua">asobi_lua</a> registers the
+modules that run scripted modes (<code>asobi_game_modes:register_game_mode/2</code>) when it
+starts. Consume asobi directly without it and every <code>{lua, _}</code> mode fails with
+<code>{error, lua_runtime_unavailable}</code> — matchmaking rejects the mode as unknown and
+world creation refuses it. Erlang-module modes are unaffected.</p>
 <p>Shorthand (Erlang module only):</p>
 <pre><code class="language-erlang">{game_modes, #{
     ~&quot;arena&quot; =&gt; my_arena_game
@@ -229,6 +235,20 @@ lives in <code>sys.config</code> under the <code>{asobi, [...]}</code> key.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="operator-modes-vs-game-declared-modes" tabindex="-1">Operator Modes vs Game-Declared Modes</h3>
+<p>Modes come from two independent places and asobi keeps them apart (ADR 0006):</p>
+<ul>
+<li><strong>Operator modes</strong> are the ones above, in your <code>sys.config</code> <code>game_modes</code>.
+asobi never rewrites that key.</li>
+<li><strong>Game-declared modes</strong> are what a Lua game declares in its <code>match.lua</code> or
+<code>config.lua</code> manifest. Loading a game replaces that set wholesale, so a mode
+you delete from <code>config.lua</code> is gone the next time the config loads instead
+of lingering until a restart.</li>
+</ul>
+<p>The effective registry is the game-declared set with the operator set on top:
+an operator mode wins a name clash and a game bundle can never drop or
+redefine it. Read it with <code>asobi_game_config:modes/0</code> - the raw <code>game_modes</code>
+app-env key is only the operator half.</p>
 <h2 id="matchmaker" tabindex="-1">Matchmaker</h2>
 <pre><code class="language-erlang">{matchmaker, #{
     tick_interval =&gt; 1000,     %% ms between matchmaker ticks (default 1000)
