@@ -3,7 +3,7 @@
 
 -export([render/1]).
 
--type active() :: home | features | sdks | demo | docs | blog | cloud | none.
+-type active() :: home | features | sdks | demo | showcase | docs | blog | cloud | none.
 -type bindings() :: #{active := active()}.
 
 -spec render(bindings()) -> asobi_site_html:html().
@@ -12,6 +12,7 @@ render(Bindings) ->
         {~"/#features", ~"Features", {active, features}, true},
         {~"/#sdks", ~"SDKs", {active, sdks}, true},
         {~"/demo", ~"Demo", {active, demo}, true},
+        {~"/showcase", ~"Showcase", {active, showcase}, true},
         {~"/docs", ~"Docs", {active, docs}, true},
         {~"/blog", ~"Blog", {active, blog}, true},
         {~"/cloud", ~"Cloud", {active, cloud}, true},

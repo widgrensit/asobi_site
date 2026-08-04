@@ -21,6 +21,8 @@ routes(_Environment) ->
                 page(~"/lua", asobi_site_lua_view, sdks),
                 page(~"/migrate-from-hathora", asobi_site_migrate_hathora_view, none),
                 page(~"/demo", asobi_site_demo_view, demo),
+                page(~"/showcase", asobi_site_showcase_view, showcase),
+                page(~"/brand", asobi_site_brand_view, none),
                 page(~"/blog", asobi_site_blog_view, blog),
                 {~"/blog/rss.xml", fun asobi_site_controller:blog_rss/1, #{methods => [get]}},
                 page(~"/blog/:slug", asobi_site_blog_post_view, blog),
