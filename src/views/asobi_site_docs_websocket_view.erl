@@ -164,15 +164,50 @@ that ignores it stays open to anyone holding a <code>world_id</code>.</p>
 <p>Input sent while not in a match or world is dropped. The first drop (at
 most one per 5 seconds per connection) is answered with an error event so
 the client can tell input is going nowhere:</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;payload&quot;: {&quot;type&quot;: &quot;match.input&quot;, &quot;reason&quot;: &quot;not_in_match&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;payload&quot;: {&quot;type&quot;: &quot;match.input&quot;, &quot;reason&quot;: &quot;not_in_match&quot;, &quot;error&quot;: {&quot;code&quot;: &quot;match.not_in_match&quot;, &quot;message&quot;: &quot;This connection is not joined to a match.&quot;, &quot;details&quot;: {}}}}
+</code></pre>
+<h3 id="error-server-push" tabindex="-1"><code>error</code> (server push)</h3>
+<p>Every failure on this socket is an <code>error</code> frame, carrying the <code>cid</code> of the
+request that caused it when there was one:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;cid&quot;: &quot;c-17&quot;, &quot;payload&quot;: {&quot;reason&quot;: &quot;world_not_found&quot;, &quot;error&quot;: {&quot;code&quot;: &quot;world.not_found&quot;, &quot;message&quot;: &quot;No live world exists with this id.&quot;, &quot;details&quot;: {}}}}
+</code></pre>
+<ul>
+<li><code>error.code</code> is the contract - stable, machine-readable, and namespaced by
+domain (<code>match.</code>, <code>world.</code>, <code>chat.</code>, <code>matchmaker.</code>) or bare when it is
+cross-cutting (<code>rate_limited</code>, <code>unauthenticated</code>). Branch on this. It is the
+same code set the <a href="/docs/protocols/rest#errors">REST API</a> returns.</li>
+<li><code>error.message</code> is prose for a human reading a log. Do not parse it.</li>
+<li><code>error.details</code> is <strong>always</strong> an object, <code>{}</code> when there is nothing to add.</li>
+<li><code>reason</code> is the original, flatter dialect. It is unchanged and still sent, so
+existing clients keep working, but it is not namespaced and two unrelated
+failures can share a string. Prefer <code>error.code</code>.</li>
+</ul>
+<p>A reason with no code of its own yet - including anything a Lua game script
+returns from a rejected join - arrives as <code>ws.request_failed</code> with the raw
+string in <code>details</code>, so script-supplied text can never mint a code:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;payload&quot;: {&quot;reason&quot;: &quot;party_is_full&quot;, &quot;error&quot;: {&quot;code&quot;: &quot;ws.request_failed&quot;, &quot;message&quot;: &quot;The request failed. See `details.reason`.&quot;, &quot;details&quot;: {&quot;reason&quot;: &quot;party_is_full&quot;}}}}
 </code></pre>
 <h3 id="gameerror-server-push" tabindex="-1"><code>game.error</code> (server push)</h3>
-<p>A Lua callback error, sent to the player whose input triggered it. Only
-emitted when the runtime runs with dev errors enabled
-(<code>ASOBI_DEV_ERRORS=true</code>); production runtimes keep script errors
-server-side.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;game.error&quot;, &quot;payload&quot;: {&quot;callback&quot;: &quot;handle_input&quot;, &quot;script&quot;: &quot;match.lua&quot;, &quot;message&quot;: &quot;bad arithmetic + on nil, 1&quot;}}
+<p>An extension callback error, sent to the player whose input triggered it.
+Only emitted when the extension runs with dev errors enabled (for
+asobi_lua, <code>ASOBI_DEV_ERRORS=true</code>); production runtimes keep script
+errors server-side.</p>
+<p><code>module</code> names the extension that produced the error. It is the only field
+asobi owns; the rest of the payload is the extension's.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;game.error&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;callback&quot;: &quot;handle_input&quot;, &quot;script&quot;: &quot;match.lua&quot;, &quot;message&quot;: &quot;bad arithmetic + on nil, 1&quot;}}
 </code></pre>
+<h3 id="gamemessage-server-push" tabindex="-1"><code>game.message</code> (server push)</h3>
+<p>A message addressed to one player by an extension - asobi_lua's
+<code>game.send(player_id, message)</code>. The message is wrapped rather than sent
+raw, because it may be any scripting value (string, number, table).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;game.message&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;message&quot;: &quot;you are player 3&quot;}}
+</code></pre>
+<p>Both frames are produced by extensions, not only by Lua, which is why the
+producer is a payload key rather than part of the wire type. <code>module</code> was
+added without a type change so existing SDK builds keep working; clients
+that care which extension spoke should read <code>payload.module</code> and treat a
+missing value as <code>&quot;lua&quot;</code>. Renaming the types to <code>module.error</code> and
+<code>module.message</code> is reserved for the 1.0 wire break.</p>
 <h3 id="matchstate-server-push" tabindex="-1"><code>match.state</code> (server push)</h3>
 <p>Server broadcasts game state updates to all players in the match.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.state&quot;, &quot;payload&quot;: {&quot;players&quot;: {...}, &quot;tick&quot;: 42}}
@@ -185,6 +220,14 @@ server-side.</p>
 <p>Notification that a match has ended with results.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.finished&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;result&quot;: {...}}}
 </code></pre>
+<p><code>result</code> is whatever your game returned with <code>{finished, Result, State}</code>;
+asobi does not interpret it, with one exception. It reads <code>winners</code> (a list
+of player ids) or <code>winner</code> (one id), and <code>losers</code> / <code>loser</code>, to move the
+<code>wins</code> and <code>losses</code> columns in <code>player_stats</code>. <code>games_played</code> moves for
+every player in the match either way. Declare winners without losers and
+every other player in the match takes the loss; declare <code>losers: []</code> to
+score a co-op run where nobody loses. <code>rating</code> and <code>rating_deviation</code> are
+not maintained by asobi.</p>
 <h3 id="matchleave" tabindex="-1"><code>match.leave</code></h3>
 <p>Leave the current match.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.leave&quot;, &quot;payload&quot;: {}}
@@ -328,6 +371,11 @@ membership without a per-frame registry lookup.</p>
 <td>The two named participants only.</td>
 </tr>
 <tr>
+<td><code>global:</code></td>
+<td>Game-wide chat, spans every world</td>
+<td>Any signed-in player, for a name the operator declared.</td>
+</tr>
+<tr>
 <td><code>world:</code></td>
 <td>World-wide chat</td>
 <td>Players currently joined to the world.</td>
@@ -349,6 +397,14 @@ membership without a per-frame registry lookup.</p>
 </tr>
 </tbody>
 </table>
+<p><code>global:&lt;name&gt;</code> is the only scheme that outlives a single world, so it is the
+one to use for &quot;everyone in the game&quot;. A client cannot mint one: the name must
+appear in the <code>chat =&gt; #{global =&gt; [...]}</code> of a configured game mode, otherwise
+the join is rejected like any other unauthorised channel. Names are up to 64
+bytes of <code>a-z A-Z 0-9 _ - .</code>. Players in a world whose mode declares a global
+channel are joined to it automatically on <code>world.join</code> and left on
+<code>world.leave</code>, exactly as with <code>world:</code> - see the
+<a href="/docs/world-server#chat-channels">World Server</a> guide.</p>
 <p>There is no open-join room policy and no <code>match:</code> scheme. <code>room:</code> is authorised
 as a group membership check: the runtime strips the <code>room:</code> prefix and looks up
 the remainder as a group id, so <code>room:&lt;group_id&gt;</code> authorises exactly the members

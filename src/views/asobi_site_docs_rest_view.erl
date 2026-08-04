@@ -176,6 +176,109 @@ GET    /api/v1/storage/:collection/:key        Read object
 PUT    /api/v1/storage/:collection/:key        Write object
 DELETE /api/v1/storage/:collection/:key        Delete object
 </code></pre>
+<p>These routes return the <a href="#errors">error object</a> below on failure.</p>
+<h2 id="ops" tabindex="-1">Ops</h2>
+<pre><code>GET /api/v1/ops/players     Paginated player list
+GET /api/v1/ops/matches     Paginated match-record list
+GET /api/v1/ops/features    Installed feature set
+</code></pre>
+<p>The game-operations read plane, for a console rather than a game client. The
+lists differ from the ones above in three ways: they report a total, they
+accept a sort, and they page by offset.</p>
+<p>Every list returns the same envelope:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: [ ... ],
+  &quot;page&quot;: { &quot;limit&quot;: 50, &quot;offset&quot;: 0, &quot;total&quot;: 137 }
+}
+</code></pre>
+<p>Parameters shared by <code>ops/players</code> and <code>ops/matches</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Parameter</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>limit</code></td>
+<td>Rows per page. Default 50, clamped to 1-200.</td>
+</tr>
+<tr>
+<td><code>page</code></td>
+<td>1-based page number. Wins over <code>offset</code> when both are given.</td>
+</tr>
+<tr>
+<td><code>offset</code></td>
+<td>Rows to skip. Clamped to 0-100000 and snapped down to a multiple of <code>limit</code>, so the <code>offset</code> in the response is the one the query ran with.</td>
+</tr>
+<tr>
+<td><code>sort</code></td>
+<td>Field to sort by. Must be one of the fields listed below - anything else is <strong>400</strong>, never a silent fallback.</td>
+</tr>
+<tr>
+<td><code>order</code></td>
+<td><code>asc</code> (default) or <code>desc</code>. Anything else is <strong>400</strong>.</td>
+</tr>
+<tr>
+<td><code>q</code></td>
+<td>Case-insensitive substring search. <code>%</code> and <code>_</code> are matched literally.</td>
+</tr>
+</tbody>
+</table>
+<p>A malformed number is never an error: <code>?limit=abc</code> uses the default. A
+malformed <em>sort</em> always is, because ordering the wrong rows silently is worse
+than a 400.</p>
+<p>Sorts always end on <code>id</code>, so paging by offset cannot repeat or skip a row when
+the sort key has duplicates.</p>
+<p><code>ops/players</code> sorts on <code>id</code>, <code>username</code>, <code>display_name</code>, <code>inserted_at</code>,
+<code>updated_at</code>, and searches username and display name. <code>ops/matches</code> sorts on
+<code>id</code>, <code>mode</code>, <code>status</code>, <code>started_at</code>, <code>finished_at</code>, <code>inserted_at</code>, filters on
+<code>mode</code> and <code>status</code>, and searches mode. Both return the same fields as their
+public counterparts - no roster, no credentials.</p>
+<p><code>GET /api/v1/ops/features</code> reports what this deployment has installed:</p>
+<pre><code class="language-json">{
+  &quot;data&quot;: {
+    &quot;core&quot;: {
+      &quot;name&quot;: &quot;asobi&quot;,
+      &quot;version&quot;: &quot;0.46.0&quot;,
+      &quot;capabilities&quot;: [{ &quot;name&quot;: &quot;guest_auth&quot;, &quot;enabled&quot;: true }]
+    },
+    &quot;extensions&quot;: []
+  }
+}
+</code></pre>
+<p>Capabilities report what is <em>configured</em>, not what is compiled in, and carry a
+boolean only - never the configured value. <code>extensions</code> is empty until an
+extension registry exists; entries will have the same shape as <code>core</code>.</p>
+<div class="docs-callout docs-callout-warning"><p class="docs-callout-title">Ops routes use player auth today</p><p>These routes sit behind the same bearer check as the rest of <code>/api/v1</code>, so
+any authenticated player can read them, and their fields are held to exactly
+what the public endpoints already expose. An operator capability model is
+the follow-up.</p>
+</div>
+<h2 id="errors" tabindex="-1">Errors</h2>
+<p>A failing request returns its HTTP status and one object:</p>
+<pre><code class="language-json">{&quot;error&quot;: {&quot;code&quot;: &quot;storage.not_found&quot;, &quot;message&quot;: &quot;No object exists at this collection and key.&quot;, &quot;details&quot;: {}}}
+</code></pre>
+<ul>
+<li><code>code</code> is the contract. It is stable, machine-readable, and namespaced by
+domain (<code>storage.</code>, <code>save.</code>, <code>match.</code>, <code>world.</code>, <code>chat.</code>, <code>matchmaker.</code>) or
+bare when it is cross-cutting (<code>rate_limited</code>, <code>internal</code>). Branch on this.</li>
+<li><code>message</code> is prose for a human reading a log. It may be reworded at any
+time. Do not parse it.</li>
+<li><code>details</code> is <strong>always</strong> an object, <code>{}</code> when there is nothing to add, so no
+client needs a null branch. A version conflict, for example, carries what
+the client needs to retry:</li>
+</ul>
+<pre><code class="language-json">{&quot;error&quot;: {&quot;code&quot;: &quot;save.version_conflict&quot;, &quot;message&quot;: &quot;The slot was written by another client.&quot;, &quot;details&quot;: {&quot;current_version&quot;: 4}}}
+</code></pre>
+<p>Codes are a closed set. A string supplied by a client or by a Lua game script
+never becomes a code; it arrives inside <code>details</code> instead.</p>
+<div class="docs-callout docs-callout-info"><p class="docs-callout-title">Rollout</p><p>The storage and cloud-save routes above return this shape today. Every other
+route still returns its older, flat body (<code>{&quot;error&quot;: &quot;some_string&quot;}</code>) or an
+empty body with only a status. Those are converted in a follow-up; until
+then, branch on the HTTP status outside <code>/saves</code> and <code>/storage</code>.</p>
+</div>
 <h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
 <li><a href="/docs/protocols/websocket">WebSocket protocol</a> - the push side of the API.</li>

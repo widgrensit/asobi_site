@@ -66,6 +66,10 @@ setting.</p>
 <p>A zone with subscribers resets its idle timer each tick. When subscribers drop
 to zero and the zone has no tickable entities, it enters BEAM hibernation to
 reduce memory, then is snapshotted and reaped once <code>zone_idle_timeout</code> expires.</p>
+<p>A reap is a proposal, not an order. A zone that still holds entities declines
+it, and a join or crossing that finds its zone reaped between resolving the pid
+and placing the player transparently starts a replacement zone and re-places
+them there.</p>
 <h2 id="terrain-data" tabindex="-1">Terrain Data</h2>
 <p>Terrain is separate from entities. Tile chunks are served as compressed binary
 blobs when a player subscribes to a zone, not through the tick/delta loop.</p>
