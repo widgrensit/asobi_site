@@ -26,6 +26,8 @@ render(_Bindings) ->
                         {a, [{href, ~"/"}, az_navigate], [~"Home"]},
                         {a, [{href, ~"/cloud"}, az_navigate], [~"Cloud"]},
                         {a, [{href, ~"/demo"}, az_navigate], [~"Demo"]},
+                        {a, [{href, ~"/showcase"}, az_navigate], [~"Showcase"]},
+                        {a, [{href, ~"/brand"}, az_navigate], [~"Brand"]},
                         {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]}
                     ]},
                     {'div', [{class, ~"footer-col"}], [
