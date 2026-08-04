@@ -1,6 +1,6 @@
 -module(asobi_site_controller).
 
--export([page/2, heartbeat/1, blog_rss/1]).
+-export([page/2, moved/2, heartbeat/1, blog_rss/1]).
 
 -spec page(cowboy_req:req(), map()) -> {status, 200, map(), iodata()}.
 page(Req, Spec) ->
@@ -34,6 +34,12 @@ page_title(#{slug := Slug}) when Slug =/= ~"" ->
     end;
 page_title(_Bindings) ->
     ~"Asobi".
+
+%% The empty body matters: nova's 3-tuple `{status, Code, Headers}` renders a
+%% status page, which would ship an HTML body under a redirect.
+-spec moved(cowboy_req:req(), map()) -> {status, 301, map(), binary()}.
+moved(_Req, #{location := Location}) ->
+    {status, 301, #{~"location" => Location}, ~""}.
 
 -spec heartbeat(cowboy_req:req()) -> {status, integer()}.
 heartbeat(_Req) ->

@@ -22,7 +22,7 @@ render(Bindings) ->
             {p, [{class, ~"docs-lede"}], [
                 ~"These docs are Lua-first, because that is how most games are built on Asobi. ",
                 ~"But Asobi is a plain Erlang/OTP library underneath, and you can use it directly ",
-                ~"from Erlang (or any BEAM language) without touching Lua."
+                ~"from Erlang (or any BEAM language) without writing any Lua."
             ]},
 
             {'div', [{class, ~"docs-callout"}], [
@@ -36,6 +36,40 @@ render(Bindings) ->
                 ]}
             ]},
 
+            {h2, [], [~"Start an Erlang project"]},
+            {p, [], [
+                ~"The setup steps - the ",
+                {code, [], [~"rebar.config"]},
+                ~" dependency, the ",
+                {code, [], [~"sys.config"]},
+                ~" keys Nova, kura and shigoto need, and a minimal ",
+                {code, [], [~"asobi_match"]},
+                ~" module - are in the ",
+                external_link(
+                    ~"https://hexdocs.pm/asobi/getting-started.html#erlang-otp",
+                    ~"Erlang OTP section of the getting-started guide"
+                ),
+                ~". That guide ships inside the library, so it is version-matched to the release you depend on. ",
+                ~"A working project is in ",
+                external_link(
+                    ~"https://github.com/widgrensit/asobi/tree/main/examples/erlang-match",
+                    ~"examples/erlang-match"
+                ),
+                ~"."
+            ]},
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Asobi is a game backend you write in Lua. "]},
+                    ~"Erlang is a supported way in, not the main road: the tutorials, samples and CLI ",
+                    ~"all assume Lua, and the Lua runtime ships inside the same application, so you ",
+                    ~"take it as a dependency either way. If you are writing a game rather than ",
+                    ~"embedding the library, start at the ",
+                    {a, [{href, ~"/docs/quickstart"}, az_navigate], [~"quick start"]},
+                    ~"."
+                ]}
+            ]},
+
+            {h2, [], [~"Reference"]},
             {p, [], [
                 ~"The full Erlang API reference is published on HexDocs: every public module carries ",
                 {code, [], [~"-moduledoc"]},
@@ -86,3 +120,6 @@ render(Bindings) ->
 
 module(Name, Desc) ->
     ?html({li, [], [{code, [], [Name]}, ~" - ", Desc]}).
+
+external_link(Href, Text) ->
+    ?html({a, [{href, Href}], [Text]}).

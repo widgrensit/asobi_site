@@ -31,6 +31,7 @@ routes(_Environment) ->
                 docs(~"/docs/self-host", asobi_site_docs_selfhost_view),
                 docs(~"/docs/lua/api", asobi_site_docs_lua_api_view),
                 docs(~"/docs/erlang/api", asobi_site_docs_erlang_api_view),
+                moved(~"/docs/erlang/getting-started", ~"/docs/erlang/api"),
                 docs(~"/docs/lua/callbacks", asobi_site_docs_lua_callbacks_view),
                 docs(~"/docs/lua/cookbook", asobi_site_docs_lua_cookbook_view),
                 docs(~"/docs/tutorials/tic-tac-toe", asobi_site_docs_tictactoe_view),
@@ -115,6 +116,11 @@ routes(_Environment) ->
 
 page(Path, View, Active) ->
     {Path, fun(Req) -> asobi_site_controller:page(Req, #{view => View, active => Active}) end, #{
+        methods => [get]
+    }}.
+
+moved(Path, Location) ->
+    {Path, fun(Req) -> asobi_site_controller:moved(Req, #{location => Location}) end, #{
         methods => [get]
     }}.
 
