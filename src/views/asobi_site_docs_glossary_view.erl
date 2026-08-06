@@ -19,66 +19,102 @@ render(Bindings) ->
         {h1, [], [~"Project glossary"]},
         {raw,
             ~"""
-<p>You'll see several &quot;asobi&quot; names in docs, repos, and the Discord. Here's what
-each one is and when to reach for it. Read this page first if you're new —
-the names look interchangeable and aren't.</p>
-<h2 id="the-open-source-pieces" tabindex="-1">The open-source pieces</h2>
-<p><strong>asobi</strong> — the public Erlang library published on
-<a href="https://hex.pm/packages/asobi">Hex</a>. Depend on it in <code>rebar.config</code> if
-you're writing your game backend directly in Erlang/OTP and want match,
-matchmaking, world-server, voting, economy, and the rest as composable
-OTP behaviours. This is the library underneath everything.</p>
-<p><strong>asobi_lua</strong> — the batteries-included runtime that wraps the <code>asobi</code>
-library with a <a href="https://github.com/rvirding/luerl">Luerl</a> VM so you can
-write game logic in Lua without knowing Erlang. Ships as a Docker image at
-<code>ghcr.io/widgrensit/asobi_lua</code>. Most people start here.</p>
-<p><strong>Arena Shooter</strong> — the flagship end-to-end sample: a full multiplayer game
-(server-authoritative movement and combat, matchmaking with bots, boons,
-round voting, a leaderboard), not a snippet.</p>
+<p>Names you will meet across the docs, the repos and the Discord. Read this first
+if they blur together.</p>
+<h2 id="asobi" tabindex="-1">asobi</h2>
+<p>One project with two front doors.</p>
+<p><strong>As a runnable node.</strong> The image <code>ghcr.io/widgrensit/asobi</code> is a complete
+game backend: the match and world servers, matchmaking, economy, social, chat,
+leaderboards, the Lua runtime and the operator console, in one Erlang/OTP
+release. The binary inside it is <code>bin/asobi</code>. Write <code>match.lua</code>, point the node
+at it, <code>docker compose up</code>.</p>
+<p><strong>As a Hex library.</strong> <a href="https://hex.pm/packages/asobi"><code>asobi</code> on Hex</a> is the
+same code as a dependency. Add <code>{asobi, &quot;~&gt; 0.68&quot;}</code> to <code>rebar.config</code> and
+implement the <code>asobi_match</code> behaviour when you want a callback in Erlang rather
+than Lua.</p>
+<p>Lua is not a wrapper, an add-on or a separate runtime. It ships in the node.
+The <code>asobi_lua</code> repo is retired and its code lives here, under <code>src/lua/</code>.</p>
+<p><code>asobi_lua</code> still appears in three places that are correct and must not be
+renamed: module names (<code>asobi_lua_config</code>, <code>asobi_lua_api</code>, <code>asobi_lua_loader</code>
+and friends), the <code>ASOBI_LUA_RELOAD</code> variable, and <code>{asobi_lua, [...]}</code> config
+blocks, which are still read - see
+<a href="/docs/configuration#which-application-key">Which application key</a>.</p>
+<p>The one stale <code>asobi_lua</code> is the image name. <code>ghcr.io/widgrensit/asobi_lua</code>
+still publishes, so an existing compose file keeps working; change it to
+<code>ghcr.io/widgrensit/asobi</code> when convenient.</p>
 <h2 id="client-sdks" tabindex="-1">Client SDKs</h2>
-<p><strong>asobi-godot, asobi-defold, asobi-unity, asobi-unreal, asobi-js,
-asobi-dart, flame_asobi</strong> — one per engine, all talking to asobi over
-WebSocket + REST. See the <a href="../README.md#client-sdks">SDK table in the
-README</a>.</p>
+<p>One per engine, all speaking the same WebSocket and REST protocol:
+<a href="https://github.com/widgrensit/asobi-love2d">asobi-love2d</a> (LÖVE),
+<a href="https://github.com/widgrensit/asobi-defold">asobi-defold</a>,
+<a href="https://github.com/widgrensit/asobi-godot">asobi-godot</a>,
+<a href="https://github.com/widgrensit/asobi-unity">asobi-unity</a>,
+<a href="https://github.com/widgrensit/asobi-unreal">asobi-unreal</a>,
+<a href="https://github.com/widgrensit/asobi-js">asobi-js</a>,
+<a href="https://github.com/widgrensit/asobi-dart">asobi-dart</a> and
+<a href="https://github.com/widgrensit/flame_asobi">flame_asobi</a>. Full table with docs
+and demos in the <a href="../README.md#client-sdks">README</a>.</p>
 <h2 id="the-commercial-layer" tabindex="-1">The commercial layer</h2>
-<p><strong>asobi.dev Cloud</strong> — managed hosting, opening later in 2026. Same binary
-you can self-host today, with opinionated ops and flat per-container
-pricing. Join the waitlist at <a href="https://asobi.dev/cloud">asobi.dev/cloud</a>.</p>
-<p>If we disappear, the open-source pieces above are enough to run your game
-forever. See <a href="https://hexdocs.pm/asobi/exit.html">exit.md</a> for the runbook.</p>
+<p><strong>asobi.dev Cloud</strong> - managed hosting, running the same core as the node
+described above. <strong>Invite-only</strong>: an account is created only from an operator
+allowlist or an approved waitlist request. Join the waitlist at
+<a href="https://console.asobi.dev">console.asobi.dev</a>.</p>
+<p>The differences are operational, not functional. A cloud environment is created
+and fed Lua through the <code>asobi</code> CLI rather than a mounted <code>/app/game</code>, its
+console is reached from the dashboard rather than by holding an operator secret,
+and the environment's <code>sys.config</code> is not yours to write - which rules out
+platform sign-in, IAP receipt verification, extensions and runtime tuning.
+Everything about the game itself - callbacks, protocol, error codes - is
+identical. <a href="https://hexdocs.pm/asobi/cloud.html">Cloud</a> has the full list of what each side gets.</p>
+<p>If it disappears, the open-source node above is enough to run your game
+forever. See <a href="https://hexdocs.pm/asobi/exit.html">exit.md</a>.</p>
 <h2 id="which-one-do-i-start-with" tabindex="-1">Which one do I start with?</h2>
-<ul>
-<li><strong>&quot;I want to write Lua.&quot;</strong> → <code>asobi_lua</code>. Pull the Docker image, write
-<code>match.lua</code>, <code>docker compose up</code>.</li>
-<li><strong>&quot;I want to write Erlang.&quot;</strong> → <code>asobi</code>. Add it to <code>rebar.config</code>,
-implement the <code>asobi_match</code> behaviour.</li>
-<li><strong>&quot;I want both.&quot;</strong> → <code>asobi_lua</code> hosts your Lua code and is itself built
-on the <code>asobi</code> library. You can drop from Lua into an Erlang behaviour
-for a hot loop without leaving the process.</li>
-<li><strong>&quot;I just want hosting.&quot;</strong> → self-host <code>asobi_lua</code> today, or join the
-<code>asobi.dev/cloud</code> waitlist.</li>
-</ul>
+<p>Run the image and write Lua. That is the default path and it needs no Erlang.</p>
+<p>Depend on the Hex package if you are writing Erlang callbacks - a hot loop, a
+custom matchmaking strategy, an extension.</p>
+<p>You do not choose between them. The same node serves both, plus the console.</p>
 <h2 id="concepts-not-projects" tabindex="-1">Concepts, not projects</h2>
-<p>These are vocabulary, not repositories. You'll see them throughout the
-docs:</p>
+<p>Vocabulary you will meet throughout the docs.</p>
 <ul>
-<li><strong>Match</strong> — a short-lived gameplay session. 2 to N players, finite
-duration, result persisted. Runs as a <code>gen_server</code> under a supervisor.</li>
-<li><strong>World</strong> — a long-lived persistent environment. Players come and go,
-state persists across disconnects. Think MMO zone, town, dungeon.</li>
-<li><strong>Zone</strong> — a spatial partition inside a world. Used for sharding large
-worlds into loadable chunks.</li>
-<li><strong>Session</strong> — a player's authenticated connection. Survives
-reconnection with a session token.</li>
-<li><strong>Tenant</strong> — a studio or account in the managed cloud. You don't see
-this when self-hosting.</li>
-<li><strong>Game</strong> — the product you're shipping. One game may have many match
-modes, worlds, and tenants.</li>
+<li><strong>Match</strong> - a short-lived gameplay session. 2 to N players, finite duration,
+result persisted. One <code>gen_statem</code> under <code>asobi_match_sup</code>, ticking on a
+state timeout.</li>
+<li><strong>World</strong> - a long-lived environment. Players come and go, state persists
+across disconnects. Think MMO zone, town, dungeon. One world lives entirely
+on one node.</li>
+<li><strong>Zone</strong> - a spatial partition inside a world, used to shard a large world
+into separately ticked chunks.</li>
+<li><strong>Session</strong> - one process per connection, started when the socket sends
+<code>session.connect</code> and ended when the socket closes. It does not survive the
+connection: a reconnecting client presents the same token and gets a new
+session.</li>
+<li><strong>Console</strong> - the operator UI this node serves at <code>/console</code>. Off until
+<code>console</code> is set. See <a href="https://hexdocs.pm/asobi/console.html">Operator console</a>.</li>
+<li><strong>Ops plane</strong> - the HTTP API at <code>/api/v1/ops/*</code> that the console reads. Its
+own credential, separate from the console flag, and reads apart from player
+erasure, player export and extension actions.</li>
+<li><strong>Capability class</strong> - what an ops route is allowed to touch: <code>read</code>,
+<code>player_data</code>, <code>config</code> or <code>erasure</code>. Every core ops route carries one.
+<code>erasure</code> is separate because it is the only one that cannot be undone.</li>
+<li><strong>Erasure</strong> - deleting a player and everything core holds about them, in one
+transaction. <code>asobi_player_erase:run/1</code> from a shell, or
+<code>POST /api/v1/ops/players/:id/erase</code>. See <a href="/docs/protocols/rest">REST API</a>.</li>
+<li><strong>Extension</strong> - an OTP application that depends on asobi, added to your
+release, declaring a manifest. It can add RPC methods, workers, schemas and
+ops actions without forking asobi. See <a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a>.</li>
+<li><strong>RPC method</strong> - how a client calls an extension. One WebSocket frame type:
+<code>rpc.call</code> in with a <code>method</code> and <code>params</code>, <code>rpc.ok</code> or <code>rpc.error</code> back,
+paired by <code>cid</code>.</li>
+<li><strong>Tenant</strong> - a studio or account in the managed cloud. Not a concept when
+self-hosting. See <a href="https://hexdocs.pm/asobi/cloud.html">Cloud</a>.</li>
+<li><strong>Bundle</strong> - the zip of <code>.lua</code> files the CLI uploads to a cloud environment,
+which the engine fetches and extracts at boot. The cloud equivalent of a
+mounted <code>/app/game</code>. Not a concept when self-hosting.</li>
+<li><strong>Game</strong> - the product you are shipping. One game may have many match modes
+and worlds.</li>
 </ul>
-<p>When two words compete (e.g. <em>match</em> vs <em>room</em>, <em>world</em> vs <em>realm</em>),
-asobi uses the first one. The <a href="https://hexdocs.pm/asobi/migrate-from-nakama.html">Nakama migration
-guide</a> and <a href="https://hexdocs.pm/asobi/migrate-from-hathora.html">Hathora migration
-guide</a> include mapping tables from competitor
-vocab to asobi vocab.</p>
+<p>When two words compete (<em>match</em> against <em>room</em>, <em>world</em> against <em>realm</em>),
+asobi uses the first. The <a href="https://hexdocs.pm/asobi/migrate-from-nakama.html">Nakama</a>,
+<a href="https://hexdocs.pm/asobi/migrate-from-playfab.html">PlayFab</a> and <a href="https://hexdocs.pm/asobi/migrate-from-hathora.html">Hathora</a>
+migration guides carry mapping tables from competitor vocabulary.</p>
 """}
     ]}.

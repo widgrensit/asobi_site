@@ -166,6 +166,15 @@ asobi deploy prod lua
                 ]}
             ]},
 
+            {h2, [], [~"Operating a live game"]},
+            {p, [], [
+                ~"Every node serves an operator console at ",
+                {code, [], [~"/console"]},
+                ~" - players, matches, the matchmaker, economy, chat and live runtime stats, behind a credential you set. It ships in asobi itself, so a self-hoster and a cloud tenant get the same one. See ",
+                {a, [{href, ~"/docs/console"}, az_navigate], [~"the operator console"]},
+                ~"."
+            ]},
+
             {h2, [], [~"Hosting"]},
             {p, [], [
                 ~"Asobi is fully self-hostable - see ",

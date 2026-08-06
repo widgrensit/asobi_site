@@ -19,18 +19,16 @@ render(Bindings) ->
             {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
             ~" / Phases and seasons"
         ]},
-        {h1, [], [~"Phases and seasons"]},
+        {h1, [], [~"Phases"]},
         {raw,
             ~"""
-<p>Two clocks, different scopes.</p>
 <p>A <strong>phase</strong> is a stage in one session's lifecycle - lobby, then play, then
 results - inside a single match or world. It starts and ends with that
 session and is authored in the game script.</p>
-<p>A <strong>season</strong> is a wall-clock window across the whole deployment - a
-fortnight of ranked play, a themed event - shared by every session. It
-lives in the database and is read by game logic.</p>
-<p>They do not interact. This guide covers both because a reader who sees
-<code>phase</code> on a <code>world.list</code> response, or hears &quot;season&quot;, lands here.</p>
+<p>The other clock, a <strong>season</strong>, is a wall-clock window across the whole
+deployment - a fortnight of ranked play, a themed event. Seasons are not part
+of core: they ship as the <a href="https://github.com/widgrensit/asobi_seasons"><code>asobi_seasons</code></a> extension. The two do not
+interact.</p>
 <h2 id="phases" tabindex="-1">Phases</h2>
 <h3 id="declare-them-in-your-game-script" tabindex="-1">Declare them in your game script</h3>
 <p>Phases are a list. The engine walks it in order: the first phase starts,
@@ -117,9 +115,7 @@ shape. The two calls above arrive as <code>{&quot;type&quot;: &quot;match.round_
 <a href="/docs/protocols/websocket#custom-events">Custom events</a> for the naming rules.
 See the callback reference for the full callback list.</p>
 <h3 id="what-the-client-sees-on-the-wire" tabindex="-1">What the client sees on the wire</h3>
-<p>A <strong>world</strong> pushes <code>world.phase_changed</code> on every transition and again
-roughly every three seconds while a phase runs. The payload is the phase
-info block:</p>
+<p>A <strong>world</strong> pushes <code>world.phase_changed</code> on every transition:</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;world.phase_changed&quot;,
   &quot;payload&quot;: {
@@ -127,15 +123,29 @@ info block:</p>
     &quot;phase&quot;: &quot;combat&quot;,
     &quot;remaining_ms&quot;: 118400,
     &quot;config&quot;: {},
+    &quot;timers&quot;: {},
     &quot;world_id&quot;: &quot;...&quot;
   }
 }
 </code></pre>
-<p>A <strong>match</strong> does not push a phase event. The match server runs the phase
-clock and your callbacks, but the client learns the phase by reading the
-<code>phase</code> block on the listing and join reply - <code>status</code>, <code>phase</code>,
-<code>remaining_ms</code> and the pending <code>start_condition</code>. Broadcast anything richer
-yourself from <code>on_phase_started</code>.</p>
+<p>It also re-sends the phase info periodically, and what a client actually
+receives is a <strong>burst of identical frames</strong>, not one frame every three seconds.
+The gate is a wall-clock check evaluated inside the tick loop, so it passes on
+every tick that falls in a qualifying second: at the default 20 Hz that is
+roughly twenty copies, once every three seconds. A slower <code>tick_rate</code> sends
+fewer, a faster one more.</p>
+<p>Dedupe on the client. Keep the last <code>(phase, status)</code> you rendered and ignore a
+frame that repeats it; use <code>remaining_ms</code> for the countdown rather than
+counting frames.</p>
+<p>Two other differences in the periodic frames worth handling: they carry no
+<code>world_id</code> (only the transition frame merges it in), and a world whose phases
+have all completed sends <code>{&quot;status&quot;: &quot;complete&quot;, &quot;phase&quot;: &quot;undefined&quot;}</code> on
+repeat - the string, not <code>null</code>.</p>
+<p>A <strong>match</strong> does not push a phase event at all. The match server runs the phase
+clock and your callbacks, but the client learns the phase by reading the <code>phase</code>
+block on the listing and join reply - <code>status</code>, <code>phase</code>, <code>remaining_ms</code> and the
+pending <code>start_condition</code>. Broadcast anything richer yourself from
+<code>on_phase_started</code>.</p>
 <p>See <a href="/docs/protocols/websocket#worldphase_changed-server-push">WebSocket protocol</a>
 for the frame envelope and <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a> for <code>game.broadcast</code>.</p>
 <h3 id="erlang-games" tabindex="-1">Erlang games</h3>
@@ -162,54 +172,29 @@ only. From Lua you cannot declare per-phase <code>timers</code>, an <code>end_co
 function, or the <code>players_ratio</code> and <code>event</code> start conditions - those need
 an Erlang game module. If a phase needs a timer, drive it from your own tick
 logic and <code>game.broadcast</code>, or move that game to Erlang.</p>
+<h3 id="three-ways-a-phase-list-fails-quietly" tabindex="-1">Three ways a phase list fails quietly</h3>
+<p>The decoder is forgiving, and three mistakes cost you a warning you will never
+see:</p>
+<ul>
+<li><strong>A non-numeric <code>duration</code> becomes 0.</strong> <code>duration = &quot;10000&quot;</code> is a string, so
+the phase starts and ends in the same tick. Only a Lua number works.</li>
+<li><strong>An unrecognised <code>start</code> falls back to <code>prev_ended</code>.</strong> <code>start = &quot;all-ready&quot;</code>
+or <code>start = &quot;players&quot;</code> is not rejected; the phase simply begins when the
+previous one ends. The accepted values are exactly the table above.</li>
+<li><strong>A phase table with no <code>name</code> is dropped from the list.</strong> The rest of the
+list still runs, so a three-phase game silently becomes a two-phase one.</li>
+</ul>
+<p>Only a non-list return from <code>phases()</code> logs anything. Check the phase names on
+the wire (<code>world.phase_changed</code>) or in the <code>phase</code> block on a listing before
+concluding a phase never fired.</p>
 <h2 id="seasons" tabindex="-1">Seasons</h2>
-<p>A season is a named, dated window stored in the <code>seasons</code> table. A
-background manager checks the clock once a minute and moves each season
-<code>upcoming -&gt; active -&gt; ended</code> as its <code>starts_at</code> and <code>ends_at</code> pass. Exactly
-the parts of a game you want gated on &quot;the current event&quot; - a ranked ladder,
-a reward set - key off the active season.</p>
-<p>Seasons are a server-side primitive today. There is no Lua binding, no
-WebSocket event and no REST endpoint. You seed a season row into the
-database and read it from Erlang game logic.</p>
-<h3 id="seed-a-season" tabindex="-1">Seed a season</h3>
-<p>A season is one row. <code>starts_at</code> and <code>ends_at</code> are millisecond epochs.</p>
-<pre><code class="language-erlang">Now = erlang:system_time(millisecond),
-CS = kura_changeset:cast(asobi_season, #{}, #{
-    name      =&gt; ~&quot;Spring Ladder&quot;,
-    starts_at =&gt; Now,
-    ends_at   =&gt; Now + 14 * 24 * 60 * 60 * 1000,
-    status    =&gt; ~&quot;active&quot;,
-    config    =&gt; #{theme =&gt; ~&quot;spring&quot;},
-    rewards   =&gt; #{top10 =&gt; ~&quot;gold_frame&quot;}
-}, [name, starts_at, ends_at, status, config, rewards]),
-{ok, _} = asobi_repo:insert(CS).
-</code></pre>
-<p>Where that row goes differs by deployment:</p>
-<p><strong>Cloud.</strong> The per-project database is provisioned for you and the <code>seasons</code>
-table already exists. Open a console against your project
-(<code>console.asobi.dev</code>) and insert the row - or run the snippet above from a
-release remote shell attached to your project's node.</p>
-<p><strong>Self-hosted.</strong> Point <code>ASOBI_*</code> at your own Postgres, apply migrations so
-the <code>seasons</code> table exists (<code>rebar3 kura migrate</code>), then insert the row from
-your release's remote shell. See <a href="/docs/configuration">Configuration</a> for the
-<code>ASOBI_*</code> database variables.</p>
-<p>Once the row exists the season manager runs the same on both: it flips
-<code>status</code> by wall clock with no further action from you.</p>
-<h3 id="read-the-active-season-from-game-logic" tabindex="-1">Read the active season from game logic</h3>
-<pre><code class="language-erlang">case asobi_season:current() of
-    {ok, #{name := Name, rewards := Rewards}} -&gt;
-        %% gate ranked play, pick the reward table, etc.
-        {ranked, Name, Rewards};
-    {error, no_active_season} -&gt;
-        casual
-end.
-</code></pre>
-<p>Other queries: <code>asobi_season:config(Key)</code> pulls one key from the active
-season's <code>config</code>; <code>upcoming/0</code> and <code>history/0</code> list scheduled and past
-seasons; <code>time_remaining/0</code> returns milliseconds left in the active season
-(or <code>infinity</code> if none is active).</p>
-<p>To surface the season to players, read it in your game module and put it in
-the state you already send - there is no season frame to subscribe to.</p>
+<p>Seasons live in <a href="https://github.com/widgrensit/asobi_seasons"><code>asobi_seasons</code></a>, an extension. asobi still creates
+the <code>seasons</code> table - the extraction moved the code, not the migration history</p>
+<ul>
+<li>but the schema, the query API and the background manager that flips
+<code>upcoming -&gt; active -&gt; ended</code> are all in that package now.</li>
+</ul>
+<p>Add it to your release and read <a href="https://github.com/widgrensit/asobi_seasons/blob/main/guides/seasons.md">its guide</a>.</p>
 <h2 id="checkpoint" tabindex="-1">Checkpoint</h2>
 <p>Phases, with a Lua world game running locally:</p>
 <ol>
@@ -217,22 +202,16 @@ the state you already send - there is no season frame to subscribe to.</p>
 world script.</li>
 <li>Join the world over the WebSocket and watch the frames. Within a few
 seconds you see <code>world.phase_changed</code> with <code>&quot;phase&quot;: &quot;warmup&quot;</code>, then
-after five seconds another with <code>&quot;phase&quot;: &quot;active&quot;</code>.</li>
+after five seconds another with <code>&quot;phase&quot;: &quot;active&quot;</code>. Expect repeats of the
+same frame in between; that is the periodic re-send, not a second
+transition.</li>
 <li>Call <code>world.list</code>; the entry carries a <code>phase</code> block with the live
 <code>phase</code> and <code>remaining_ms</code>.</li>
 </ol>
-<p>Seasons:</p>
-<ol>
-<li>Insert a season row with <code>status = &quot;active&quot;</code> and an <code>ends_at</code> a minute
-out (cloud console, or self-hosted remote shell as above).</li>
-<li>From a remote shell, <code>asobi_season:current()</code> returns <code>{ok, Season}</code> and
-<code>asobi_season:time_remaining()</code> counts down.</li>
-<li>Wait past <code>ends_at</code>; within a minute the manager logs <code>season_ended</code> and
-<code>current()</code> returns <code>{error, no_active_season}</code>.</li>
-</ol>
-<p>If the phase frames never arrive, confirm the game is a <strong>world</strong> (matches
-run phases but do not push them) and that <code>phases()</code> returns a list. A
-non-list logs a warning and is ignored.</p>
+<p>If the phase frames never arrive, confirm the game is a <strong>world</strong> (matches run
+phases but do not push them) and that <code>phases()</code> returns a list. A non-list
+logs a warning and is ignored. If some phases arrive and others do not, check
+the <a href="#three-ways-a-phase-list-fails-quietly">three silent decoder failures</a>.</p>
 <h2 id="next" tabindex="-1">Next</h2>
 <p><a href="/docs/voting">Voting</a> - run a vote inside a phase to let players pick what
 happens in the next one.</p>

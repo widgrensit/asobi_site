@@ -19,23 +19,22 @@ render(Bindings) ->
             {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
             ~" / World server"
         ]},
-        {h1, [], [~"World Server"]},
+        {h1, [], [~"World server"]},
         {raw,
             ~"""
-<p>Build large-session multiplayer games with spatial partitioning. The world
-server handles 1--500+ players in a shared continuous space, automatically
-splitting the world into zone processes for parallelized tick simulation
-and interest-based state broadcasting.</p>
-<p>Use the world server when your game has players moving through a shared
-space (co-op dungeons, open worlds, large-scale survival). For arena-style
-games with smaller player counts, use the standard <a href="/docs/matchmaking">match server</a>.</p>
-<p>For massive tile-based worlds (10K+ zones), see <a href="https://hexdocs.pm/asobi/large-worlds.html">Large Worlds</a>
-for lazy zone loading, terrain data, and scaling configuration.</p>
-<h2 id="how-it-works" tabindex="-1">How It Works</h2>
-<p>A world is divided into a grid of <strong>zones</strong> -- each zone is a separate
-Erlang process that owns the entities in its region. Players only receive
-updates from zones they can see (interest management), and each zone runs
-its tick in parallel across CPU cores.</p>
+<p>Large-session multiplayer with spatial partitioning. The world server holds
+players in a shared continuous space and splits that space into zone processes
+for parallelised tick simulation and interest-based state broadcasting.</p>
+<p>Use it when players move through a shared space: co-op dungeons, open worlds,
+large-scale survival. For arena-style games with smaller player counts, use the
+<a href="/docs/matchmaking">match server</a>.</p>
+<p>For massive tile-based worlds, see <a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a> for lazy zone
+loading, terrain data and scaling configuration.</p>
+<h2 id="how-it-works" tabindex="-1">How it works</h2>
+<p>A world is divided into a grid of <strong>zones</strong>, each a separate Erlang process
+owning the entities in its region. A player receives updates only from the
+zones they can see (interest management), and each zone runs its tick in
+parallel across CPU cores.</p>
 <pre><code>World (2000x2000 units, 10x10 grid)
 ┌─────┬─────┬─────┬─────┬ ...
 │ z0,0│ z1,0│ z2,0│ z3,0│
@@ -50,29 +49,34 @@ its tick in parallel across CPU cores.</p>
 <p>P1 subscribes to the 9 zones around z1,0. P2 subscribes to the 9 zones
 around z2,1. They only overlap on 2 zones, so most of their traffic is
 independent.</p>
-<h3 id="supervision-tree" tabindex="-1">Supervision Tree</h3>
+<h3 id="supervision-tree" tabindex="-1">Supervision tree</h3>
 <p>Each world instance is its own supervisor:</p>
 <pre><code>asobi_world_sup (one_for_one)
-├── asobi_world_registry         — tracks active worlds
-└── asobi_world_instance_sup     — dynamic, one per world
-    └── asobi_world_instance     — one_for_all per world
-        ├── asobi_zone_sup       — dynamic, one per zone cell
-        │   └── asobi_zone       — gen_server per grid cell
-        ├── asobi_world_ticker   — coordinates ticks across zones
-        └── asobi_world_server   — gen_statem: world lifecycle
+├── asobi_zone_snapshotter       - batched snapshot writer, one per node
+├── asobi_world_registry         - tracks active worlds on this node
+└── asobi_world_instance_sup     - dynamic, one child per world
+    └── asobi_world_instance     - one_for_all per world
+        ├── asobi_zone_sup       - dynamic, one child per live zone cell
+        │   └── asobi_zone       - gen_server per grid cell
+        ├── asobi_zone_manager   - owns which cells are live and reaps idle ones
+        ├── asobi_world_ticker   - coordinates ticks across zones
+        └── asobi_world_server   - gen_statem, world lifecycle
 </code></pre>
-<h3 id="tick-cycle" tabindex="-1">Tick Cycle</h3>
-<p>Every tick (default 20 Hz / 50ms):</p>
+<p>The top three are node-wide singletons. Everything under
+<code>asobi_world_instance</code> is per world, which is why a world costs six processes
+before a single zone beyond the first.</p>
+<h3 id="tick-cycle" tabindex="-1">Tick cycle</h3>
+<p>Every tick (default 20 Hz, 50ms):</p>
 <ol>
-<li>Ticker sends <code>tick(N)</code> to all zones in parallel</li>
-<li>Each zone: applies queued player inputs, runs <code>zone_tick/2</code>, computes
-deltas from previous state, broadcasts deltas to subscribers</li>
-<li>Each zone acks back to the ticker</li>
-<li>When all zones ack, ticker calls <code>post_tick/2</code> on the world server
-for global game events (boss phases, quest triggers, vote requests)</li>
+<li>The ticker sends <code>tick(N)</code> to every zone in parallel.</li>
+<li>Each zone applies queued player inputs, runs <code>zone_tick/2</code>, computes deltas
+from the previous state and broadcasts them to its subscribers.</li>
+<li>Each zone acks back to the ticker.</li>
+<li>When every zone has acked, the ticker calls <code>post_tick/2</code> on the world
+server for global events: boss phases, quest triggers, vote requests.</li>
 </ol>
-<h3 id="delta-compression" tabindex="-1">Delta Compression</h3>
-<p>Zones only send what changed since the last tick:</p>
+<h3 id="delta-compression" tabindex="-1">Delta compression</h3>
+<p>Zones send only what changed since the last tick:</p>
 <pre><code class="language-json">{
   &quot;type&quot;: &quot;world.tick&quot;,
   &quot;payload&quot;: {
@@ -86,23 +90,23 @@ for global game events (boss phases, quest triggers, vote requests)</li>
 }
 </code></pre>
 <ul>
-<li><code>u</code> -- updated (only changed fields)</li>
-<li><code>a</code> -- added (full entity state)</li>
-<li><code>r</code> -- removed</li>
+<li><code>u</code> - updated, only the changed fields</li>
+<li><code>a</code> - added, full entity state</li>
+<li><code>r</code> - removed</li>
 </ul>
-<h2 id="lua-implementation" tabindex="-1">Lua Implementation</h2>
-<p>Most games write world logic in Lua and run the asobi_lua Docker image - no
-Erlang needed. The <a href="#erlang-implementation">Erlang behaviour</a> below is the same
-model for teams embedding asobi as a library.</p>
-<p>World scripts follow the same pattern as match scripts but with
-zone-specific callbacks. Set <code>game_type = &quot;world&quot;</code> in your mode globals.</p>
-<blockquote>
-<p><strong>Gotcha</strong>: the global is <strong><code>game_type</code></strong>, not <code>type</code>. The Erlang
-<code>sys.config</code> form uses the key <code>type</code>, but the Lua loader
-reads <code>game_type</code>. A Lua script that sets <code>type = &quot;world&quot;</code> is
-silently ignored — the script registers as a <em>match</em> mode and
-<code>world.find_or_create</code> returns <code>mode_not_found</code>.</p>
-</blockquote>
+<h2 id="in-lua" tabindex="-1">In Lua</h2>
+<p>Run <code>ghcr.io/widgrensit/asobi</code> and write a world script. The
+<a href="#in-erlang">Erlang behaviour</a> below is the same model on the other surface of
+the same node, for a release that depends on the Hex package.</p>
+<p>World scripts follow the same pattern as match scripts, with zone-specific
+callbacks. Set <code>game_type = &quot;world&quot;</code> in your mode globals.</p>
+<p>The global is <code>game_type</code>, not <code>type</code>. The Erlang <code>sys.config</code> form uses the
+key <code>type</code>, but the Lua loader reads <code>game_type</code>. A Lua script setting
+<code>type = &quot;world&quot;</code> is silently ignored: it registers as a match mode, so
+<code>world.find_or_create</code> hands the match bridge to the world server, which then
+crashes on the world callbacks that bridge does not export (<code>spawn_position/2</code>,
+<code>zone_tick/2</code>, <code>post_tick/2</code>). There is no clean error for this - check
+<code>game_type</code> first.</p>
 <pre><code class="language-lua">-- lua/world.lua
 
 -- World mode config
@@ -143,20 +147,11 @@ end
 function post_tick(tick, state)
     state.tick_count = tick
 
-    -- Boss defeated: trigger a vote
+    -- Boss defeated: next level, and tell every client
     if state.boss_hp &lt;= 0 then
         state.boss_hp = 10000
         state.dungeon_level = state.dungeon_level + 1
-        state._vote = {
-            template = &quot;boon_pick&quot;,
-            options = {
-                { id = &quot;shield&quot;, label = &quot;Shield Boost&quot; },
-                { id = &quot;speed&quot;,  label = &quot;Speed Boost&quot; },
-                { id = &quot;damage&quot;, label = &quot;Damage Boost&quot; }
-            },
-            method = &quot;plurality&quot;,
-            window_ms = 15000
-        }
+        game.broadcast(&quot;level_up&quot;, { level = state.dungeon_level })
     end
 
     -- Time limit: 30 minutes at 20 Hz
@@ -190,7 +185,7 @@ function get_state(player_id, state)
     }
 end
 </code></pre>
-<h3 id="lua-callbacks" tabindex="-1">Lua Callbacks</h3>
+<h3 id="lua-callbacks" tabindex="-1">Lua callbacks</h3>
 <table>
 <thead>
 <tr>
@@ -203,37 +198,47 @@ end
 <tr>
 <td><code>init(config)</code></td>
 <td>yes</td>
-<td>Return initial global game state</td>
+<td>Return the initial global game state</td>
 </tr>
 <tr>
 <td><code>join(player_id, state)</code></td>
 <td>yes</td>
-<td>Handle player join, return state</td>
+<td>Player joined; return state</td>
 </tr>
 <tr>
 <td><code>join(player_id, state, ctx)</code></td>
 <td>no</td>
-<td>Same, plus the client's join context. Declare the third parameter and it is used instead — see <a href="/docs/protocols/websocket#join-context">Join context</a></td>
+<td>Same, plus the client's join context. Declare the third parameter and it is used instead - see <a href="/docs/protocols/websocket#join-context">Join context</a></td>
 </tr>
 <tr>
 <td><code>leave(player_id, state)</code></td>
 <td>yes</td>
-<td>Handle player leave, return state</td>
+<td>Player left; return state</td>
 </tr>
 <tr>
 <td><code>spawn_position(player_id, state)</code></td>
 <td>yes</td>
-<td>Return <code>{x=N, y=N}</code> table</td>
+<td>Return a <code>{x=N, y=N}</code> table</td>
 </tr>
 <tr>
 <td><code>post_tick(tick, state)</code></td>
 <td>yes</td>
-<td>Global tick logic. Set <code>_finished</code>/<code>_result</code> or <code>_vote</code> on state</td>
+<td>Global tick logic. Set <code>_finished</code> and <code>_result</code> on state to end the world</td>
+</tr>
+<tr>
+<td><code>zone_tick(entities, zone_state)</code></td>
+<td>no</td>
+<td>Per-zone simulation; return both</td>
+</tr>
+<tr>
+<td><code>handle_input(player_id, input, entities)</code></td>
+<td>no</td>
+<td>Apply one player's input to that zone's entities</td>
 </tr>
 <tr>
 <td><code>generate_world(seed, config)</code></td>
 <td>no</td>
-<td>Return table keyed by <code>&quot;x,y&quot;</code> strings</td>
+<td>Return a table keyed by <code>&quot;x,y&quot;</code> strings</td>
 </tr>
 <tr>
 <td><code>get_state(player_id, state)</code></td>
@@ -241,13 +246,41 @@ end
 <td>Player-visible state</td>
 </tr>
 <tr>
-<td><code>vote_resolved(template, result, state)</code></td>
+<td><code>spawn_templates(config)</code></td>
 <td>no</td>
-<td>Handle vote result</td>
+<td>See <a href="#spawn-templates">Spawn templates</a></td>
+</tr>
+<tr>
+<td><code>phases(config)</code></td>
+<td>no</td>
+<td>See <a href="/docs/phases">Phases</a></td>
+</tr>
+<tr>
+<td><code>on_phase_started(name, state)</code> / <code>on_phase_ended(name, state)</code></td>
+<td>no</td>
+<td>Phase transitions</td>
+</tr>
+<tr>
+<td><code>on_zone_loaded(cx, cy, state)</code> / <code>on_zone_unloaded(cx, cy, state)</code></td>
+<td>no</td>
+<td>See <a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a></td>
+</tr>
+<tr>
+<td><code>terrain_provider(config)</code></td>
+<td>no</td>
+<td>See <a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a></td>
+</tr>
+<tr>
+<td><code>on_world_recovered(snapshot, state)</code></td>
+<td>no</td>
+<td>The world process restarted and a snapshot was recovered</td>
 </tr>
 </tbody>
 </table>
-<h3 id="finishing-a-world" tabindex="-1">Finishing a World</h3>
+<p><code>vote_resolved</code> is not on this list on purpose. The world bridge does not
+export it, so a Lua world script defining <code>vote_resolved</code> is never called. See
+<a href="/docs/voting">Voting</a> for what does and does not reach a Lua world today.</p>
+<h3 id="finishing-a-world" tabindex="-1">Finishing a world</h3>
 <p>Set <code>_finished</code> and <code>_result</code> on your state in <code>post_tick()</code>:</p>
 <pre><code class="language-lua">function post_tick(tick, state)
     if all_quests_complete(state) then
@@ -261,25 +294,12 @@ end
     return state
 end
 </code></pre>
-<h3 id="triggering-votes" tabindex="-1">Triggering Votes</h3>
-<p>Set <code>_vote</code> on your state in <code>post_tick()</code>:</p>
-<pre><code class="language-lua">function post_tick(tick, state)
-    if state.boss_hp &lt;= 0 then
-        state._vote = {
-            template = &quot;choose_path&quot;,
-            options = {
-                { id = &quot;cave&quot;, label = &quot;Dark Cave&quot; },
-                { id = &quot;forest&quot;, label = &quot;Enchanted Forest&quot; }
-            },
-            method = &quot;plurality&quot;,
-            window_ms = 20000
-        }
-        state.boss_hp = nil  -- clear so vote doesn't re-trigger
-    end
-    return state
-end
-</code></pre>
-<h2 id="erlang-implementation" tabindex="-1">Erlang Implementation</h2>
+<h3 id="triggering-votes" tabindex="-1">Triggering votes</h3>
+<p>Setting <code>state._vote</code> in <code>post_tick</code> is the world's vote trigger, and the
+server does read it every tick. It does not start a vote today: the decoded
+table reaches the vote server with the wrong key type and the failure is
+swallowed. <a href="/docs/voting">Voting</a> has the detail and the Erlang route that works.</p>
+<h2 id="in-erlang" tabindex="-1">In Erlang</h2>
 <p>Implement the <code>asobi_world</code> behaviour:</p>
 <pre><code class="language-erlang">-module(my_dungeon).
 -behaviour(asobi_world).
@@ -321,7 +341,7 @@ handle_input(_PlayerId, _Input, Entities) -&gt;
     {ok, Entities}.
 
 post_tick(TickN, #{boss_hp := HP} = State) when HP =&lt; 0 -&gt;
-    %% Boss defeated -- trigger an upgrade vote
+    %% Boss defeated - trigger an upgrade vote
     {vote, #{
         template =&gt; ~&quot;boon_pick&quot;,
         options =&gt; [
@@ -351,7 +371,7 @@ post_tick(_TickN, State) -&gt;
 <tr>
 <td><code>init/1</code></td>
 <td>yes</td>
-<td>Initialize global game state</td>
+<td>Initialise global game state</td>
 </tr>
 <tr>
 <td><code>join/2</code></td>
@@ -396,7 +416,7 @@ post_tick(_TickN, State) -&gt;
 <tr>
 <td><code>vote_resolved/3</code></td>
 <td>no</td>
-<td>Handle vote result (inherited from match voting)</td>
+<td>Handle vote result. Not declared on the <code>asobi_world</code> behaviour: the world server looks for it with <code>erlang:function_exported/3</code>, so exporting it works but the compiler will not tell you if the arity is wrong</td>
 </tr>
 </tbody>
 </table>
@@ -440,14 +460,19 @@ shapes within one entity is not supported - keep an entity's keys consistent.</p
 <td>Must be <code>world</code> for world server mode</td>
 </tr>
 <tr>
+<td><code>module</code></td>
+<td>required</td>
+<td>The game module, or <code>{lua, &quot;path.lua&quot;}</code></td>
+</tr>
+<tr>
 <td><code>grid_size</code></td>
 <td>10</td>
-<td>Number of zones per axis (total = grid_size^2)</td>
+<td>Zones per axis; total zones = <code>grid_size^2</code></td>
 </tr>
 <tr>
 <td><code>zone_size</code></td>
 <td>200</td>
-<td>Units per zone side (world size = grid_size * zone_size)</td>
+<td>Units per zone side; world size = <code>grid_size * zone_size</code></td>
 </tr>
 <tr>
 <td><code>tick_rate</code></td>
@@ -457,75 +482,102 @@ shapes within one entity is not supported - keep an entity's keys consistent.</p
 <tr>
 <td><code>view_radius</code></td>
 <td>1</td>
-<td>Zones visible in each direction from player's zone</td>
-</tr>
-<tr>
-<td><code>rehome_margin</code></td>
-<td>0.15</td>
-<td>Fraction of <code>zone_size</code> an entity (player or NPC) must clear past its zone's edge before re-homing to the neighbouring zone (see below)</td>
+<td>Zones visible in each direction from the player's zone</td>
 </tr>
 <tr>
 <td><code>max_players</code></td>
 <td>500</td>
-<td>Maximum concurrent players per world</td>
+<td>Concurrent players per world</td>
 </tr>
 <tr>
-<td><code>zone_idle_timeout</code></td>
-<td>30000</td>
-<td>Milliseconds an empty zone lingers before it is released</td>
+<td><code>persistent</code></td>
+<td><code>false</code></td>
+<td>Keep the world alive with no players in it</td>
 </tr>
 <tr>
 <td><code>empty_grace_ms</code></td>
 <td>0</td>
-<td>Milliseconds a world with no players lingers before it finishes (0 = finish immediately)</td>
+<td>Milliseconds an empty world lingers before finishing. 0 finishes immediately</td>
 </tr>
 <tr>
-<td><code>snapshot_interval</code></td>
-<td>600</td>
-<td>Ticks between zone snapshots (see <a href="#snapshots">Snapshots</a>)</td>
+<td><code>player_ttl_ms</code></td>
+<td>0</td>
+<td>Milliseconds a disconnected player's entity is held for reconnection</td>
 </tr>
 <tr>
 <td><code>listed</code></td>
 <td><code>true</code></td>
-<td>Whether worlds of this mode appear in <code>world.list</code> / <code>GET /api/v1/worlds</code></td>
+<td>Whether worlds of this mode appear in <code>world.list</code> and <code>GET /api/v1/worlds</code></td>
 </tr>
 <tr>
 <td><code>quick_play</code></td>
 <td><code>true</code></td>
 <td>Whether <code>world.find_or_create</code> may place a player into an existing world of this mode</td>
 </tr>
+<tr>
+<td><code>chat</code></td>
+<td><code>#{}</code></td>
+<td>See <a href="#chat-channels">Chat channels</a></td>
+</tr>
 </tbody>
 </table>
-<p>#&gt; Using a world as a persistent hub is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
-<p>An entity - player or NPC - must clear its zone's edge by <code>rehome_margin</code> (a
+<p>Using a world as a persistent hub is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
+<h3 id="four-values-you-cannot-set" tabindex="-1">Four values you cannot set</h3>
+<p>These four look like mode options and are not: the mode config never reaches
+the process that would read them, so every world runs on the built-in value.
+Plan around them as facts of the deployment, not knobs.</p>
+<table>
+<thead>
+<tr>
+<th>Value</th>
+<th>What every world gets</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Active zones per world</td>
+<td>10,000. See <a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a> for what happens at that ceiling</td>
+</tr>
+<tr>
+<td>Zone idle timeout</td>
+<td>30 seconds before an empty zone is released</td>
+</tr>
+<tr>
+<td>Rehome margin</td>
+<td>0.15 of <code>zone_size</code> (described below)</td>
+</tr>
+<tr>
+<td>Zone snapshot interval</td>
+<td>600 ticks, and moot - see <a href="#snapshots">Snapshots</a></td>
+</tr>
+</tbody>
+</table>
+<p>An entity, player or NPC, must clear its zone's edge by the rehome margin (a
 fraction of <code>zone_size</code>) before re-homing to the neighbouring zone, so an
-entity parked on or jittering across a boundary doesn't re-home every tick.
-This means an entity's tracked zone can lag its true position by up to that
-margin near a boundary - an entity in a zone's entity map is not necessarily
-strictly within its rectangle.</p>
-<p><code>game.zone.query_radius</code>/<code>query_rect</code> only search the calling zone's own
+entity parked on or jittering across a boundary does not re-home every tick.
+An entity's tracked zone can therefore lag its true position by up to that
+margin near a boundary: an entity in a zone's entity map is not necessarily
+strictly inside that zone's rectangle.</p>
+<p>The zone-based <code>game.spatial.query_radius(x, y, radius)</code> and
+<code>game.spatial.query_rect(x1, y1, x2, y2)</code> search only the calling zone's own
 entity map, so this lag has a direction that matters: an area geometrically
 inside zone A's rectangle can be occupied by an entity zone B still owns,
-because it hasn't cleared the margin yet. A query issued from zone A over
-that area misses it entirely. For NPCs this is a live gap, not just a
-terrain-lookup rounding concern - query_radius/query_rect are exactly how
-game code typically finds NPCs near a point, and the margin means that gap
-can persist (an NPC parked just past its zone's edge stays invisible to the
-neighbour's queries indefinitely, not just for the tick it takes to cross).
-Account for this if your NPC AI queries by position near zone edges - a
-terrain lookup or other bounding use should account for the same slack.</p>
-<p>The margin only bounds this slack for positions inside the world rectangle.
-An entity outside it entirely is clamped into the edge zone by <code>pos_to_zone</code>
-and stays owned by that zone at any distance past the edge - validate
-positions in your movement handler if your game trusts the zone rectangle as
-a hard bound. Also note that a band-parked NPC only stays visible to a
-neighbouring zone's <em>subscribers</em> (not its <code>query_radius</code>/<code>query_rect</code>
-callers) while <code>view_radius &gt;= 1</code> keeps that neighbour touched every tick -
-at <code>view_radius = 0</code> the owning zone can idle out and persist the NPC under
-coordinates a player standing metres away never loads.</p>
-<p>See <a href="/docs/configuration">Configuration</a> for the matching <code>rehome</code> rate limit on
-how often a player may re-home at all - NPCs re-home directly without going
-through that limiter, since asobi_zone owns them outright.</p>
+because it has not cleared the margin yet. A query issued from zone A over that
+area misses it entirely, and the gap persists - an NPC parked just past its
+zone's edge stays invisible to the neighbour's queries indefinitely, not only
+for the tick it takes to cross. Account for that if your NPC AI queries by
+position near zone edges.</p>
+<p>The margin bounds this slack only for positions inside the world rectangle. An
+entity outside it entirely is clamped into the edge zone by <code>pos_to_zone</code> and
+stays owned by that zone at any distance past the edge, so validate positions
+in your movement handler if your game trusts the zone rectangle as a hard
+bound. A band-parked NPC also stays visible to a neighbouring zone's
+<em>subscribers</em> only while <code>view_radius &gt;= 1</code> keeps that neighbour touched every
+tick; at <code>view_radius = 0</code> the owning zone can idle out under coordinates a
+player standing metres away never loads.</p>
+<p>See <a href="/docs/configuration">Configuration</a> for the <code>rehome</code> rate limit on how often
+a player may re-home at all. NPCs re-home directly without going through that
+limiter, since <code>asobi_zone</code> owns them outright.</p>
 <h2 id="visibility" tabindex="-1">Visibility</h2>
 <p><code>listed</code> and <code>quick_play</code> are independent axes, so a mode can be browsable
 but out of quick-play rotation, or reachable by quick-play while hidden from
@@ -546,7 +598,7 @@ authorisation, which does not exist yet.</p>
 <p>With <code>quick_play =&gt; false</code>, <code>world.find_or_create</code> returns
 <code>quick_play_disabled</code> rather than creating a world, since it could never
 find the one it just made.</p>
-<h3 id="procedural-generation" tabindex="-1">Procedural Generation</h3>
+<h3 id="procedural-generation" tabindex="-1">Procedural generation</h3>
 <p>Implement <code>generate_world/2</code> to provide initial state for each zone:</p>
 <pre><code class="language-erlang">generate_world(Seed, _Config) -&gt;
     rand:seed(exsss, {Seed, Seed, Seed}),
@@ -567,12 +619,13 @@ templates</strong>. Implement the optional <code>spawn_templates/1</code> callba
 map of template id to template definition.</p>
 <p>A template has:</p>
 <ul>
-<li><code>type</code> -- the entity type applied to every spawned instance.</li>
-<li><code>base_state</code> -- a map merged into every entity spawned from the template.</li>
-<li><code>respawn</code> -- optional respawn policy: <code>strategy</code> (currently <code>timer</code>),
+<li><code>type</code> - the entity type applied to every spawned instance.</li>
+<li><code>base_state</code> - a map merged into every entity spawned from the template.</li>
+<li><code>respawn</code> - optional respawn policy: <code>strategy</code> (currently <code>timer</code>),
 <code>delay</code> (milliseconds), <code>jitter</code> (milliseconds of random spread added to
 the delay), and <code>max_respawns</code> (cap, or <code>infinity</code>).</li>
-<li><code>persistent</code> -- whether a spawned entity survives a zone snapshot/restore.
+<li><code>persistent</code> - whether a spawned entity would survive a zone snapshot and
+restore (see <a href="#snapshots">Snapshots</a> for why none is taken today).
 Lua entities default to <code>true</code>.</li>
 </ul>
 <p>At runtime, Lua scripts spawn from a template with
@@ -625,19 +678,28 @@ end
 </code></pre>
 <p>See the <code>examples/world-spawns</code> demo for a complete world script.</p>
 <h2 id="snapshots" tabindex="-1">Snapshots</h2>
-<p><code>asobi_zone_snapshotter</code> periodically persists each zone's entities and
-restores them on restart, before the zone accepts new subscribers. Tune the
-cadence with the <code>snapshot_interval</code> config key (default 600, measured in
-<strong>ticks</strong>, not milliseconds).</p>
+<p><code>asobi_zone_snapshotter</code> is a batched writer that persists a zone's entities,
+zone state, entity timers and spawner state to the <code>zone_snapshots</code> table, and
+loads them back when a zone starts blank.</p>
+<p><strong>No world writes one today.</strong> The zone reads a <code>persistence</code> flag, and the
+mode config that would set it emits <code>persistent</code> instead, so the flag is always
+false and both the periodic write and the restore-on-start are skipped. Setting
+<code>persistent = true</code> in a mode keeps a world alive when it empties; it does not
+survive a node restart.</p>
+<p>What does still work is a per-zone ETS backup written every 20 ticks. It is
+crash recovery for a zone process inside a running node, not durability across
+a restart.</p>
+<p>Do not build on cross-restart world state until this is fixed. A world's
+entities are in memory only.</p>
 <h2 id="subscriptions" tabindex="-1">Subscriptions</h2>
 <p>A player subscribes to the 3x3 neighbourhood of zones around their entity.
 Membership is recomputed as the player moves: entering a zone streams a
-snapshot of that zone's currently-visible entities, and leaving a zone stops
+snapshot of that zone's currently visible entities, and leaving a zone stops
 its updates.</p>
-<h2 id="websocket-protocol" tabindex="-1">WebSocket Protocol</h2>
-<p>World messages use the <code>world.*</code> namespace. See the full
-<a href="/docs/protocols/websocket">WebSocket Protocol</a> for envelope format.</p>
-<h3 id="client-to-server" tabindex="-1">Client to Server</h3>
+<h2 id="websocket-protocol" tabindex="-1">WebSocket protocol</h2>
+<p>World messages use the <code>world.*</code> namespace. See
+<a href="/docs/protocols/websocket">WebSocket protocol</a> for the envelope.</p>
+<h3 id="client-to-server" tabindex="-1">Client to server</h3>
 <table>
 <thead>
 <tr>
@@ -648,14 +710,29 @@ its updates.</p>
 </thead>
 <tbody>
 <tr>
+<td><code>world.create</code></td>
+<td><code>{&quot;mode&quot;: &quot;...&quot;}</code></td>
+<td>Create a world of this mode and join it</td>
+</tr>
+<tr>
+<td><code>world.find_or_create</code></td>
+<td><code>{&quot;mode&quot;: &quot;...&quot;}</code></td>
+<td>Join an existing world of this mode, or create one</td>
+</tr>
+<tr>
 <td><code>world.join</code></td>
 <td><code>{&quot;world_id&quot;: &quot;...&quot;}</code></td>
 <td>Join a specific world</td>
 </tr>
 <tr>
+<td><code>world.list</code></td>
+<td><code>{&quot;mode&quot;: &quot;...&quot;, &quot;has_capacity&quot;: true}</code></td>
+<td>Browse listed worlds</td>
+</tr>
+<tr>
 <td><code>world.leave</code></td>
 <td><code>{}</code></td>
-<td>Leave current world</td>
+<td>Leave the current world</td>
 </tr>
 <tr>
 <td><code>world.input</code></td>
@@ -664,7 +741,7 @@ its updates.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="server-to-client" tabindex="-1">Server to Client</h3>
+<h3 id="server-to-client" tabindex="-1">Server to client</h3>
 <table>
 <thead>
 <tr>
@@ -676,7 +753,7 @@ its updates.</p>
 <tbody>
 <tr>
 <td><code>world.joined</code></td>
-<td><code>{world_id, status, player_count, grid_size}</code></td>
+<td><code>{world_id, status, player_count, grid_size, ...}</code></td>
 <td>Join confirmed</td>
 </tr>
 <tr>
@@ -690,17 +767,29 @@ its updates.</p>
 <td>Zone delta broadcast</td>
 </tr>
 <tr>
+<td><code>world.phase_changed</code></td>
+<td>the phase info block</td>
+<td>See <a href="/docs/phases">Phases</a></td>
+</tr>
+<tr>
+<td><code>world.terrain</code></td>
+<td><code>{coords, data}</code></td>
+<td>See <a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a></td>
+</tr>
+<tr>
 <td><code>world.finished</code></td>
 <td><code>{world_id, result}</code></td>
 <td>World ended</td>
 </tr>
 </tbody>
 </table>
-<h3 id="input-routing" tabindex="-1">Input Routing</h3>
-<p>When you send <code>world.input</code>, the message is routed to the zone process
-that currently owns your player entity. You don't need to specify which
-zone -- the server tracks your position and routes automatically.</p>
-<h2 id="chat-channels" tabindex="-1">Chat Channels</h2>
+<p>A player already in a world who sends <code>world.join</code> for a different one is
+refused with <code>world.already_joined</code>; leave first.</p>
+<h3 id="input-routing" tabindex="-1">Input routing</h3>
+<p><code>world.input</code> is routed to the zone process that currently owns your player
+entity. You do not name a zone: the server tracks your position and routes
+automatically.</p>
+<h2 id="chat-channels" tabindex="-1">Chat channels</h2>
 <p>World chat is configuration-driven. Enable the channel types you need per
 game mode:</p>
 <pre><code class="language-erlang">{asobi, [
@@ -718,13 +807,12 @@ game mode:</p>
     }}
 ]}
 </code></pre>
-<p>Lua equivalent:</p>
-<pre><code class="language-lua">-- In your world script globals
-chat_world     = true
-chat_zone      = true
-chat_proximity = 2
-</code></pre>
-<h3 id="channel-types" tabindex="-1">Channel Types</h3>
+<p>There is no Lua equivalent: the loader reads no chat globals, so a script
+cannot turn a channel on. Chat is an operator <code>game_modes</code> entry, and that
+entry replaces the script's mode config for that name rather than merging into
+it - so a Lua world with chat needs the whole mode declared in <code>sys.config</code>,
+<code>module =&gt; {lua, &quot;world.lua&quot;}</code> included.</p>
+<h3 id="channel-types" tabindex="-1">Channel types</h3>
 <table>
 <thead>
 <tr>
@@ -735,35 +823,30 @@ chat_proximity = 2
 </thead>
 <tbody>
 <tr>
-<td><strong>Global</strong></td>
+<td>Global</td>
 <td>Every player in the game, across all worlds</td>
 <td>Join on world join, leave on world leave</td>
 </tr>
 <tr>
-<td><strong>World</strong></td>
+<td>World</td>
 <td>All players in the world instance</td>
 <td>Join on world join, leave on world leave</td>
 </tr>
 <tr>
-<td><strong>Zone</strong></td>
+<td>Zone</td>
 <td>Players in the same zone cell</td>
 <td>Auto-swap when crossing zone boundaries</td>
 </tr>
 <tr>
-<td><strong>Proximity</strong></td>
+<td>Proximity</td>
 <td>Players within N zones</td>
 <td>Follows your interest radius, updates on zone change</td>
 </tr>
-<tr>
-<td><strong>Federation</strong></td>
-<td>Federation members only</td>
-<td>Managed by the social system (works automatically)</td>
-</tr>
 </tbody>
 </table>
-<h3 id="how-it-works-1" tabindex="-1">How It Works</h3>
-<p>Chat channels use the existing <code>asobi_chat_channel</code> system. The world
-server automatically manages subscriptions:</p>
+<h3 id="how-it-works-1" tabindex="-1">How it works</h3>
+<p>Chat channels use the <code>asobi_chat_channel</code> system. The world server manages
+subscriptions:</p>
 <ul>
 <li><strong>On join</strong>: player is added to world chat and their spawn zone's chat</li>
 <li><strong>On zone change</strong>: old zone chat is left, new zone chat is joined.
@@ -786,27 +869,43 @@ is one broadcast and one row of history, not one per world. Only names
 declared in a mode's <code>chat.global</code> are authorised, so a client cannot mint
 new ones; names are up to 64 bytes of <code>a-z A-Z 0-9 _ - .</code> and anything else
 is dropped with a warning at join time.</p>
-<h3 id="no-chat-config" tabindex="-1">No Chat Config</h3>
-<p>If you omit the <code>chat</code> key entirely, no chat channels are created. The
-world server runs without any chat overhead. Add channels later by
-updating your mode config.</p>
+<h3 id="no-chat-config" tabindex="-1">No chat config</h3>
+<p>Omit the <code>chat</code> key and no channels are created. The world server then runs
+with no chat overhead. Add channels later by updating your mode config.</p>
 <h2 id="clustering" tabindex="-1">Clustering</h2>
-<p>Zones are regular Erlang processes. In a multi-node cluster, they
-distribute across nodes automatically via <code>pg</code>. A player on Node A can
-be subscribed to a zone on Node B -- Erlang distribution handles the
-message routing transparently.</p>
-<p>For large worlds, zones are distributed round-robin across cluster nodes:</p>
-<pre><code>Node A: zones {0,0}..{4,4}  (25 zones)
-Node B: zones {5,0}..{9,4}  (25 zones)
-Node C: zones {0,5}..{4,9}  (25 zones)
-Node D: zones {5,5}..{9,9}  (25 zones)
+<p>A world lives entirely on the node that created it. Its zones are local
+processes under that world's instance supervisor; nothing distributes them
+across nodes and there is no zone placement to configure. <code>pg</code> carries the
+registrations - world server pids by world id, zone pids by coordinates, player
+sessions, and the per-player and global world caps - but it registers
+processes, it never moves them.</p>
+<p>Horizontal scale therefore means more worlds, never a bigger one. If a single
+world is the thing that is full, shard it in your game design - regions,
+instances, shards. See <a href="/docs/clustering">Clustering</a>.</p>
+<h2 id="inspecting-a-world" tabindex="-1">Inspecting a world</h2>
+<p>The console has no worlds screen. Three things stand in for one:</p>
+<pre><code class="language-bash"># Every listed world, with player counts and phase blocks. Player-facing, so
+# it needs a player token, and unlisted modes never appear.
+curl http://localhost:8084/api/v1/worlds -H 'Authorization: Bearer &lt;token&gt;'
+
+# One world by id, including unlisted ones.
+curl http://localhost:8084/api/v1/worlds/&lt;world_id&gt; -H 'Authorization: Bearer &lt;token&gt;'
+
+# Node pressure: process count against the limit, run queue, memory, uptime.
+curl -H 'Authorization: Bearer &lt;ops-secret&gt;' \
+  http://localhost:8084/api/v1/ops/stats
 </code></pre>
-<h2 id="next-steps" tabindex="-1">Next Steps</h2>
+<p><code>/ops/stats</code> is the one to watch when zones are the concern: every zone is a
+process, so a world grid and its idle-zone churn show up in <code>process_count</code> and
+<code>run_queue</code> before they show up anywhere else. A stock node serves neither the
+console nor the ops API - see <a href="https://hexdocs.pm/asobi/console.html">Operator console</a>.</p>
+<h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
-<li><a href="/docs/lua/api">Lua Scripting</a> -- match-based Lua scripting</li>
-<li><a href="/docs/voting">Voting</a> -- in-game voting system</li>
-<li><a href="/docs/matchmaking">Matchmaking</a> -- how players enter worlds</li>
-<li><a href="/docs/clustering">Clustering</a> -- multi-node deployment</li>
+<li><a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a> - lazy zones, terrain, and the zone ceiling.</li>
+<li><a href="/docs/lua/api">Lua scripting</a> - the match-side scripting model.</li>
+<li><a href="/docs/voting">Voting</a> - in-session voting.</li>
+<li><a href="/docs/phases">Phases</a> - the phase clock and <code>world.phase_changed</code>.</li>
+<li><a href="/docs/clustering">Clustering</a> - multi-node deployment.</li>
 </ul>
 """}
     ]}.

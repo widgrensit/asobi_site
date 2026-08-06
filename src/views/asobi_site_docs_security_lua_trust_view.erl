@@ -24,58 +24,51 @@ render(Bindings) ->
         {h1, [], [~"Trust model"]},
         {raw,
             ~"""
-<p>asobi_lua treats the mounted <code>/app/game</code> Lua scripts as <strong>trusted</strong> in
-the same sense your <code>/app/bin/asobi_lua</code> binary is trusted: you control
-what files end up there. The sandbox protects against incidental
-scripting bugs (infinite loops, missed nil checks, atom exhaustion via
-untrusted player input) and makes it harder for a <em>compromised</em>
-dependency or <code>require</code>'d module to escape. It is not a defence against
-a deliberate, all-Erlang-aware adversary with the ability to write
-<code>/app/game/match.lua</code>.</p>
-<h2 id="verified-negative-results" tabindex="-1">Verified negative results</h2>
-<p>These are properties prior security audits looked at and confirmed
-hold. Documented here so future readers don't re-derive them.</p>
-<h3 id="setmetatable_g-and-setmetatableos-are-still-allowed" tabindex="-1"><code>setmetatable(_G, ...)</code> and <code>setmetatable(os, ...)</code> are still allowed</h3>
-<p>The strip pass calls <code>set_table_keys</code> with <code>nil</code>, which Luerl's
-<code>set_table_key_key/4</code> <em>erases</em> the entry from the underlying ttdict —
-the key becomes truly absent, not &quot;set to nil&quot;. A subsequent <code>__index</code>
-metatable on <code>os</code> (or <code>_G</code>) would intercept lookups for the absent
-keys. However, <code>__index</code> can only return values that exist in the
-script's reach, and the actual Erlang function references for
-<code>os.execute</code>, <code>os.exit</code>, etc. are stored exclusively inside the os
-table dict that was just erased. Once erased there is no Lua-reachable
-path to those function references — they are not stored elsewhere in
-the Luerl state. So metatable manipulation cannot recover stripped
-functions.</p>
-<h3 id="_asobi_loaded-is-reachable-via-_g_asobi_loaded" tabindex="-1"><code>_ASOBI_LOADED</code> is reachable via <code>_G._ASOBI_LOADED</code></h3>
-<p>The require cache is installed as a global, fully visible to Lua. A
-script can iterate it, mutate it, delete entries. There's no privilege
-boundary inside a single Luerl state, so this is by design and
-acceptable. Cross-match isolation comes from each match having its own
-state; a script that clobbers its own cache only DoSes itself. The internal
-<code>lookup_loaded</code> helper in <code>asobi_lua_loader</code> handles a clobbered
-cache cleanly rather than crashing with <code>case_clause</code>.</p>
-<h3 id="atom-table-inflation-via-terrain_provider" tabindex="-1">Atom-table inflation via <code>terrain_provider</code></h3>
-<p>A Lua script that returns <code>{ module = &quot;&lt;some_atom&gt;&quot;, ... }</code> from
-<code>terrain_provider/1</code> cannot inflate the atom table — the bridge uses
-<code>binary_to_existing_atom/1</code>. As of the F-* hardening pass the bridge
-also requires the target module to be on an explicit allowlist
-(<code>asobi_terrain_flat</code>, <code>asobi_terrain_perlin</code> by default; configurable
-via <code>application:get_env(asobi_lua, terrain_providers, ...)</code>) so a
-script that names an unrelated loaded module (<code>gen_server</code>, <code>rpc</code>,
-etc.) is rejected with a <code>terrain_provider_not_allowed</code> warning.</p>
-<h2 id="per-callback-isolation" tabindex="-1">Per-callback isolation</h2>
-<p>Most Lua callbacks run inside a child process spawned by the loader's
-<code>bounded_eval</code> wrapper with a wall-clock timeout and a
-<code>max_heap_size: kill =&gt; true</code>. A runaway loop or a runaway allocation
-in those callbacks crashes the child, the parent gen_server receives a
-<code>{error, timeout | heap_exhausted}</code> result, and the match continues.</p>
+<p>asobi treats the Lua scripts mounted at <code>/app/game</code> as trusted in the same
+sense the <code>/app/bin/asobi</code> binary is trusted: you control what files end up
+there. The <a href="/docs/security/lua-sandbox">sandbox</a> protects against incidental scripting
+bugs - infinite loops, missed nil checks, atom exhaustion driven by player
+input - and makes it harder for a compromised dependency or a <code>require</code>d module
+to escape. It is not a defence against a deliberate, Erlang-aware adversary who
+can write <code>/app/game/match.lua</code>.</p>
+<h2 id="documented-properties" tabindex="-1">Documented properties</h2>
+<p>Three properties of the sandbox that are easy to re-derive wrongly, with where
+to check them.</p>
+<h3 id="metatables-cannot-recover-a-stripped-function" tabindex="-1">Metatables cannot recover a stripped function</h3>
+<p><code>strip_dangerous_globals/1</code> in <code>asobi_lua_loader</code> sets each dangerous key to
+<code>nil</code>, and Luerl's <code>set_table_key_key/4</code> erases the entry from the underlying
+dict rather than storing a nil. So <code>setmetatable(_G, ...)</code> and
+<code>setmetatable(os, ...)</code> remain allowed, and an <code>__index</code> metatable does
+intercept lookups for the now-absent keys - but the Erlang function references
+for <code>os.execute</code> and the rest lived only in the dict entry that was erased.
+Nothing else in the Luerl state holds them, so there is no Lua-reachable path
+back to them.</p>
+<h3 id="_asobi_loaded-is-visible-to-script-code" tabindex="-1"><code>_ASOBI_LOADED</code> is visible to script code</h3>
+<p>The require cache is installed as a global. A script can iterate it, mutate it
+or delete entries. There is no privilege boundary inside a single Luerl state,
+so this is by design: cross-match isolation comes from each match owning its
+own state, and a script that clobbers its own cache only denies itself.
+<code>lookup_loaded</code> in <code>asobi_lua_loader</code> turns a clobbered cache into a clean Lua
+error rather than a <code>case_clause</code> crash.</p>
+<h3 id="terrain_provider-cannot-inflate-the-atom-table" tabindex="-1"><code>terrain_provider</code> cannot inflate the atom table</h3>
+<p>A script returning <code>{ module = &quot;&lt;name&gt;&quot;, ... }</code> from <code>terrain_provider/1</code>
+cannot mint an atom: the bridge uses <code>binary_to_existing_atom/1</code>. It also
+requires the module to be on an allowlist, so naming an unrelated loaded module
+(<code>gen_server</code>, <code>rpc</code>) is rejected with a <code>terrain_provider_not_allowed</code>
+warning. The default is <code>asobi_terrain_flat</code> and <code>asobi_terrain_perlin</code>, read
+through <code>asobi_lua_env:get_env(terrain_providers, ...)</code>.</p>
+<h2 id="per-callback-budgets" tabindex="-1">Per-callback budgets</h2>
+<p>Almost every Lua callback runs inside a child process spawned by the
+<code>bounded_eval</code> helper in <code>asobi_lua_loader</code>, with a wall-clock timeout,
+<code>max_heap_size</code> with <code>kill =&gt; true</code>, and a reduction budget. A runaway loop or
+allocation kills
+the child, the parent gen_server sees <code>{error, timeout | heap_exhausted | reductions_exhausted}</code>, and the match or zone continues on its previous state.</p>
 <table>
 <thead>
 <tr>
 <th>Callback</th>
 <th>Bridge</th>
-<th>Bounded?</th>
+<th>Bounded</th>
 <th>Budget</th>
 </tr>
 </thead>
@@ -84,19 +77,19 @@ in those callbacks crashes the child, the parent gen_server receives a
 <td><code>init/1</code></td>
 <td>match, world</td>
 <td>yes</td>
-<td>1000-2000 ms</td>
+<td>1000 ms match, 2000 ms world</td>
 </tr>
 <tr>
-<td><code>tick/1</code>, <code>zone_tick/2</code></td>
+<td><code>generate_world/2</code></td>
+<td>world</td>
+<td>yes</td>
+<td>5000 ms</td>
+</tr>
+<tr>
+<td><code>tick/1</code>, <code>zone_tick/2</code>, <code>post_tick/2</code></td>
 <td>match, world</td>
 <td>yes</td>
 <td>500 ms</td>
-</tr>
-<tr>
-<td><code>get_state/{1,2}</code></td>
-<td>match, world</td>
-<td>yes</td>
-<td>100 ms</td>
 </tr>
 <tr>
 <td><code>join/2</code>, <code>leave/2</code></td>
@@ -105,7 +98,19 @@ in those callbacks crashes the child, the parent gen_server receives a
 <td>200 ms</td>
 </tr>
 <tr>
-<td><code>vote_*</code></td>
+<td><code>get_state/{1,2}</code></td>
+<td>match, world</td>
+<td>yes</td>
+<td>100 ms</td>
+</tr>
+<tr>
+<td><code>spawn_position/2</code></td>
+<td>world</td>
+<td>yes</td>
+<td>100 ms</td>
+</tr>
+<tr>
+<td><code>vote_requested/1</code>, <code>vote_resolved/3</code></td>
 <td>match</td>
 <td>yes</td>
 <td>200 ms</td>
@@ -114,13 +119,31 @@ in those callbacks crashes the child, the parent gen_server receives a
 <td><code>phases/1</code></td>
 <td>match, world</td>
 <td>yes</td>
-<td>1000-2000 ms</td>
+<td>1000 ms match, 2000 ms world</td>
 </tr>
 <tr>
-<td><code>on_phase_*/2</code></td>
+<td><code>on_phase_started/2</code>, <code>on_phase_ended/2</code></td>
 <td>match, world</td>
 <td>yes</td>
 <td>200 ms</td>
+</tr>
+<tr>
+<td><code>on_zone_loaded/3</code>, <code>on_zone_unloaded/3</code></td>
+<td>world</td>
+<td>yes</td>
+<td>200 ms</td>
+</tr>
+<tr>
+<td><code>spawn_templates/1</code></td>
+<td>world</td>
+<td>yes</td>
+<td>2000 ms</td>
+</tr>
+<tr>
+<td><code>on_world_recovered/2</code></td>
+<td>world</td>
+<td>yes</td>
+<td>2000 ms</td>
 </tr>
 <tr>
 <td><code>terrain_provider/1</code></td>
@@ -129,31 +152,52 @@ in those callbacks crashes the child, the parent gen_server receives a
 <td>2000 ms</td>
 </tr>
 <tr>
-<td><strong><code>handle_input/3</code></strong></td>
-<td><strong>match, world</strong></td>
-<td><strong>NO</strong></td>
-<td><strong>(see below)</strong></td>
+<td>bot <code>think/2</code></td>
+<td>bot</td>
+<td>yes</td>
+<td>50 ms</td>
+</tr>
+<tr>
+<td><code>handle_input/3</code></td>
+<td>match, world</td>
+<td><strong>no</strong></td>
+<td>see below</td>
 </tr>
 </tbody>
 </table>
-<p><code>handle_input/3</code> is the one callback that does <strong>not</strong> spawn-isolate.
-At realistic input rates (one tick × N players × the message rate)
-the per-call spawn cost dominated the actual Lua work (~30-50 µs spawn</p>
+<p>The macros are not all in one place. Match budgets are <code>?*_TIMEOUT</code> in
+<code>asobi_lua_match.erl</code> and world budgets are <code>?*_TIMEOUT</code> in
+<code>asobi_lua_world.erl</code>, but <code>get_state/1</code> on the shared-state path has its own
+<code>?GET_STATE_TIMEOUT</code> in <code>asobi_lua_match_shared.erl</code>, and the bot <code>think</code>
+budget is a literal <code>50</code> at the call site in <code>asobi_bot.erl</code> rather than a
+macro. Grep for <code>asobi_lua_loader:call(</code> if you need the authoritative set.</p>
+<h2 id="handle-input-is-not-a-sandbox-boundary" tabindex="-1">handle-input is not a sandbox boundary</h2>
+<p><code>handle_input/3</code> is the one callback that does not spawn-isolate. At realistic
+input rates - one tick times N players times the message rate - the per-call
+spawn cost dominated the actual Lua work: roughly 30 to 50 microseconds of
+spawn, monitor and heap-cap setup against 50 to 200 microseconds of input
+handling. Removing the wrapper recovered measured tail-latency wins at 200
+players and 10 Hz input.</p>
+<p>What that costs is worth stating precisely, because it is not a supervisor
+event. Input arrives as a cast and is queued; the queue is drained inside the tick,
+by <code>apply_inputs/3</code> in <code>asobi_match_server</code> and in <code>asobi_zone</code>. There is no
+<code>gen_server:call</code> behind it and no call timeout to trip. A
+<code>while true do end</code> inside <code>handle_input</code> therefore hangs the match or
+zone process indefinitely: the tick stops, no supervisor restart happens, and
+every later call against that process times out in its own caller. Blast radius
+is one match or one zone. Recovery is manual.</p>
+<p>So treat <code>handle_input/3</code> as a hot path for trusted-author scripts, not as a
+boundary. Audit the inputs your script accepts, avoid dispatching on
+attacker-controlled strings, and treat it the way you would an Erlang
+<code>handle_call/3</code> you wrote yourself. Per-tick safety belongs in <code>tick/1</code>, which
+still spawn-isolates and is the right place to enforce fairness across players.</p>
+<h2 id="related" tabindex="-1">Related</h2>
 <ul>
-<li>monitor + heap-cap setup vs ~50-200 µs of input handling). Removing
-the wrapper recovered measured tail-latency wins of 35-45 % at 200
-players × 10 Hz input. See ADR 0002.</li>
+<li><a href="/docs/security/lua-sandbox">Sandbox model</a> - what the sandbox removes, replaces and bounds.</li>
+<li><a href="https://hexdocs.pm/asobi/security-lua-known-limitations.html">Known limitations (Lua)</a> - what it does not enforce.</li>
+<li><a href="/docs/security/threat-model">Threat model</a> - the node-level trust boundaries.</li>
+<li><a href="/docs/security/known-limitations">Known limitations</a> - the same for in-VM Erlang code.</li>
+<li><a href="/docs/security/auth">Auth and rate limiting</a> - the request-side bounds.</li>
 </ul>
-<p>The trade is explicit: a <code>while true do end</code> inside <code>handle_input</code> now
-hangs the match server until its caller's <code>gen_server:call/2</code> timeout
-trips (5 s default). The match supervisor then restarts the match
-process. Blast radius is one match.</p>
-<p><code>handle_input/3</code> is therefore <strong>not a sandbox boundary</strong>. It is a hot
-path for trusted-author scripts. Audit the inputs your match script
-accepts and avoid pattern-matching dispatch on attacker-controlled
-strings; otherwise, treat the same as you would any Erlang gen_server
-handle_call/2 implementation. Per-tick safety remains owned by
-<code>tick/1</code>, which still spawn-isolates and is the right place to
-enforce wall-clock fairness across players.</p>
 """}
     ]}.

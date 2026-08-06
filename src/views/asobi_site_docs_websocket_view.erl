@@ -87,16 +87,68 @@ and is handed to a catch-all match/world event handler. Every official SDK
 has one; a client written from scratch needs one too.</p>
 <h2 id="connection" tabindex="-1">Connection</h2>
 <h3 id="sessionconnect" tabindex="-1"><code>session.connect</code></h3>
-<p>Authenticate the WebSocket connection. Must be the first message sent.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;session.connect&quot;, &quot;payload&quot;: {&quot;token&quot;: &quot;session_token_here&quot;}}
+<p>Authenticate the WebSocket connection. Must be the first message sent. The
+token is the <code>access_token</code> from any auth route.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.connect&quot;, &quot;payload&quot;: {&quot;token&quot;: &quot;&lt;access_token&gt;&quot;}}
 </code></pre>
 <p>Response:</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.connected&quot;, &quot;payload&quot;: {&quot;player_id&quot;: &quot;...&quot;}}
 </code></pre>
+<p>A bad or expired token answers <code>error</code> with reason <code>invalid_token</code> and code
+<code>unauthenticated</code>, and the socket stays open so the client can retry with a
+refreshed token.</p>
 <h3 id="sessionheartbeat" tabindex="-1"><code>session.heartbeat</code></h3>
 <p>Keep-alive ping. Send periodically to prevent timeout.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;payload&quot;: {}}
 </code></pre>
+<p>Reply, carrying the server's clock in Unix milliseconds:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;cid&quot;: &quot;h-1&quot;, &quot;payload&quot;: {&quot;ts&quot;: 1785312000000}}
+</code></pre>
+<p>The reply is the same type as the request. A client that switches on <code>type</code>
+alone must tolerate that; a <code>cid</code> distinguishes the reply from a push.</p>
+<h3 id="limits" tabindex="-1">Limits</h3>
+<p>Every bound below is enforced by the socket itself, and a client that
+reconnects or backs off needs all of them.</p>
+<table>
+<thead>
+<tr>
+<th>Bound</th>
+<th>What happens</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>60 messages per second per connection</td>
+<td>Further frames in that second are answered with <code>error</code>, reason <code>rate_limited</code>. The connection stays open.</td>
+</tr>
+<tr>
+<td>64 KiB per inbound frame</td>
+<td>Answered with <code>error</code>, reason <code>payload_too_large</code>. Measured on the raw frame, before JSON parsing.</td>
+</tr>
+<tr>
+<td>10s to send <code>session.connect</code></td>
+<td>The socket is closed with code 1008 and the reason <code>idle_auth_timeout</code>. Override with <code>asobi.ws_idle_auth_timeout_ms</code>.</td>
+</tr>
+<tr>
+<td>60 connects per second per IP</td>
+<td>The upgrade is closed with 1008 <code>rate_limited</code> before anything else runs. Tune under <code>asobi.rate_limits</code>, group <code>ws_connect</code>.</td>
+</tr>
+<tr>
+<td>Origin allowlist</td>
+<td>A browser <code>Origin</code> outside <code>asobi.ws_allowed_origins</code> is closed with 1008 <code>origin_rejected</code>. With no allowlist configured every Origin passes, and a request with no <code>Origin</code> header always passes, because a native client sends none.</td>
+</tr>
+</tbody>
+</table>
+<p>The message-rate window is a fixed 1000ms bucket, not a sliding one: a burst
+that straddles the boundary can put 120 frames through in two adjacent
+windows. Size a client's send rate against the limit, not against the burst.</p>
+<p>Joining is bounded separately, per player rather than per connection: 10
+world or match joins per 60 seconds, including <code>world.create</code> and
+<code>world.find_or_create</code>. The 11th is <code>error</code> with reason <code>join_rate_limited</code>
+and code <code>join_rate_limited</code>.</p>
+<p>The first two bounds are per connection. The connect-flood and join buckets
+are per node, so across a cluster the real ceiling is the figure above times
+the node count. See <a href="/docs/clustering">Clustering</a>.</p>
 <h2 id="matches" tabindex="-1">Matches</h2>
 <blockquote>
 <p>The <code>match.input</code> (client -&gt; server) and <code>match.state</code> (server -&gt; all clients)
@@ -126,6 +178,13 @@ equivalent of this message.</p>
 <p>Joining is WebSocket-only by design: the join binds the match to your
 session so subsequent <code>match.input</code> is routed. There is no REST join, the
 same as for worlds.</p>
+<h4 id="matchjoined-reply" tabindex="-1"><code>match.joined</code> (reply)</h4>
+<p>The full match info, including the roster:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.joined&quot;, &quot;cid&quot;: &quot;j-1&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;mode&quot;: &quot;arena&quot;, &quot;status&quot;: &quot;waiting&quot;, &quot;player_count&quot;: 1, &quot;max_players&quot;: 4, &quot;players&quot;: [&quot;...&quot;], &quot;listed&quot;: false}}
+</code></pre>
+<p>An unknown id is <code>match_not_found</code> (<code>match.not_found</code>); over the join rate
+it is <code>join_rate_limited</code>; a game module that refuses the join answers with
+whatever reason it returned, wrapped as <code>ws.request_failed</code>.</p>
 <h4 id="join-context" tabindex="-1">Join context</h4>
 <p>Both <code>match.join</code> and <code>world.join</code> accept an optional <code>ctx</code>, passed through
 to your game module untouched:</p>
@@ -151,9 +210,11 @@ without it there is no channel from a client to your game before
 membership exists, so <code>join/2</code> can implement an allowlist but never a code.</p>
 <p>Bounded at the server: a flat object, at most 8 keys, keys up to 64 bytes,
 string values up to 256 bytes, plus integers and booleans. No nesting.
-Violations are rejected with <code>invalid_join_ctx</code>, <code>join_ctx_too_many_keys</code>,
-<code>join_ctx_key_too_long</code>, <code>join_ctx_value_too_long</code>, or
-<code>invalid_join_ctx_value</code>.</p>
+Violations are rejected with <code>invalid_join_ctx</code>, <code>invalid_join_ctx_key</code>,
+<code>join_ctx_too_many_keys</code>, <code>join_ctx_key_too_long</code>, <code>join_ctx_value_too_long</code>,
+or <code>invalid_join_ctx_value</code>. None of the six has a code of its own, so each
+arrives as <code>ws.request_failed</code> with the reason in <code>details</code> - see
+<a href="#error-server-push">error</a>.</p>
 <p><strong>A join context does not make a world private.</strong> Only a game that
 implements <code>join/3</code> and rejects unauthorised joins restricts entry; a game
 that ignores it stays open to anyone holding a <code>world_id</code>.</p>
@@ -173,9 +234,21 @@ request that caused it when there was one:</p>
 </code></pre>
 <ul>
 <li><code>error.code</code> is the contract - stable, machine-readable, and namespaced by
-domain (<code>match.</code>, <code>world.</code>, <code>chat.</code>, <code>matchmaker.</code>) or bare when it is
-cross-cutting (<code>rate_limited</code>, <code>unauthenticated</code>). Branch on this. It is the
-same code set the <a href="/docs/protocols/rest#errors">REST API</a> returns.</li>
+domain (<code>match.</code>, <code>world.</code>, <code>chat.</code>, <code>dm.</code>, <code>matchmaker.</code>, <code>rpc.</code>, <code>ws.</code>) or
+bare when it is cross-cutting (<code>rate_limited</code>, <code>join_rate_limited</code>,
+<code>unauthenticated</code>, <code>forbidden</code>, <code>payload_too_large</code>, <code>invalid_json</code>,
+<code>invalid_message</code>, <code>invalid_payload</code>, <code>missing_field</code>, <code>unknown_type</code>,
+<code>internal</code>). Branch on this. Codes come from the same closed set the
+<a href="/docs/protocols/rest#errors">REST API</a> uses.</li>
+<li>The two surfaces agree only where a failure has a first-class code. A
+WebSocket reason that has one carries it, so <code>world_not_found</code> here and a
+404 on <code>GET /api/v1/worlds/:id</code> are both <code>world.not_found</code>. Everything else
+arrives as <code>ws.request_failed</code> with the reason in <code>details</code>, including
+several common failures. On this page that covers the world capacity pair
+(<code>world_capacity_reached</code>, <code>player_world_limit_reached</code>, which REST answers
+as <code>world.capacity_reached</code> and <code>world.player_limit_reached</code>) and every
+join-context rejection listed under <a href="#join-context">Join context</a>. Match a
+reason string on <code>details.reason</code> for those, not a code.</li>
 <li><code>error.message</code> is prose for a human reading a log. Do not parse it.</li>
 <li><code>error.details</code> is <strong>always</strong> an object, <code>{}</code> when there is nothing to add.</li>
 <li><code>reason</code> is the original, flatter dialect. It is unchanged and still sent, so
@@ -187,35 +260,59 @@ returns from a rejected join - arrives as <code>ws.request_failed</code> with th
 string in <code>details</code>, so script-supplied text can never mint a code:</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;payload&quot;: {&quot;reason&quot;: &quot;party_is_full&quot;, &quot;error&quot;: {&quot;code&quot;: &quot;ws.request_failed&quot;, &quot;message&quot;: &quot;The request failed. See `details.reason`.&quot;, &quot;details&quot;: {&quot;reason&quot;: &quot;party_is_full&quot;}}}}
 </code></pre>
-<h3 id="gameerror-server-push" tabindex="-1"><code>game.error</code> (server push)</h3>
+<h3 id="moduleerror-server-push" tabindex="-1"><code>module.error</code> (server push)</h3>
 <p>An extension callback error, sent to the player whose input triggered it.
-Only emitted when the extension runs with dev errors enabled (for
-asobi_lua, <code>ASOBI_DEV_ERRORS=true</code>); production runtimes keep script
-errors server-side.</p>
+Only emitted when the extension runs with dev errors enabled (for asobi's
+Lua runtime, <code>ASOBI_DEV_ERRORS=true</code> or <code>{asobi_lua, [{dev_errors, true}]}</code>);
+production runtimes keep script errors server-side.</p>
 <p><code>module</code> names the extension that produced the error. It is the only field
 asobi owns; the rest of the payload is the extension's.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;game.error&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;callback&quot;: &quot;handle_input&quot;, &quot;script&quot;: &quot;match.lua&quot;, &quot;message&quot;: &quot;bad arithmetic + on nil, 1&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;module.error&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;callback&quot;: &quot;handle_input&quot;, &quot;script&quot;: &quot;match.lua&quot;, &quot;message&quot;: &quot;bad arithmetic + on nil, 1&quot;}}
 </code></pre>
-<h3 id="gamemessage-server-push" tabindex="-1"><code>game.message</code> (server push)</h3>
-<p>A message addressed to one player by an extension - asobi_lua's
+<h3 id="modulemessage-server-push" tabindex="-1"><code>module.message</code> (server push)</h3>
+<p>A message addressed to one player by an extension - in Lua,
 <code>game.send(player_id, message)</code>. The message is wrapped rather than sent
 raw, because it may be any scripting value (string, number, table).</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;game.message&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;message&quot;: &quot;you are player 3&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;module.message&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;message&quot;: &quot;you are player 3&quot;}}
 </code></pre>
-<p>Both frames are produced by extensions, not only by Lua, which is why the
-producer is a payload key rather than part of the wire type. <code>module</code> was
-added without a type change so existing SDK builds keep working; clients
-that care which extension spoke should read <code>payload.module</code> and treat a
-missing value as <code>&quot;lua&quot;</code>. Renaming the types to <code>module.error</code> and
-<code>module.message</code> is reserved for the 1.0 wire break.</p>
+<h3 id="gameerror-gamemessage-server-push-deprecated" tabindex="-1"><code>game.error</code> / <code>game.message</code> (server push, deprecated)</h3>
+<p>The pre-rename names for the two frames above. Deprecated. <strong>New SDK code
+dispatches on <code>module.error</code> and <code>module.message</code>.</strong> The pair is removed
+at the 1.0 wire break and will not be replaced.</p>
+<p>They are still emitted, byte-identical payload and same reply as their
+<code>module.*</code> twin, so every SDK built before the rename keeps working with
+no change. Each message therefore produces two frames today: the legacy
+frame first, then the <code>module.*</code> frame.</p>
+<p>Do not dispatch on both - a client that handles <code>game.message</code> and
+<code>module.message</code> processes every message twice.</p>
+<p>Neither name was ever Lua-specific: both frames are produced by
+extensions in general, which is why the producer travels in the payload's
+<code>module</code> key. Clients that care which extension spoke read
+<code>payload.module</code> and treat a missing value as <code>&quot;lua&quot;</code>. <code>game.*</code> put one
+extension in the wire type, where no second extension could reuse it -
+that is what the rename fixes.</p>
+<p><strong>Wire history.</strong> <code>module.*</code> did not exist on the wire in any release
+before this change: not in v0.54.0, and not in v0.53.0, where commit
+<code>a6bc2eb</code> says otherwise. That commit's message describes a dual-emit
+that its own follow-up commit in the same pull request removed, because
+Nova could not send two frames from one reply at the time
+(novaframework/nova#400). Every release up to v0.54.0 emits <code>game.error</code>
+and <code>game.message</code> only.</p>
+<p><strong>Turning the legacy pair off.</strong> Set <code>asobi.ws_legacy_game_frames</code> to
+<code>false</code> to emit only <code>module.*</code>. <code>game.message</code> is <code>game.send/2</code>, which a
+script may call per player per tick, so on a chatty game the compat frame
+doubles asobi's hottest extension-produced egress. Any client still
+dispatching on <code>game.*</code> goes silent when you do this, so flip it only
+once every client on the deployment reads <code>module.*</code>. It defaults to
+<code>true</code> and becomes a no-op at 1.0.</p>
 <h3 id="matchstate-server-push" tabindex="-1"><code>match.state</code> (server push)</h3>
 <p>Server broadcasts game state updates to all players in the match.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.state&quot;, &quot;payload&quot;: {&quot;players&quot;: {...}, &quot;tick&quot;: 42}}
 </code></pre>
-<h3 id="matchstarted-server-push" tabindex="-1"><code>match.started</code> (server push)</h3>
-<p>Notification that a match has begun.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;match.started&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;players&quot;: [...]}}
-</code></pre>
+<p>There is no &quot;match started&quot; frame. The match server notifies its players on
+<code>finished</code> and on nothing else, so a client learns the match began from
+<code>match.matched</code> (matchmaker) or <code>match.joined</code> (its own join reply), and
+then from the first <code>match.state</code>.</p>
 <h3 id="matchfinished-server-push" tabindex="-1"><code>match.finished</code> (server push)</h3>
 <p>Notification that a match has ended with results.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.finished&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;result&quot;: {...}}}
@@ -232,32 +329,80 @@ not maintained by asobi.</p>
 <p>Leave the current match.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.leave&quot;, &quot;payload&quot;: {}}
 </code></pre>
+<h4 id="matchleft-reply" tabindex="-1"><code>match.left</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.left&quot;, &quot;cid&quot;: &quot;l-1&quot;, &quot;payload&quot;: {&quot;success&quot;: true}}
+</code></pre>
+<p>Sent whether or not the connection was in a match, so leaving is safe to
+call unconditionally on teardown.</p>
 <h2 id="matchmaking" tabindex="-1">Matchmaking</h2>
+<p>The queue is per node. A ticket lives in the matchmaker process on the node
+that accepted it, there is no ticket table, and the matcher only ever sees
+that node's tickets. Two players who queue for the same mode against
+different nodes therefore never match each other, and a ticket id is
+meaningless on any other node. A cluster needs every matchmaker call from
+one player pinned to one node, and matchmaking only works at all if the
+whole population lands on one node or the fleet is deliberately partitioned
+by mode.</p>
+<p>World and match discovery and join are <strong>not</strong> subject to this. They resolve
+through a cluster-wide process registry rather than the matchmaker's own
+state, so <code>world.list</code>, <code>match.list</code>, <code>world.join</code> and <code>match.join</code> reach a
+world or match on any node. See <a href="/docs/clustering">Clustering</a>.</p>
 <h3 id="matchmakeradd" tabindex="-1"><code>matchmaker.add</code></h3>
 <p>Submit a matchmaking ticket.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.add&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;properties&quot;: {&quot;skill&quot;: 1200}}}
 </code></pre>
+<h4 id="matchmakerqueued-reply" tabindex="-1"><code>matchmaker.queued</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.queued&quot;, &quot;cid&quot;: &quot;q-1&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;, &quot;status&quot;: &quot;pending&quot;, &quot;players_needed&quot;: 4}}
+</code></pre>
+<p><code>players_needed</code> is the mode's configured <code>match_size</code>, or <code>null</code> when the
+mode declares none. How many others are already waiting is deliberately not
+reported.</p>
+<p>A mode that resolves to no game module is <code>unknown_mode</code>
+(<code>matchmaker.unknown_mode</code>); a full queue is <code>queue_full</code>
+(<code>matchmaker.queue_full</code>). Re-adding for a mode you already have an open
+ticket for returns that same ticket rather than a second one.</p>
 <h3 id="matchmakerremove" tabindex="-1"><code>matchmaker.remove</code></h3>
 <p>Cancel a matchmaking ticket.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.remove&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;}}
 </code></pre>
-<h3 id="matchmatched-server-push" tabindex="-1"><code>match.matched</code> (server push)</h3>
-<p>Notification that the matchmaker paired you into a match.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;match.matched&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;players&quot;: [...]}}
+<h4 id="matchmakerremoved-reply" tabindex="-1"><code>matchmaker.removed</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.removed&quot;, &quot;cid&quot;: &quot;r-1&quot;, &quot;payload&quot;: {&quot;success&quot;: true}}
 </code></pre>
-<blockquote>
-<p>Note: distinct from <code>match.joined</code>, which is the server's reply to a
-client-initiated <code>match.join</code> message. Both signal &quot;you're in a match
-and <code>match.state</code> will follow,&quot; but only <code>match.matched</code> is fired
-spontaneously by the matchmaker.</p>
-</blockquote>
+<p>Another player's ticket is <code>not_owner</code> (<code>forbidden</code>). An unknown ticket is
+<code>not_found</code>, which has no code of its own and arrives as <code>ws.request_failed</code>.
+A ticket issued by another node reads as unknown here.</p>
+<h3 id="matchmatched-server-push" tabindex="-1"><code>match.matched</code> (server push)</h3>
+<p>Notification that the matchmaker paired you into a match. The join is
+already done: the matchmaker joins every paired player before sending this,
+so no <code>match.join</code> follows.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.matched&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;players&quot;: [&quot;...&quot;, &quot;...&quot;]}}
+</code></pre>
+<p>A mode whose matches are backed by a <strong>world</strong> rather than a match server
+sends a different payload on the same frame: <code>match_id</code> holds the world id,
+<code>mode</code> is present, and the roster is under <code>player_ids</code> rather than
+<code>players</code>. Read both keys if your game has any world-backed mode.</p>
+<p>Distinct from <code>match.joined</code>, which is the reply to a client-initiated
+<code>match.join</code>. Both mean &quot;you are in a match and <code>match.state</code> will follow&quot;,
+but only <code>match.matched</code> arrives unprompted and without a <code>cid</code>.</p>
+<h3 id="matchmatchmaker_expired-server-push" tabindex="-1"><code>match.matchmaker_expired</code> (server push)</h3>
+<p>Your ticket waited longer than <code>matchmaker.max_wait_seconds</code> (default 60)
+without being matched. It is gone; submit a new one to keep queuing.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.matchmaker_expired&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;}}
+</code></pre>
+<h3 id="matchmatchmaker_failed-server-push" tabindex="-1"><code>match.matchmaker_failed</code> (server push)</h3>
+<p>A group formed but the match could not be started, so everyone in it is back
+out of the queue. <code>reason</code> is <code>match_start_failed</code> or <code>no_game_module</code>.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.matchmaker_failed&quot;, &quot;payload&quot;: {&quot;reason&quot;: &quot;match_start_failed&quot;}}
+</code></pre>
 <h2 id="worlds" tabindex="-1">Worlds</h2>
 <p>The world server runs persistent shared spaces with zoned interest
 management. See <a href="/docs/world-server">World server</a> for the model and
 <a href="https://hexdocs.pm/asobi/large-worlds.html">Large worlds</a> for tuning.</p>
 <h3 id="worldlist" tabindex="-1"><code>world.list</code></h3>
-<p>List running worlds. Optional filters: <code>mode</code> (string), <code>has_capacity</code>
-(bool — only worlds that aren't full).</p>
+<p>List running worlds. Optional filters: <code>mode</code> (string, up to 64 bytes) and
+<code>has_capacity</code> (bool - only worlds that are not full). A filter of the wrong
+type is rejected with <code>invalid_mode_filter</code> or <code>invalid_has_capacity_filter</code>
+rather than silently dropped.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.list&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;walkers&quot;, &quot;has_capacity&quot;: true}}
 </code></pre>
 <p>Response:</p>
@@ -266,7 +411,11 @@ management. See <a href="/docs/world-server">World server</a> for the model and
 <h3 id="worldcreate" tabindex="-1"><code>world.create</code></h3>
 <p>Create a new world for the given mode. Refuses with
 <code>world_capacity_reached</code> (global cap hit) or <code>player_world_limit_reached</code>
-(per-player cap hit). On success the caller is auto-joined.</p>
+(per-player cap hit). Neither reason has a code of its own on this socket:
+both arrive as <code>ws.request_failed</code> with the reason in <code>details</code>, unlike
+<code>POST /api/v1/worlds</code>, which answers <code>world.capacity_reached</code> (503) and
+<code>world.player_limit_reached</code> (429). On success the caller is auto-joined and
+the reply is <code>world.joined</code>.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.create&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;walkers&quot;}}
 </code></pre>
 <h3 id="worldfind_or_create" tabindex="-1"><code>world.find_or_create</code></h3>
@@ -280,13 +429,14 @@ right call for &quot;drop me into a shared room&quot; flows.</strong></p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.join&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;}}
 </code></pre>
 <h3 id="worldinput" tabindex="-1"><code>world.input</code></h3>
-<p>Send game input to your zone. The <code>payload</code> IS the input map — there is
+<p>Send game input to your zone. The <code>payload</code> IS the input map - there is
 no inner <code>data</code> wrapper. Field names are entirely up to your game; the
 server only forwards the map verbatim to your <code>handle_input/3</code> callback.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.input&quot;, &quot;payload&quot;: {&quot;kind&quot;: &quot;move&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480}}
 </code></pre>
 <p>The server routes the message to whichever zone owns your player
-entity — clients don't specify zone coordinates.</p>
+entity - clients do not specify zone coordinates. Input sent while not in a
+zone is dropped with no reply at all.</p>
 <h3 id="worldleave" tabindex="-1"><code>world.leave</code></h3>
 <p>Leave the current world.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.leave&quot;, &quot;payload&quot;: {}}
@@ -299,7 +449,7 @@ player_count, grid_size, max_players, …).</p>
 </code></pre>
 <h3 id="worldtick-server-push" tabindex="-1"><code>world.tick</code> (server push)</h3>
 <p>Per-zone delta broadcast. The first <code>world.tick</code> after <code>world.joined</code> is
-the <strong>initial snapshot</strong> for every entity in the zone — register your
+the <strong>initial snapshot</strong> for every entity in the zone - register your
 handler before sending the join message or you miss it.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.tick&quot;, &quot;payload&quot;: {&quot;tick&quot;: 42, &quot;updates&quot;: [{&quot;op&quot;: &quot;a&quot;, &quot;id&quot;: &quot;01HX...&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480, &quot;type&quot;: &quot;player&quot;}]}}
 </code></pre>
@@ -315,12 +465,12 @@ handler before sending the join message or you miss it.</p>
 <tbody>
 <tr>
 <td><code>&quot;a&quot;</code></td>
-<td>Added — full state</td>
+<td>Added, full state</td>
 <td>id + every field on the entity</td>
 </tr>
 <tr>
 <td><code>&quot;u&quot;</code></td>
-<td>Updated — diff</td>
+<td>Updated, diff</td>
 <td>id + only changed fields</td>
 </tr>
 <tr>
@@ -347,15 +497,44 @@ the game module returned <code>{finished, Result, State}</code> from <code>post_
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.finished&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;, &quot;result&quot;: {}}}
 </code></pre>
 <h3 id="worldphase_changed-server-push" tabindex="-1"><code>world.phase_changed</code> (server push)</h3>
-<p>Phase transition for worlds that declare phases. Payload mirrors the
-match <code>match.phase_changed</code> event.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;world.phase_changed&quot;, &quot;payload&quot;: {&quot;phase&quot;: &quot;combat&quot;, &quot;duration_ms&quot;: 60000}}
+<p>Phase state for a world whose mode declares phases. Only worlds emit this;
+there is no match equivalent, so a client that wants phases in a match reads
+them out of <code>match.state</code> or has the script broadcast its own event.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.phase_changed&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;, &quot;status&quot;: &quot;active&quot;, &quot;phase&quot;: &quot;combat&quot;, &quot;remaining_ms&quot;: 42000, &quot;config&quot;: {}, &quot;timers&quot;: {}}}
 </code></pre>
+<p><code>status</code> is <code>waiting</code>, <code>active</code> or <code>complete</code>, and it decides which other
+fields are present:</p>
+<table>
+<thead>
+<tr>
+<th><code>status</code></th>
+<th>Fields beside <code>phase</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>waiting</code></td>
+<td><code>start_condition</code> - what the phase is waiting for.</td>
+</tr>
+<tr>
+<td><code>active</code></td>
+<td><code>remaining_ms</code>, <code>config</code> (the phase's own config object) and <code>timers</code> (the phase's live timers, keyed by id).</td>
+</tr>
+<tr>
+<td><code>complete</code></td>
+<td>None. <code>phase</code> is <code>null</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>The frame is sent on every transition, and again periodically while a phase
+runs, so a client must treat it as state rather than as an edge. <code>world_id</code>
+is present on the transition frame and absent from the periodic one; do not
+key off it.</p>
 <h2 id="chat" tabindex="-1">Chat</h2>
 <p>Channel ids are namespaced: every id must start with one of these prefixes, and
-a frame whose channel id is missing or unprefixed is rejected with
-<code>channel_id_invalid</code>. The prefix lets the runtime route the message and enforce
-membership without a per-frame registry lookup.</p>
+a <code>chat.join</code> whose channel id is missing or unprefixed is rejected with
+<code>invalid_channel_id</code> (<code>chat.invalid_channel_id</code>). The prefix lets the runtime
+route the message and enforce membership without a per-frame registry lookup.</p>
 <table>
 <thead>
 <tr>
@@ -421,15 +600,28 @@ work in Slack/Discord: it is not a bug or a cutoff to add later.</p>
 <p>The worked examples below use a <code>world:</code> channel, which authorises on world
 membership you already hold after <code>world.join</code>.</p>
 <p>A single connection may join at most <strong>32 channels</strong> at once; a 33rd is rejected
-with <code>too_many_channels</code>. Idle channels with no members stop after 60s; rejoining
-is cheap. Message <code>content</code> is capped at 2000 bytes and empty or non-binary
-content is rejected with <code>content_empty</code> / <code>content_too_large</code>.</p>
-<p>History (<code>GET /api/v1/chat/:channel_id/history</code>) requires membership and clamps
-<code>?limit</code> to 200; non-members get <code>403</code>.</p>
+with <code>too_many_channels</code> (<code>chat.too_many_channels</code>). Idle channels with no
+members stop after 60s; rejoining is cheap.</p>
+<p><code>chat.send</code> never answers with a size error. Content over 2000 bytes, and
+content that is not a string, is dropped with no reply at all, and empty
+content is accepted and broadcast. A client that needs either rejected has to
+check before sending. The only failure <code>chat.send</code> reports is <code>not_authorized</code>
+(<code>forbidden</code>), for a malformed channel id or a channel this player may not
+write to. <code>content_empty</code> and <code>content_too_large</code> are direct-message codes -
+see <a href="#direct-messages">Direct messages</a>.</p>
+<p>History (<code>GET /api/v1/chat/:channel_id/history</code>) requires membership; <code>?limit</code>
+defaults to 50 and clamps to 1-200, and a non-member gets <code>403</code>.</p>
 <h3 id="chatjoin" tabindex="-1"><code>chat.join</code></h3>
 <p>Join a chat channel. The channel id must be namespaced.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;chat.join&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;}}
 </code></pre>
+<h4 id="chatjoined-reply" tabindex="-1"><code>chat.joined</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.joined&quot;, &quot;cid&quot;: &quot;c-1&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;}}
+</code></pre>
+<p>A malformed id is <code>invalid_channel_id</code> (<code>chat.invalid_channel_id</code>); a channel
+this player is not authorised for is <code>not_authorized</code> (<code>forbidden</code>).</p>
+<p>Joining does not replay history. Fetch it from
+<code>GET /api/v1/chat/:channel_id/history</code>.</p>
 <h3 id="chatsend" tabindex="-1"><code>chat.send</code></h3>
 <p>Send a message to a channel.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;chat.send&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;, &quot;content&quot;: &quot;Hello!&quot;}}
@@ -442,14 +634,74 @@ content is rejected with <code>content_empty</code> / <code>content_too_large</c
     &quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;,
     &quot;sender_id&quot;: &quot;...&quot;,
     &quot;content&quot;: &quot;Hello!&quot;,
-    &quot;sent_at&quot;: &quot;2025-01-15T10:30:00Z&quot;
+    &quot;sent_at&quot;: 1785312000000
   }
 }
 </code></pre>
+<p><code>sent_at</code> is Unix milliseconds, not an ISO string. The same field on the
+persisted history read is a timestamp column, so the two differ.</p>
 <h3 id="chatleave" tabindex="-1"><code>chat.leave</code></h3>
 <p>Leave a chat channel.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;chat.leave&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;}}
 </code></pre>
+<h4 id="chatleft-reply" tabindex="-1"><code>chat.left</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;chat.left&quot;, &quot;cid&quot;: &quot;c-2&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;world:w_ancient_ruins&quot;}}
+</code></pre>
+<p>Sent whether or not the connection had joined that channel.</p>
+<h2 id="direct-messages" tabindex="-1">Direct messages</h2>
+<p>A DM is a chat message on a <code>dm:</code> channel whose id is both player ids sorted
+and joined with colons, so both sides always name the same channel. The
+sender gets a reply carrying that id; the recipient gets a <code>dm.message</code>
+push. Both sides read history from <code>GET /api/v1/dm/:player_id/history</code>.</p>
+<h3 id="dmsend" tabindex="-1"><code>dm.send</code></h3>
+<pre><code class="language-json">{&quot;type&quot;: &quot;dm.send&quot;, &quot;cid&quot;: &quot;d-1&quot;, &quot;payload&quot;: {&quot;recipient_id&quot;: &quot;...&quot;, &quot;content&quot;: &quot;Hello!&quot;}}
+</code></pre>
+<h4 id="dmsent-reply" tabindex="-1"><code>dm.sent</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;dm.sent&quot;, &quot;cid&quot;: &quot;d-1&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;dm:0197...:0198...&quot;}}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Code</th>
+<th>Cause</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>content_empty</code></td>
+<td><code>dm.content_empty</code></td>
+<td><code>content</code> was the empty string.</td>
+</tr>
+<tr>
+<td><code>content_too_large</code></td>
+<td><code>dm.content_too_large</code></td>
+<td><code>content</code> was over 2000 bytes.</td>
+</tr>
+<tr>
+<td><code>blocked</code></td>
+<td><code>dm.blocked</code></td>
+<td>The recipient has blocked the sender.</td>
+</tr>
+<tr>
+<td><code>invalid_input</code></td>
+<td><code>ws.request_failed</code></td>
+<td><code>recipient_id</code> or <code>content</code> was not a string.</td>
+</tr>
+</tbody>
+</table>
+<p>Unlike <code>chat.send</code>, these are real error frames: a DM that is too long or
+empty is refused rather than dropped.</p>
+<h3 id="dmmessage-server-push" tabindex="-1"><code>dm.message</code> (server push)</h3>
+<p>Addressed to the recipient's session, not to the channel. The sender's own
+confirmation is the <code>dm.sent</code> reply.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;dm.message&quot;, &quot;payload&quot;: {&quot;channel_id&quot;: &quot;dm:0197...:0198...&quot;, &quot;sender_id&quot;: &quot;...&quot;, &quot;content&quot;: &quot;Hello!&quot;, &quot;sent_at&quot;: 1785312000000}}
+</code></pre>
+<p>A recipient who is offline gets no push; the message is persisted either way
+and appears in history when they return.</p>
+<p>A connection that has also <code>chat.join</code>ed the <code>dm:</code> channel additionally
+receives the message as a <code>chat.message</code> on that channel. Handle one or the
+other, or a client that does both shows every DM twice.</p>
 <h2 id="voting" tabindex="-1">Voting</h2>
 <h3 id="votecast" tabindex="-1"><code>vote.cast</code></h3>
 <p>Cast a vote in an active match vote.</p>
@@ -458,11 +710,26 @@ content is rejected with <code>content_empty</code> / <code>content_too_large</c
 <p>For approval voting, <code>option_id</code> is a list:</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;vote.cast&quot;, &quot;payload&quot;: {&quot;vote_id&quot;: &quot;...&quot;, &quot;option_id&quot;: [&quot;jungle&quot;, &quot;caves&quot;]}}
 </code></pre>
+<h4 id="votecast_ok-reply" tabindex="-1"><code>vote.cast_ok</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;vote.cast_ok&quot;, &quot;cid&quot;: &quot;v1&quot;, &quot;payload&quot;: {&quot;success&quot;: true}}
+</code></pre>
+<p>Casting while not in a match is <code>not_in_match</code> (<code>match.not_in_match</code>), and
+changing your vote more times than the vote's <code>max_revotes</code> allows (3 by
+default) is <code>rate_limited</code>. The refusals that come from the vote itself -
+<code>vote_not_found</code>, <code>vote_closed</code>, <code>not_eligible</code>, <code>invalid_option</code> - have no
+code of their own and arrive as <code>ws.request_failed</code> with the reason in
+<code>details</code>.</p>
 <h3 id="voteveto" tabindex="-1"><code>vote.veto</code></h3>
 <p>Use a veto token to cancel the current vote. Requires <code>veto_tokens_per_player &gt; 0</code>
 in match config and <code>veto_enabled</code> on the vote.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;vote.veto&quot;, &quot;payload&quot;: {&quot;vote_id&quot;: &quot;...&quot;}}
 </code></pre>
+<h4 id="voteveto_ok-reply" tabindex="-1"><code>vote.veto_ok</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;vote.veto_ok&quot;, &quot;cid&quot;: &quot;v2&quot;, &quot;payload&quot;: {&quot;success&quot;: true}}
+</code></pre>
+<p>An unknown vote is <code>vote_not_found</code>, a player out of tokens is
+<code>no_veto_tokens</code>, and a vote that did not enable vetoes is <code>veto_disabled</code>.
+None of the three has a code of its own either.</p>
 <h3 id="matchvote_start-server-push" tabindex="-1"><code>match.vote_start</code> (server push)</h3>
 <p>A new vote has started.</p>
 <pre><code class="language-json">{
@@ -507,13 +774,17 @@ in match config and <code>veto_enabled</code> on the vote.</p>
 </code></pre>
 <h2 id="presence" tabindex="-1">Presence</h2>
 <h3 id="presenceupdate" tabindex="-1"><code>presence.update</code></h3>
-<p>Update your online status.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;presence.update&quot;, &quot;payload&quot;: {&quot;status&quot;: &quot;in_game&quot;, &quot;metadata&quot;: {&quot;match_id&quot;: &quot;...&quot;}}}
+<p>Set your own status string. <code>status</code> is the only field read; anything else in
+the payload is discarded. Omitting it sets <code>&quot;online&quot;</code>.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;presence.update&quot;, &quot;cid&quot;: &quot;p-1&quot;, &quot;payload&quot;: {&quot;status&quot;: &quot;in_game&quot;}}
 </code></pre>
-<h3 id="presencechanged-server-push" tabindex="-1"><code>presence.changed</code> (server push)</h3>
-<p>A friend's presence changed.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;presence.changed&quot;, &quot;payload&quot;: {&quot;player_id&quot;: &quot;...&quot;, &quot;status&quot;: &quot;online&quot;}}
+<h4 id="presenceupdated-reply" tabindex="-1"><code>presence.updated</code> (reply)</h4>
+<pre><code class="language-json">{&quot;type&quot;: &quot;presence.updated&quot;, &quot;cid&quot;: &quot;p-1&quot;, &quot;payload&quot;: {&quot;status&quot;: &quot;in_game&quot;}}
 </code></pre>
+<p>The status is not validated against a list, and it is not persisted: it lives
+for the length of the session. There is no push telling a client that another
+player's presence changed - a client that needs a friends list with live
+status polls for it.</p>
 <h2 id="notifications" tabindex="-1">Notifications</h2>
 <h3 id="notificationnew-server-push" tabindex="-1"><code>notification.new</code> (server push)</h3>
 <p>A new notification for the player.</p>
@@ -527,9 +798,87 @@ in match config and <code>veto_enabled</code> on the vote.</p>
   }
 }
 </code></pre>
+<h2 id="extension-rpc" tabindex="-1">Extension RPC</h2>
+<p>One frame type reaches every method any installed
+<a href="https://hexdocs.pm/asobi/extensions.html">extension</a> declares, so an extension needs no per-extension
+SDK work to be callable from a client.</p>
+<h3 id="rpccall" tabindex="-1"><code>rpc.call</code></h3>
+<pre><code class="language-json">{
+  &quot;type&quot;: &quot;rpc.call&quot;,
+  &quot;cid&quot;: &quot;c-1&quot;,
+  &quot;payload&quot;: {&quot;protocol&quot;: 1, &quot;method&quot;: &quot;quests.claim&quot;, &quot;params&quot;: {&quot;quest_id&quot;: &quot;q-1&quot;}}
+}
+</code></pre>
+<ul>
+<li><code>cid</code> is <strong>required</strong> here and validated by the server: 1 to 64 printable
+ASCII bytes. Elsewhere on this socket it is an optional echo; an RPC reply
+is useless without it, because it is the only way to pair a reply with its
+call. A rejected <code>cid</code> is not echoed back, so that one reply carries none.</li>
+<li><code>protocol</code> is the RPC payload version, currently <code>1</code>. Version the payload
+rather than the frame type, so a server that does not speak your version
+says so instead of answering <code>unknown_type</code>.</li>
+<li><code>params</code> is <strong>always</strong> an object, <code>{}</code> when the method takes nothing.</li>
+<li><code>method</code> is <code>&lt;extension&gt;.&lt;name&gt;</code>. The socket must already be authenticated:
+every declared method is player-scoped, and the player is the one that sent
+<code>session.connect</code>.</li>
+</ul>
+<h3 id="rpcok-reply" tabindex="-1"><code>rpc.ok</code> (reply)</h3>
+<pre><code class="language-json">{&quot;type&quot;: &quot;rpc.ok&quot;, &quot;cid&quot;: &quot;c-1&quot;, &quot;payload&quot;: {&quot;result&quot;: {&quot;reward&quot;: 100}}}
+</code></pre>
+<p><code>result</code> is <strong>always</strong> an object, so a method can grow a field without
+breaking a shipped client.</p>
+<h3 id="rpcerror-reply" tabindex="-1"><code>rpc.error</code> (reply)</h3>
+<pre><code class="language-json">{&quot;type&quot;: &quot;rpc.error&quot;, &quot;cid&quot;: &quot;c-1&quot;, &quot;payload&quot;: {&quot;error&quot;: {&quot;code&quot;: &quot;quests.already_claimed&quot;, &quot;message&quot;: &quot;This quest was already claimed.&quot;, &quot;details&quot;: {}}}}
+</code></pre>
+<p>The same error object the rest of this socket and the
+<a href="/docs/protocols/rest#errors">REST API</a> carry, and only that object - the flatter
+<code>reason</code> dialect is not repeated on a frame nothing has shipped against.</p>
+<p>An extension mints codes in its own domain, so a failure arrives as
+<code>quests.already_claimed</code> rather than <code>internal</code>. The set stays closed: a code
+no installed extension declared is answered as <code>internal</code> instead of being
+reflected back. Codes core itself adds for this surface:</p>
+<table>
+<thead>
+<tr>
+<th>Code</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>rpc.unknown_method</code></td>
+<td>No installed extension serves that method</td>
+</tr>
+<tr>
+<td><code>rpc.invalid_cid</code></td>
+<td><code>cid</code> was missing, not a string, empty, over 64 bytes, or not printable ASCII</td>
+</tr>
+<tr>
+<td><code>rpc.unsupported_protocol</code></td>
+<td><code>details.supported</code> lists the versions this server speaks</td>
+</tr>
+<tr>
+<td><code>rpc.invalid_params</code></td>
+<td><code>params</code> was not an object</td>
+</tr>
+<tr>
+<td><code>invalid_payload</code></td>
+<td><code>payload</code> itself was not an object</td>
+</tr>
+<tr>
+<td><code>unauthenticated</code></td>
+<td>The socket has not completed <code>session.connect</code></td>
+</tr>
+<tr>
+<td><code>not_ready</code></td>
+<td>The node is still running migrations. Retry</td>
+</tr>
+</tbody>
+</table>
 <h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
 <li><a href="/docs/protocols/rest">REST API</a> - the request/response surface alongside this socket protocol.</li>
+<li><a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a> - declaring the methods <code>rpc.call</code> reaches.</li>
 <li><a href="/docs/authentication">Authentication</a> - obtaining the token the socket authenticates with.</li>
 <li><a href="/docs/voting">Voting</a> - the vote flow whose <code>match.vote_*</code> pushes appear above.</li>
 </ul>

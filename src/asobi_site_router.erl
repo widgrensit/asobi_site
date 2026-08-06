@@ -63,6 +63,7 @@ routes(_Environment) ->
                 docs(~"/docs/economy", asobi_site_docs_economy_view),
                 docs(~"/docs/leaderboards", asobi_site_docs_leaderboards_view),
                 docs(~"/docs/clustering", asobi_site_docs_clustering_view),
+                docs(~"/docs/console", asobi_site_docs_console_view),
                 docs(~"/docs/configuration", asobi_site_docs_configuration_view),
                 docs(~"/docs/performance", asobi_site_docs_performance_view),
                 docs(~"/docs/lua/bots", asobi_site_docs_lua_bots_view),
