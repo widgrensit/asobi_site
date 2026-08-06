@@ -1,28 +1,27 @@
 #!/usr/bin/env bash
 # Regenerate the docs view modules that are single-sourced from guides.
 # See docs/adr/0003 in the asobi repo: each page is generated from the repo
-# whose CI can verify its claims - asobi for the library pages, asobi_lua for
-# the Lua-runtime pages.
+# whose CI can verify its claims. That used to be two repos - the Lua-runtime
+# pages came from asobi_lua - but the runtime merged into asobi and that repo
+# is archived, so its guides are frozen. Everything now comes from asobi,
+# which is the only checkout whose CI can still verify any of it.
 #
-# Usage: scripts/gen-docs.sh [ASOBI_DIR] [ASOBI_LUA_DIR]
-#   defaults: the repo's siblings ../asobi and ../asobi_lua
+# Usage: scripts/gen-docs.sh [ASOBI_DIR]
+#   default: the repo's sibling ../asobi
 #
 # Manifest columns: repo | guide-basename | module | page-id | title | breadcrumb | tab-slug
-#   repo is `asobi` or `asobi_lua` - selects which checkout's guides/ to read.
+#   repo is always `asobi`; the column stays so the row shape is unchanged.
 set -euo pipefail
 
 repo_root="$(cd "$(dirname "$0")/.." && pwd)"
 asobi="${1:-$(dirname "$repo_root")/asobi}"
-asobi_lua="${2:-$(dirname "$repo_root")/asobi_lua}"
 gen="$repo_root/scripts/gen-doc-view.mjs"
 views="$repo_root/src/views"
 
-for d in "$asobi/guides" "$asobi_lua/guides"; do
-	[ -d "$d" ] || {
-		echo "guides not found at $d" >&2
-		exit 1
-	}
-done
+[ -d "$asobi/guides" ] || {
+	echo "guides not found at $asobi/guides" >&2
+	exit 1
+}
 
 # repo | guide | module | id | title | breadcrumb | slug
 manifest=$(
@@ -36,6 +35,7 @@ asobi|lobbies|asobi_site_docs_lobbies_view|docs-lobbies|Lobbies — Asobi docs|L
 asobi|economy|asobi_site_docs_economy_view|docs-economy|Economy & IAP — Asobi docs|Economy|econ
 asobi|voting|asobi_site_docs_voting_view|docs-voting|Voting — Asobi docs|Voting|vote
 asobi|world-server|asobi_site_docs_world_server_view|docs-world-server|World server — Asobi docs|World server|world
+asobi|console|asobi_site_docs_console_view|docs-console|Operator console — Asobi docs|Operator console|console
 asobi|configuration|asobi_site_docs_configuration_view|docs-configuration|Configuration — Asobi docs|Configuration|config
 asobi|security-auth|asobi_site_docs_security_auth_view|docs-sec-auth|Auth & rate limiting — Asobi docs|Security / Authentication & rate limiting|secauth
 asobi|clustering|asobi_site_docs_clustering_view|docs-clustering|Clustering — Asobi docs|Clustering|cluster
@@ -50,10 +50,10 @@ asobi|exit|asobi_site_docs_exit_view|docs-exit|If Asobi disappears — Asobi doc
 asobi|migrate-from-nakama|asobi_site_docs_migrate_nakama_view|docs-migrate-nakama|Migrate from Nakama — Asobi docs|Migrate / Nakama|mignakama
 asobi|migrate-from-hathora|asobi_site_docs_migrate_hathora_view|docs-migrate-hathora|Migrate from Hathora — Asobi docs|Migrate / Hathora|mighathora
 asobi|migrate-from-playfab|asobi_site_docs_migrate_playfab_view|docs-migrate-playfab|Migrate from PlayFab — Asobi docs|Migrate / PlayFab|migplayfab
-asobi_lua|lua-bots|asobi_site_docs_lua_bots_view|docs-lua-bots|Lua bots — Asobi docs|Lua / Bots|luabots
-asobi_lua|security-sandbox|asobi_site_docs_security_lua_sandbox_view|docs-sec-lua-sandbox|Lua sandbox — Asobi docs|Security / Lua sandbox|luasandbox
-asobi_lua|security-trust-model|asobi_site_docs_security_lua_trust_view|docs-sec-lua-trust|Lua trust model — Asobi docs|Security / Lua trust model|luatrust
-asobi_lua|security-known-limitations|asobi_site_docs_security_lua_known_limits_view|docs-sec-lua-known|Lua known limitations — Asobi docs|Security / Lua known limitations|lualim
+asobi|lua-bots|asobi_site_docs_lua_bots_view|docs-lua-bots|Lua bots — Asobi docs|Lua / Bots|luabots
+asobi|security-sandbox|asobi_site_docs_security_lua_sandbox_view|docs-sec-lua-sandbox|Lua sandbox — Asobi docs|Security / Lua sandbox|luasandbox
+asobi|security-trust-model|asobi_site_docs_security_lua_trust_view|docs-sec-lua-trust|Lua trust model — Asobi docs|Security / Lua trust model|luatrust
+asobi|security-lua-known-limitations|asobi_site_docs_security_lua_known_limits_view|docs-sec-lua-known|Lua known limitations — Asobi docs|Security / Lua known limitations|lualim
 EOF
 )
 
@@ -62,7 +62,6 @@ while IFS='|' read -r repo guide mod id title crumb slug; do
 	[ -z "$repo" ] && continue
 	case "$repo" in
 	asobi) guides_dir="$asobi/guides" ;;
-	asobi_lua) guides_dir="$asobi_lua/guides" ;;
 	*)
 		echo "  !! $guide - unknown repo '$repo'" >&2
 		exit 1

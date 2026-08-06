@@ -19,37 +19,45 @@ render(Bindings) ->
         {h1, [], [~"Bots"]},
         {raw,
             ~"""
-<p>Asobi includes built-in bot support. Bots run as server-side processes that
-join matches as regular players -- no fake clients, no network overhead. The
-AI logic runs in the same tick loop as the game.</p>
+<p>Bots are server-side processes that join matches as ordinary players. There
+are no fake clients and no network hop; a bot's decisions go through the same
+<code>handle_input</code> path a human's do.</p>
 <h2 id="when-to-use-bots" tabindex="-1">When to use bots</h2>
 <ul>
-<li>Fill empty slots so matches start immediately instead of waiting for a full lobby.</li>
+<li>Fill empty slots so matches start instead of waiting for a full lobby.</li>
 <li>A tutorial or single-player sandbox with scripted opponents.</li>
-<li>Load-testing your tick loop without spawning real WebSocket sessions.</li>
-<li>Replay / record-and-replay testing.</li>
+<li>Load-testing a tick loop without spawning real WebSocket sessions.</li>
+<li>Replay and record-and-replay testing.</li>
 </ul>
-<h2 id="how-it-works" tabindex="-1">How It Works</h2>
+<h2 id="how-it-works" tabindex="-1">How it works</h2>
 <ol>
-<li>A player queues for matchmaking</li>
-<li>If no match is found within the configured wait time, Asobi adds bots</li>
-<li>Bots join the match like regular players</li>
-<li>Each tick, the bot calls a <code>think()</code> function to decide its input</li>
-<li>Bot input goes through the same <code>handle_input</code> path as real players</li>
+<li>A player queues for matchmaking.</li>
+<li>Every 8 seconds the spawner looks at each mode with someone queued. If
+fewer are queued than the mode's bot target, it queues bots for the
+difference.</li>
+<li>The matchmaker forms a match from the queue as usual, bots included.</li>
+<li>Within about 2 seconds of the match appearing, the spawner starts an AI
+process for each <code>bot_</code>-prefixed player in it.</li>
+<li>That process calls <code>think(bot_id, state)</code> on its own fixed 100 ms loop and
+sends the result as input.</li>
 </ol>
+<p>No waiting period gates any of this. The spawner's only test is &quot;are fewer
+queued for this mode than its target&quot;, so with a target of 4 and one human
+waiting, three bots are queued at the next 8-second check. A mode with nobody
+queued is skipped, so bots never start a match on their own. The one wait
+setting that exists, <code>max_wait_seconds</code> (60 by default, under <code>{asobi, [{matchmaker, #{max_wait_seconds =&gt; N}}]}</code>), expires an unmatched ticket
+instead - it does not trigger bot fill.</p>
+<p>Bot fill is per node, because the matchmaker queue is per node. Each node
+fills its own queue from its own view. See <a href="/docs/clustering">Clustering</a>.</p>
 <h2 id="configuration" tabindex="-1">Configuration</h2>
-<h3 id="lua-docker" tabindex="-1">Lua (Docker)</h3>
-<p>Enable bots by adding <code>bots</code> to your match script globals and a <code>names</code>
-list to your bot script:</p>
+<p>Add a <code>bots</code> table to the match script's globals, and a <code>names</code> list to the
+bot script:</p>
 <pre><code class="language-lua">-- match.lua
 match_size = 4
 max_players = 8
 strategy = &quot;fill&quot;
 bots = { script = &quot;bots/chaser.lua&quot;, min_players = 4 }
 </code></pre>
-<p><code>bots.min_players</code> is optional and defaults to <code>match_size</code>. <code>bots.enabled</code>
-is also optional and defaults to <code>true</code> (set it to <code>false</code> to keep the
-table around, e.g. to declare <code>min_players</code>, while disabling bot-fill).</p>
 <pre><code class="language-lua">-- bots/chaser.lua
 names = {&quot;Spark&quot;, &quot;Blitz&quot;, &quot;Volt&quot;, &quot;Neon&quot;, &quot;Pulse&quot;}
 
@@ -57,15 +65,26 @@ function think(bot_id, state)
     -- AI logic here
 end
 </code></pre>
-<p>The platform reads <code>names</code> from your bot script at runtime. Bot names are
-prefixed with <code>bot_</code> (e.g., <code>bot_Spark</code>).</p>
-<p>The spawner checks the queue every 8 seconds (a fixed interval, not tunable) and
-fills a waiting match with bots up to the mode's <code>min_players</code>, capped at
-<code>max_players</code> so a small <code>match_size</code>/<code>max_players</code> mode never overshoots into
-a second, bot-only match. Both settings below live in the game mode's <code>bots</code>
-map — there are no bot environment variables.</p>
-<h3 id="erlang-sysconfig" tabindex="-1">Erlang (sys.config)</h3>
-<p>For Erlang OTP projects, configure bots in <code>sys.config</code>:</p>
+<p><code>bots.script</code> is resolved relative to the match script's own directory, and a
+path that escapes it is rejected with a warning.</p>
+<p><code>bots.min_players</code> is the fill target. From Lua it defaults to <code>match_size</code>.
+It is clamped at 64, and a larger value is clamped with a warning in the log.
+The target is also capped at the mode's <code>max_players</code>, so a
+<code>match_size = 2</code> / <code>max_players = 2</code> mode never overshoots into a second,
+bot-only match.</p>
+<p><code>bots.enabled</code> defaults to <code>true</code>; declaring the table at all is the opt-in.
+Set it to <code>false</code> to keep the table (to declare <code>min_players</code>, say) with fill
+turned off.</p>
+<p>Bot ids are <code>bot_</code> plus a name from the list, taken in order: <code>bot_Spark</code>,
+<code>bot_Blitz</code>. Past the end of the list they fall back to their position in the
+fill, so the sixth bot of a batch with five names is <code>bot_6</code> and the seventh
+is <code>bot_7</code>. Give the list at least as many names as the largest fill you
+expect.</p>
+<p>With no <code>names</code> global, or none the platform can read, the defaults are
+<code>Spark</code>, <code>Blitz</code>, <code>Volt</code>, <code>Neon</code> and <code>Pulse</code>.</p>
+<p>A bot joins through the normal match join, so the script's
+<code>join(player_id, state)</code> runs for it exactly as for a human.</p>
+<h3 id="in-erlang" tabindex="-1">In Erlang</h3>
 <pre><code class="language-erlang">{game_modes, #{
     ~&quot;arena&quot; =&gt; #{
         module =&gt; {lua, &quot;game/match.lua&quot;},
@@ -78,17 +97,62 @@ map — there are no bot environment variables.</p>
     }
 }}
 </code></pre>
-<p>Bot names are read from the bot script's <code>names</code> global. If not defined,
-defaults to <code>[&quot;Spark&quot;, &quot;Blitz&quot;, &quot;Volt&quot;, &quot;Neon&quot;, &quot;Pulse&quot;]</code>.</p>
-<h2 id="writing-a-bot-ai-script" tabindex="-1">Writing a Bot AI Script</h2>
-<p>A bot script defines a single function: <code>think(bot_id, state)</code>. It receives
-the current game state and returns an input table -- the same format a real
-player would send. That is the whole callback surface: a bot script has no
-<code>on_join</code> / <code>on_leave</code> / <code>on_message</code> hooks; it only ever produces the next
-input from the current state (plus an optional <code>names</code> list, below).</p>
-<p>Since the bot only decides from <code>state</code>, difficulty is a property of the
-script, not a config knob: throttle a reaction-time delay or degrade the target
-selection by keying private per-bot state off <code>bot_id</code> in a module-level table.</p>
+<p>Two differences from the Lua path. <code>min_players</code> here defaults to <strong>4</strong>, not
+to <code>match_size</code>, when the key is absent. And <code>names</code> can be set directly in
+the <code>bots</code> map, in which case the bot script's <code>names</code> global is never read:</p>
+<pre><code class="language-erlang">bots =&gt; #{enabled =&gt; true, names =&gt; [~&quot;Ada&quot;, ~&quot;Grace&quot;], script =&gt; &lt;&lt;&quot;game/bots/chaser.lua&quot;&gt;&gt;}
+</code></pre>
+<p>The 64 clamp applies here too, at spawn time.</p>
+<h2 id="writing-a-bot-ai-script" tabindex="-1">Writing a bot AI script</h2>
+<p>A bot script defines one function: <code>think(bot_id, state)</code>. It receives the
+current game state and returns an input table, in the same format a real
+player would send. That is the whole callback surface: no <code>on_join</code>,
+<code>on_leave</code> or <code>on_message</code> hooks, just the next input from the current state,
+plus the optional <code>names</code> list.</p>
+<p>Because a bot decides only from <code>state</code>, difficulty is a property of the
+script rather than a config knob: throttle a reaction delay or degrade target
+selection by keying per-bot state off <code>bot_id</code> in a module-level table.</p>
+<h3 id="what-a-bot-script-gets" tabindex="-1">What a bot script gets</h3>
+<p>A bot script loads into the same hardened Luerl state a match script starts
+from, but <strong>without</strong> the <code>game.*</code> API. That namespace is installed only for
+match, world and zone scripts; inside <code>think</code>, <code>game</code> is <code>nil</code>. There is no
+<code>game.log</code>, <code>game.economy</code>, <code>game.storage</code> or <code>game.leaderboard</code> for a bot.</p>
+<p>An installed <a href="https://hexdocs.pm/asobi/extensions.html">extension</a> cannot add one either. <code>bot</code> is not a
+VM kind an extension's <code>lua/0</code> may name, and declaring it fails the build
+rather than installing a binding that quietly does nothing.</p>
+<p>What is available:</p>
+<ul>
+<li>The Lua standard library, minus what the sandbox clears. <code>io</code>, <code>package</code>,
+<code>load</code>, <code>loadfile</code>, <code>loadstring</code>, <code>dofile</code>, <code>print</code>, <code>eprint</code> and
+<code>os.execute</code> / <code>os.exit</code> / <code>os.getenv</code> / <code>os.remove</code> / <code>os.rename</code> /
+<code>os.tmpname</code> are all <code>nil</code>. See <a href="/docs/security/lua-sandbox">Sandbox model</a>.</li>
+<li><code>require(&quot;module&quot;)</code>, resolved relative to the bot script's own directory, so
+<code>require(&quot;targeting&quot;)</code> reads <code>&lt;bot script dir&gt;/targeting.lua</code>. Dotted paths
+work; parent traversal and absolute paths are rejected.</li>
+<li><code>math.random</code> and <code>math.sqrt</code>, backed by the BEAM's <code>rand</code> and <code>math</code>.</li>
+<li>The two arguments of <code>think(bot_id, state)</code>, plus whatever the script itself
+defines at the top level. <code>state</code> is the match state as broadcast to
+players, so a bot sees what a client sees and nothing more.</li>
+</ul>
+<p>Anything else has to come through the match script: put the value in the state
+the match broadcasts and read it from <code>state</code>.</p>
+<p>Bots work under both state strategies, and <code>think</code> sees the same <code>state</code>
+either way. A mode that declares <code>state_strategy = &quot;shared&quot;</code> still calls
+<code>get_state</code> once per tick and encodes once for the connected sessions; a bot
+is handed the payload behind that frame as a term, so it decodes nothing and
+costs the shared path no extra encode. The difference that remains is what
+<code>state</code> contains, not whether it arrives: under <code>&quot;shared&quot;</code> every bot sees
+exactly what every player sees, so a bot cannot be given information a client
+is not also given. Use per-player <code>get_state</code> when a bot needs a filtered view
+of its own - see <a href="/docs/performance">Performance tuning</a> for what each
+path costs.</p>
+<p>Each <code>think</code> call runs under a 50 ms wall-clock budget, a heap cap and a
+reduction budget. A timeout, a heap or CPU overrun, an error, or a missing
+<code>think</code> falls back to the built-in default AI below.</p>
+<p>That fallback is silent to the client, so it is also logged: a persistently
+broken <code>think</code> produces <code>bot_think_error_falling_back_to_default_ai</code> with the
+bot id and the reason, once a minute per bot. Grep for it when a bot has
+stopped behaving like your script and started behaving like the default AI.</p>
 <pre><code class="language-lua">-- game/bots/chaser.lua
 
 function think(bot_id, state)
@@ -96,13 +160,11 @@ function think(bot_id, state)
     local me = players[bot_id]
     if not me then return {} end
 
-    -- Find nearest enemy
     local target = find_nearest(bot_id, me, players)
     if not target then
         return wander()
     end
 
-    -- Chase and shoot
     local dist = distance(me, target)
     return {
         right = target.x &gt; me.x,
@@ -144,20 +206,13 @@ function wander()
     }
 end
 </code></pre>
-<h2 id="multiple-bot-types" tabindex="-1">Multiple Bot Types</h2>
-<p>Create different AI scripts for different playstyles:</p>
-<pre><code>game/bots/
-├── chaser.lua    -- rushes nearest player
-├── sniper.lua    -- stays back, long range
-├── healer.lua    -- supports teammates
-└── camper.lua    -- holds position, ambushes
-</code></pre>
-<p>Currently, all bots in a game mode use the same script. To vary behavior,
-add randomization inside your <code>think()</code> function:</p>
+<h2 id="multiple-bot-types" tabindex="-1">Multiple bot types</h2>
+<p>Every bot in a game mode runs the same script. To vary behaviour, branch
+inside <code>think</code>:</p>
 <pre><code class="language-lua">local STRATEGIES = { &quot;aggressive&quot;, &quot;defensive&quot;, &quot;random&quot; }
 
 function think(bot_id, state)
-    -- Use bot_id hash to pick consistent strategy per bot
+    -- bot_id length picks a stable strategy per bot
     local strategy = STRATEGIES[(#bot_id % #STRATEGIES) + 1]
 
     if strategy == &quot;aggressive&quot; then
@@ -170,35 +225,59 @@ function think(bot_id, state)
 end
 </code></pre>
 <h2 id="default-ai" tabindex="-1">Default AI</h2>
-<p>If no bot script is configured, bots use a built-in default AI that:</p>
+<p>With no bot script configured, or when <code>think</code> fails, bots run a built-in AI
+that finds the nearest living enemy, moves towards it, shoots within 200
+units with slight aim jitter, and wanders when nothing is alive to chase.</p>
+<p>It reads <code>players</code>, and each player's <code>x</code>, <code>y</code> and <code>hp</code>, from the broadcast
+state. A bot with no entry of its own under <code>players</code> sends an empty input;
+one whose peers carry no <code>hp</code> finds nothing alive to chase and wanders
+instead.</p>
+<h2 id="boon-picking-and-voting" tabindex="-1">Boon picking and voting</h2>
+<p>Bots handle two phases without any script code:</p>
 <ul>
-<li>Finds the nearest living enemy</li>
-<li>Moves toward them</li>
-<li>Shoots when within range (200 units)</li>
-<li>Adds slight aim randomization</li>
-<li>Wanders randomly if no targets are alive</li>
+<li>Boon pick: the bot picks the first offered option immediately.</li>
+<li>Voting: the bot casts a random vote after a delay of 1 to 4 seconds.</li>
 </ul>
-<p>This works for most arena-style games out of the box.</p>
-<h2 id="auto-boon-pick-and-voting" tabindex="-1">Auto Boon Pick and Voting</h2>
-<p>Bots automatically handle game phases:</p>
-<ul>
-<li><strong>Boon pick</strong>: Bots pick the first available option immediately</li>
-<li><strong>Voting</strong>: Bots cast a random vote after a 1-3 second delay</li>
-</ul>
-<p>This behavior is built-in and doesn't require any bot script code.</p>
-<h2 id="bot-ids" tabindex="-1">Bot IDs</h2>
-<p>Bot player IDs are prefixed with <code>bot_</code> followed by their display name
-(e.g., <code>bot_Spark</code>, <code>bot_Blitz</code>). Your game logic can check for bots:</p>
+<p>The boon pick is driven by the broadcast state: the phase comes from
+<code>state.phase</code> (<code>&quot;boon_pick&quot;</code>), and the offers from <code>state.boon_offers</code>. The
+vote is not - it is driven by the <code>vote_start</code> match event, which carries the
+vote id and the options the bot picks from. A <code>state.phase</code> of <code>&quot;voting&quot;</code> or
+<code>&quot;vote_pending&quot;</code> only stops the bot sending input while the vote runs.</p>
+<h2 id="bot-ids" tabindex="-1">Bot ids</h2>
+<p>Bot player ids are <code>bot_</code> followed by the display name, so game logic can test
+for them:</p>
 <pre><code class="language-lua">function is_bot(player_id)
     return string.sub(player_id, 1, 4) == &quot;bot_&quot;
 end
 </code></pre>
-<p>Clients receive bot players in the normal game state. Whether to show them
-differently (e.g., &quot;AI&quot; tag) is up to the client.</p>
+<p>Clients receive bots in the normal game state. Whether to mark them in the UI
+is up to the client.</p>
+<h2 id="bots-and-presence" tabindex="-1">Bots and presence</h2>
+<p>A bot is tracked with <code>asobi_presence:track_bot/2</code>, which makes it a delivery
+target for everything the match server broadcasts (state, match events, votes)
+exactly like a connected player session. Shared state reaches it too:
+<code>asobi_presence:send_match_state/3</code> gives a session the pre-encoded frame and
+a bot the same payload as a term, which is the one delivery that differs by
+recipient kind - see <a href="#what-a-bot-script-gets">What a bot script gets</a>.</p>
+<p>It deliberately does not make the bot <em>online</em>:</p>
+<ul>
+<li><code>asobi_presence:online_count/0</code> counts connected humans only. Bots are never
+added to it, so the concurrency figure stays a real player count. Bot fill
+does not read it: it reads the matchmaker queue, where the bots it queued
+count like anyone else, which is what stops the fill feeding itself.</li>
+<li>Bots emit no <code>player_online</code> / <code>player_offline</code> broadcasts, so friend lists
+and presence subscribers never see a bot appear or disappear.</li>
+</ul>
+<p><code>asobi_presence:get_status/1</code> on a bot id does answer <code>online</code>, because that
+function reports whether the id is addressable. Filter on the <code>bot_</code> prefix
+if you need the human answer.</p>
 <h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
-<li><a href="/docs/lua/api">Lua scripting</a> - the <code>game.*</code> API a bot's <code>think</code> shares with match logic.</li>
-<li><a href="/docs/security/lua-trust-model">Trust model</a> - a bot's <code>think</code> runs bounded, like any callback.</li>
+<li><a href="https://hexdocs.pm/asobi/lua-api.html">The game.* API</a> - what match and world scripts can call, and
+bots cannot (see <a href="#what-a-bot-script-gets">What a bot script gets</a>).</li>
+<li><a href="/docs/lua/api">Lua scripting</a> - the match callbacks a bot's input feeds.</li>
+<li><a href="/docs/security/lua-trust-model">Trust model</a> - a bot's <code>think</code> runs bounded, like
+any callback.</li>
 </ul>
 """}
     ]}.

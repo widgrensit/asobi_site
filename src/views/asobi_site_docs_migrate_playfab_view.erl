@@ -25,55 +25,29 @@ render(Bindings) ->
         {h1, [], [~"Migrating from PlayFab to asobi"]},
         {raw,
             ~"""
-<p>If you're reading this, you've probably been through the PlayFab v2
-migration, watched features quietly get removed, or watched your Azure
-bill climb while the product got thinner. You're not alone — the
+<p>For studios who have been through the PlayFab v2 migration, watched features
+get removed, or watched the Azure bill climb while the product got thinner. The
 <a href="https://medium.com/@imperium42/the-silent-death-of-playfab-29614f5b9f15">Imperium42 write-up</a>
-catalogues the situation far better than we can.</p>
-<p>This guide walks you from &quot;my PlayFab stack is working but brittle&quot; to
-&quot;I run my game on a Docker container I own.&quot;</p>
-<blockquote>
-<p><strong>Draft notice.</strong> This guide is a starting point, not a playbook — nobody
-has yet migrated a shipped PlayFab title to asobi end-to-end. The
-asobi-side endpoints and events below are verified against the current
-code. PlayFab-side SDK names come from the public PlayFab documentation
-and may have drifted. <strong>The fastest path is pairing with us in the
-<a href="https://discord.gg/vYSfYYyXpu">Discord</a> <code>#migrations</code> channel.</strong></p>
-</blockquote>
-<h2 id="tldr" tabindex="-1">TL;DR</h2>
+catalogues the situation.</p>
+<p>Nobody has migrated a shipped PlayFab title to asobi end to end yet. The
+asobi-side endpoints and events below are verified against this repository;
+PlayFab-side names come from Microsoft's public documentation. Pair with us in
+the <a href="https://discord.gg/vYSfYYyXpu">Discord</a> <code>#migrations</code> channel.</p>
+<h2 id="what-asobi-is" tabindex="-1">What asobi is</h2>
+<p>One Erlang/OTP node containing the game backend, the Lua runtime and the
+operator console. Two ways in: run <code>ghcr.io/widgrensit/asobi</code> and write Lua, or
+depend on the Hex package and write Erlang. Same node either way. Apache-2.0,
+self-hostable, and the <a href="https://hexdocs.pm/asobi/exit.html">exit guide</a> is the runbook for keeping your
+game alive if we disappear.</p>
+<h2 id="the-shape-of-the-move" tabindex="-1">The shape of the move</h2>
 <ol>
-<li>Your Unity/Unreal/JS game keeps shipping. You don't touch the client.</li>
-<li>Stand up asobi in parallel on Hetzner / Fly / your laptop.</li>
-<li>Port one PlayFab API domain at a time — usually <strong>Auth → Player
-Inventory → Virtual Currency → Leaderboards → Matchmaking</strong>, in that
-order.</li>
-<li>When all domains are ported, flip a feature flag to point at asobi and
-retire the PlayFab Title.</li>
+<li>Your Unity, Unreal or JS game keeps shipping. You do not touch the client on
+day one.</li>
+<li>Stand up asobi in parallel.</li>
+<li>Port one PlayFab API domain at a time.</li>
+<li>When every domain is ported, flip a feature flag and retire the PlayFab
+Title.</li>
 </ol>
-<h2 id="why-asobi-specifically" tabindex="-1">Why asobi specifically</h2>
-<ul>
-<li><strong>Apache-2.0, open-source, self-hostable.</strong> Not a Microsoft product, not
-a SaaS. The repos are <a href="https://github.com/widgrensit/asobi">widgrensit/asobi</a>
-and <a href="https://github.com/widgrensit/asobi_lua">widgrensit/asobi_lua</a>. See
-the <a href="https://hexdocs.pm/asobi/exit.html">exit guide</a> if you want to know what happens if <em>we</em>
-disappear.</li>
-<li><strong>Flat infra cost.</strong> PlayFab Essentials starts free but scales steeply
-through compute-based tiers, Data Explorer add-ons, and dedicated
-multiplayer server VMs. asobi is a single container whose cost you
-control — a small Hetzner box (€5-15/mo) comfortably holds thousands of
-players.</li>
-<li><strong>Linux dedicated servers work.</strong> Unlike PlayFab's Unreal OSS SDK which
-historically forced Windows hosts (and their licensing costs), asobi
-just runs in any Linux container.</li>
-<li><strong>Hot-reload Lua.</strong> Ship a fix at 11pm. Connected players stay connected.</li>
-<li><strong>One matchmaking service.</strong> Not three (Client::Matchmaker, Multiplayer
-Matchmaking 2.0, OSS SDK) with no canonical guidance — just
-<code>asobi_matchmaker</code> with pluggable strategies.</li>
-<li><strong>Friends work.</strong> Request, approve, block — all in the library.</li>
-<li><strong>Lobbies hold state.</strong> Our matchmaker tickets + match &quot;waiting&quot; phase
-replace the v1 Lobby. Not the stateless read-only v2 Lobby that broke
-half the games on PlayFab.</li>
-</ul>
 <h2 id="concept-map" tabindex="-1">Concept map</h2>
 <table>
 <thead>
@@ -85,318 +59,269 @@ half the games on PlayFab.</li>
 </thead>
 <tbody>
 <tr>
-<td><strong>Title</strong></td>
-<td>Tenant / deployment</td>
-<td>One Docker container per environment (dev/live).</td>
+<td>Title</td>
+<td>Deployment</td>
+<td>One container per environment.</td>
 </tr>
 <tr>
-<td><strong>TitleId</strong> + SDK config</td>
-<td>Base URL of your asobi deployment</td>
-<td>No opaque ID — you point the SDK at a URL.</td>
+<td>TitleId plus SDK config</td>
+<td>Base URL of your deployment</td>
+<td>No opaque ID; you point the SDK at a URL.</td>
 </tr>
 <tr>
-<td><strong>Entity (<code>master_player_account</code>)</strong></td>
+<td>Entity (<code>master_player_account</code>)</td>
 <td>Player</td>
-<td>Same concept: durable ID + profile.</td>
+<td>Durable ID plus profile.</td>
 </tr>
 <tr>
-<td><strong>Virtual Currency</strong></td>
+<td>Virtual currency</td>
 <td>Economy</td>
-<td><code>game.economy.grant</code>, <code>debit</code>, <code>balance</code>, <code>purchase</code>. Multiple named currencies; per-player ledgers.</td>
+<td><code>game.economy.grant</code>, <code>debit</code>, <code>balance</code>, <code>purchase</code> in Lua; <code>/api/v1/wallets</code> over REST. Multiple named currencies, per-player ledgers.</td>
 </tr>
 <tr>
-<td><strong>Catalog</strong></td>
-<td>Store + inventory</td>
-<td><code>asobi_store_listing</code> + <code>asobi_item_def</code> tables; <code>/api/v1/store</code>.</td>
+<td>Catalog</td>
+<td>Store plus item definitions</td>
+<td><code>GET /api/v1/store</code>, <code>POST /api/v1/store/purchase</code>.</td>
 </tr>
 <tr>
-<td><strong>Inventory</strong></td>
 <td>Inventory</td>
-<td><code>game.player_items</code> in Lua / <code>/api/v1/inventory</code> REST.</td>
+<td>Inventory</td>
+<td><code>GET /api/v1/inventory</code> and <code>POST /api/v1/inventory/consume</code>, or Kura queries against the <code>asobi_player_item</code> schema (table <code>player_items</code>). There is no Lua binding for inventory.</td>
 </tr>
 <tr>
-<td><strong>CloudScript (JS functions)</strong></td>
-<td>Lua in <code>match.lua</code> + REST controllers</td>
-<td>Your server logic runs as part of the match process — no separate Functions runtime, no cold starts.</td>
+<td>CloudScript (JS functions)</td>
+<td>Lua callbacks, or an extension RPC method</td>
+<td>Per-match logic goes in <code>match.lua</code>. Anything a client calls by name goes over the WebSocket as <code>rpc.call</code> - see below the table. No separate Functions runtime, no cold starts.</td>
 </tr>
 <tr>
-<td><strong>Matchmaking (Queue)</strong></td>
-<td><code>asobi_matchmaker</code></td>
-<td>Strategies: <code>fill</code>, <code>skill_based</code>, or bring your own via <code>asobi_matchmaker_strategy</code>.</td>
+<td>Matchmaking (queue)</td>
+<td><code>POST /api/v1/matchmaker</code></td>
+<td>Modes plus pluggable strategies (<code>fill</code>, <code>skill_based</code>, or your own via the <code>asobi_matchmaker_strategy</code> behaviour).</td>
 </tr>
 <tr>
-<td><strong>Multiplayer Server (Build)</strong></td>
+<td>Multiplayer Server (build)</td>
 <td>Match process</td>
-<td>No container-per-match. One Docker container hosts thousands of matches as BEAM processes. Simpler ops, cheaper.</td>
+<td>No container per match. One container hosts thousands of matches as BEAM processes.</td>
 </tr>
 <tr>
-<td><strong>Data → Player → KeyValue</strong></td>
+<td>Data, player key-value</td>
 <td><code>/api/v1/storage/:collection/:key</code></td>
-<td>Per-player and shared collections with public/owner/none permissions.</td>
+<td>Per-player rows. Permissions are <code>read_perm</code> and <code>write_perm</code>, each <code>public</code> or <code>owner</code>. There is no <code>none</code>.</td>
 </tr>
 <tr>
-<td><strong>Data → Title Data</strong></td>
-<td><code>/api/v1/storage/global/:key</code></td>
-<td>Use a well-known collection.</td>
+<td>Data, Title Data</td>
+<td>Lua <code>game.storage.get/set</code></td>
+<td>The HTTP storage routes are scoped to per-player rows, so writing to a collection called <code>global</code> gives every player their own copy. The shared, owner-less namespace is reachable from Lua only.</td>
 </tr>
 <tr>
-<td><strong>Data → Title Internal Data</strong></td>
-<td>Erlang <code>sys.config</code> or Kura schema</td>
-<td>Sensitive config stays out of the API.</td>
+<td>Data, Title Internal Data</td>
+<td>Erlang <code>sys.config</code> or a Kura schema</td>
+<td>Sensitive config stays off the player-facing API.</td>
 </tr>
 <tr>
-<td><strong>Leaderboards + Statistics</strong></td>
-<td>Leaderboards (<code>/api/v1/leaderboards/:id</code>)</td>
-<td>ETS for microsecond reads, Postgres for persistence.</td>
+<td>Leaderboards and statistics</td>
+<td><code>/api/v1/leaderboards/:id</code></td>
+<td>ETS for reads, PostgreSQL for persistence.</td>
 </tr>
 <tr>
-<td><strong>Friends list</strong></td>
-<td>Friends (<code>/api/v1/friends</code>)</td>
-<td>Request / approve / block / update status all work.</td>
+<td>Friends list</td>
+<td><code>/api/v1/friends</code></td>
+<td>Request, approve, block, update status.</td>
 </tr>
 <tr>
-<td><strong>Player Groups</strong></td>
-<td>Groups (<code>/api/v1/groups</code>)</td>
-<td>Roles, member management, chat channel per group.</td>
+<td>Player groups</td>
+<td><code>/api/v1/groups</code></td>
+<td>Roles, member management, a chat channel per group.</td>
 </tr>
 <tr>
-<td><strong>Push Notifications</strong></td>
-<td>Notifications table + WS push</td>
-<td><code>match.notification</code> event or polled via <code>/api/v1/notifications</code>.</td>
+<td>Push notifications</td>
+<td>Notifications plus a WebSocket push</td>
+<td><code>GET /api/v1/notifications</code>, or the <code>notification.new</code> frame on the socket. This is in-game delivery, not APNs or FCM.</td>
 </tr>
 <tr>
-<td><strong>PlayFab Party (voice/chat)</strong></td>
-<td>Chat channels + DM</td>
-<td>Text only. For voice, pair asobi with Vivox / Dissonance / a WebRTC service.</td>
+<td>PlayFab Party (voice and chat)</td>
+<td>Chat channels plus DMs</td>
+<td>Text only. For voice, pair asobi with a voice service.</td>
 </tr>
 <tr>
-<td><strong>Receipt validation (IAP)</strong></td>
-<td><code>/api/v1/iap/apple</code>, <code>/api/v1/iap/google</code></td>
-<td>Verifies Apple App Store and Google Play receipts.</td>
+<td>Receipt validation (IAP)</td>
+<td><code>POST /api/v1/iap/apple</code>, <code>/api/v1/iap/google</code></td>
+<td>Verifies an Apple or Google receipt and records it once per transaction.</td>
 </tr>
 <tr>
-<td><strong>Automation rules / webhooks</strong></td>
+<td>Granting from a receipt</td>
+<td>Your game's job</td>
+<td>Nothing is granted by the IAP endpoints. Turn a verified receipt into currency or items yourself through the economy or inventory API.</td>
+</tr>
+<tr>
+<td>Automation rules and webhooks</td>
 <td>Shigoto jobs</td>
-<td>Write the rule as an Erlang callback or Lua handler.</td>
+<td>Written as an Erlang callback.</td>
 </tr>
 <tr>
-<td><strong>Insights / Analytics</strong></td>
-<td><code>asobi_telemetry</code> + your pipeline</td>
-<td>We emit telemetry; pipe to Prometheus / Grafana / ClickHouse. No hosted analytics yet.</td>
+<td>Insights and analytics</td>
+<td><code>asobi_telemetry</code> plus your own pipeline</td>
+<td>Telemetry is emitted; there is no hosted analytics.</td>
 </tr>
 <tr>
-<td><strong>Game Manager (web console)</strong></td>
-<td><a href="https://github.com/widgrensit/asobi_admin">asobi_admin</a></td>
-<td>Players, leaderboards, economy, chat. Pre-1.0.</td>
+<td>Game Manager (web console)</td>
+<td>Built-in operator console at <code>/console</code></td>
+<td>Off by default, and reads plus player erasure/export. See the note below the table.</td>
 </tr>
 </tbody>
 </table>
+<p>Custom server-side logic that is not tied to a match goes over the WebSocket:
+frame type <code>rpc.call</code> with <code>{protocol: 1, method, params}</code>, answered by
+<code>rpc.ok</code> <code>{result}</code> or <code>rpc.error</code> <code>{error: {code, message, details}}</code>,
+correlated by <code>cid</code>. All seven client SDKs support it. That is the CloudScript
+replacement. See <a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a>.</p>
+<p>A stock node serves neither the console nor the ops API; you turn them on - see
+<a href="https://hexdocs.pm/asobi/console.html">Operator console</a>. When you do, the plane is reads plus player
+erasure and export, apart from actions an extension declares. If you use Game Manager to ban a player, refund a
+purchase or edit a catalogue item, budget for building that yourself.</p>
 <h2 id="migration-path" tabindex="-1">Migration path</h2>
-<h3 id="phase-1-stand-up-asobi-alongside-playfab-1-day" tabindex="-1">Phase 1 — stand up asobi alongside PlayFab (1 day)</h3>
-<p>Bring up asobi on a spare machine:</p>
-<pre><code class="language-yaml"># docker-compose.yml
-services:
+<h3 id="phase-1---stand-up-asobi-alongside-playfab-1-day" tabindex="-1">Phase 1 - stand up asobi alongside PlayFab (1 day)</h3>
+<pre><code class="language-yaml">services:
   postgres:
     image: postgres:17
     environment:
       POSTGRES_USER: postgres
       POSTGRES_PASSWORD: postgres
       POSTGRES_DB: my_game
+    healthcheck:
+      test: [&quot;CMD-SHELL&quot;, &quot;pg_isready -U postgres&quot;]
+      interval: 5s
 
   asobi:
-    image: ghcr.io/widgrensit/asobi_lua:latest
-    depends_on: [postgres]
+    image: ghcr.io/widgrensit/asobi:latest
+    depends_on:
+      postgres: { condition: service_healthy }
     ports: [&quot;8084:8084&quot;]
     volumes: [&quot;./lua:/app/game:ro&quot;]
     environment:
       ASOBI_DB_HOST: postgres
       ASOBI_DB_NAME: my_game
+      ASOBI_CORS_ORIGINS: &quot;https://play.my-game.com&quot;
+      ASOBI_CONSOLE: &quot;true&quot;
+      ASOBI_OPS_SECRET_FILE: /run/secrets/ops_secret
+    secrets: [ops_secret]
+
+secrets:
+  ops_secret:
+    file: ./ops_secret.txt
 </code></pre>
+<p><code>./lua</code> must contain a <code>match.lua</code> before the matchmaker has anything to match
+on - <a href="https://hexdocs.pm/asobi/getting-started.html">Getting started</a> has a complete one. Without it,
+<code>POST /api/v1/matchmaker</code> answers <code>matchmaker.unknown_mode</code>.</p>
+<p><code>ASOBI_CORS_ORIGINS</code> is not optional for a browser build: unset, the node sends
+an empty <code>Access-Control-Allow-Origin</code> and every fetch from a page is blocked.</p>
 <pre><code class="language-bash">docker compose up -d
-curl localhost:8084/api/v1/auth/register \
+curl -s localhost:8084/api/v1/auth/register \
   -H 'content-type: application/json' \
   -d '{&quot;username&quot;:&quot;alice&quot;,&quot;password&quot;:&quot;hunter2&quot;}'
-# → { &quot;player_id&quot;: &quot;...&quot;, &quot;session_token&quot;: &quot;...&quot;, &quot;username&quot;: &quot;alice&quot; }
+# { &quot;player_id&quot;: &quot;019de3...&quot;, &quot;access_token&quot;: &quot;...&quot;, &quot;refresh_token&quot;: &quot;...&quot;, &quot;username&quot;: &quot;alice&quot; }
 </code></pre>
-<h3 id="phase-2-port-auth-2-5-days" tabindex="-1">Phase 2 — port Auth (2-5 days)</h3>
-<p>PlayFab auth paths map 1:1:</p>
-<p><code>LoginWithCustomID</code> maps directly to guest auth - Asobi handles create-or-resume
-server-side, so there is no client-generated password to persist:</p>
-<pre><code class="language-csharp">// Before (PlayFab)
-PlayFabClientAPI.LoginWithCustomID(new LoginWithCustomIDRequest {
-  CustomId = deviceId, CreateAccount = true
-}, OnSuccess, OnError);
-
-// After (asobi) — anonymous guest, create-or-resume from a device-held secret
-var client = new AsobiClient(&quot;https://api.my-game.com&quot;);
-await client.Auth.GuestAsync(deviceId, deviceSecret);   // POST /auth/guest
-// later, when the player signs up for real:
-// await client.Auth.UpgradeGuestAsync(username, password);
+<p>There is no <code>session_token</code>. <code>access_token</code> is the Bearer credential;
+<code>refresh_token</code> buys a new pair from <code>POST /api/v1/auth/refresh</code>. Requirements
+and the production compose are in <a href="https://hexdocs.pm/asobi/self-hosting.html">Self-hosting</a>.</p>
+<h3 id="phase-2---port-auth-2-5-days" tabindex="-1">Phase 2 - port auth (2-5 days)</h3>
+<p><code>LoginWithCustomID</code> maps to guest auth. The client generates a random
+<code>device_secret</code> of at least 32 bytes on first launch and posts it with a stable
+<code>device_id</code>; the server creates the player, or resumes it on later launches:</p>
+<pre><code class="language-bash">curl -s localhost:8084/api/v1/auth/guest \
+  -H 'content-type: application/json' \
+  -d '{&quot;device_id&quot;:&quot;&lt;stable device id&gt;&quot;,&quot;device_secret&quot;:&quot;&lt;base64 of &gt;= 32 random bytes&gt;&quot;}'
 </code></pre>
-<p>Store <code>deviceSecret</code> (&gt;= 32 random bytes) in secure device storage; see the
-<a href="/docs/authentication#guest-anonymous">Authentication guide</a>.</p>
-<p>OAuth providers (Google, Apple, Steam) go through
-<code>POST /api/v1/auth/oauth</code> — same as PlayFab's <code>LoginWithGoogleAccount</code> etc.</p>
-<h3 id="phase-3-port-the-data-domains-one-at-a-time-1-2-weeks" tabindex="-1">Phase 3 — port the data domains one at a time (1-2 weeks)</h3>
-<p>Run PlayFab and asobi in parallel. For each domain:</p>
+<p>Treat <code>device_secret</code> as that account's password and keep it in secure device
+storage; every SDK does this for you. Claim the account later with
+<code>POST /api/v1/auth/guest/upgrade</code>.</p>
+<p>Guest auth is opt-in and off until two things are true: the game declares
+<code>guest_auth</code> in its Lua config, and the operator supplies a pepper of at least
+32 bytes. Either one missing and the endpoint answers <code>guest.disabled</code>. See
+<a href="/docs/authentication">Authentication</a>.</p>
+<p>OAuth providers go through <code>POST /api/v1/auth/oauth</code>, replacing
+<code>LoginWithGoogleAccount</code> and friends.</p>
+<h3 id="phase-3---port-the-data-domains-one-at-a-time-1-2-weeks" tabindex="-1">Phase 3 - port the data domains one at a time (1-2 weeks)</h3>
+<p>Run PlayFab and asobi in parallel. Per domain:</p>
 <ul>
-<li>Migrate the PlayFab data snapshot to asobi's Postgres schema (one-off
-script per domain)</li>
-<li>Dual-write: the client hits PlayFab AND asobi for the same action</li>
-<li>Read from asobi; diff vs PlayFab for a day</li>
-<li>Switch reads to asobi; keep PlayFab dual-write for rollback</li>
-<li>After a week of clean asobi reads, stop writing to PlayFab</li>
+<li>Migrate the PlayFab snapshot into asobi's Postgres schema with a one-off
+script.</li>
+<li>Dual-write: the client hits both for the same action.</li>
+<li>Read from asobi, diff against PlayFab for a day.</li>
+<li>Switch reads to asobi, keep the PlayFab write for rollback.</li>
+<li>After a week of clean reads, stop writing to PlayFab.</li>
 </ul>
-<p>Order: <strong>Leaderboards → Inventory → Virtual Currency → Storage → Friends →
-Groups → Matchmaking</strong>. Leave matchmaking last because it's the most
-stateful handoff.</p>
-<h3 id="phase-4-port-cloudscript-2-days-2-weeks" tabindex="-1">Phase 4 — port CloudScript (2 days – 2 weeks)</h3>
-<p>Rewrite each CloudScript function either as:</p>
+<p>Order: leaderboards, inventory, virtual currency, storage, friends, groups,
+matchmaking. Matchmaking last, because it is the most stateful handoff.</p>
+<h3 id="phase-4---port-cloudscript-2-days-to-2-weeks" tabindex="-1">Phase 4 - port CloudScript (2 days to 2 weeks)</h3>
+<p>Each CloudScript function becomes one of three things:</p>
 <ul>
-<li>A <strong>Lua callback</strong> in <code>match.lua</code> (for per-match logic — e.g.
-<code>handle_input</code>, <code>tick</code>)</li>
-<li>An <strong>asobi REST controller</strong> in Erlang (for domain logic — economy
-rules, tournament brackets, daily quest resets)</li>
+<li>A Lua callback in <code>match.lua</code>, for per-match logic.</li>
+<li>An extension RPC method, for anything a client calls by name. This is the
+closest equivalent and the one most CloudScript functions map onto. See
+<a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a>.</li>
+<li>A Shigoto job, for scheduled work such as a daily reset.</li>
 </ul>
-<p>If your PlayFab workload is CloudScript-heavy, budget more time for this
-phase. The upside: hot-reload replaces the CloudScript deploy loop.</p>
-<h3 id="phase-5-cut-over-1-day" tabindex="-1">Phase 5 — cut over (1 day)</h3>
-<p>Flip the SDK base URL from PlayFab to your asobi endpoint via a feature
-flag. Monitor for 24h. Retire the PlayFab Title.</p>
-<h2 id="deploy-story" tabindex="-1">Deploy story</h2>
-<table>
-<thead>
-<tr>
-<th>Host</th>
-<th>Fit</th>
-<th>Rough cost</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td><strong>Hetzner Cloud</strong> (CX22–CX42)</td>
-<td>Best price/perf. EU-only.</td>
-<td>€4–15 / month</td>
-</tr>
-<tr>
-<td><strong>Scaleway Serverless</strong></td>
-<td>Auto-scale for dev / low traffic</td>
-<td>Free tier → pay per req</td>
-</tr>
-<tr>
-<td><strong>Fly.io</strong></td>
-<td>Multi-region one-liner</td>
-<td>$5+/month/region</td>
-</tr>
-<tr>
-<td><strong>Clever Cloud</strong></td>
-<td>git-push deploy, EU</td>
-<td>€10+/month</td>
-</tr>
-<tr>
-<td><strong>On-prem (your datacentre)</strong></td>
-<td>Regulated / sovereign workloads</td>
-<td>Your hardware cost</td>
-</tr>
-</tbody>
-</table>
-<p>A studio running PlayFab Multiplayer Servers at, say, $300/month in VM
-credits typically fits on a €15/month Hetzner CX32 box with asobi.</p>
-<h2 id="things-asobi-does-not-do-compared-to-playfab" tabindex="-1">Things asobi does NOT do (compared to PlayFab)</h2>
+<p>The upside is that live Lua reload replaces the CloudScript deploy loop.</p>
+<h3 id="phase-5---cut-over-1-day" tabindex="-1">Phase 5 - cut over (1 day)</h3>
+<p>Flip the SDK base URL behind a feature flag. Monitor for 24h. Retire the
+PlayFab Title.</p>
+<h2 id="what-asobi-does-not-do" tabindex="-1">What asobi does not do</h2>
 <ul>
-<li><strong>No hosted analytics dashboard.</strong> We emit telemetry; you pipe it
-somewhere. PlayFab Insights is the biggest DX gap.</li>
-<li><strong>No built-in A/B testing / segmentation framework.</strong> Coming in 2026. For
-now, roll it in your match logic.</li>
-<li><strong>No push notification service.</strong> Use OneSignal, Firebase Cloud
-Messaging, or APNs directly.</li>
-<li><strong>No hosted voice.</strong> Pair with Vivox / Dissonance / Agora.</li>
-<li><strong>No Title-as-a-product support tools</strong> (refunds portal, player support
-console). On the admin dashboard roadmap.</li>
-<li><strong>No mandated Entity model.</strong> asobi is pragmatic: player_id is the
-primary key; you don't have to model everything as Entity-With-Objects.</li>
+<li>No hosted analytics dashboard. Telemetry is emitted; you pipe it somewhere.
+This is the biggest gap against PlayFab Insights.</li>
+<li>No A/B testing or segmentation framework.</li>
+<li>No push notification service. Use APNs, FCM or a third party directly; the
+built-in notifications are in-game only.</li>
+<li>No hosted voice.</li>
+<li>Little player-support tooling. The console erases and exports a player;
+refunds, bans and grants are your own code.</li>
+<li>No Entity model. <code>player_id</code> is the primary key and you are not required to
+model everything as an entity with objects.</li>
 </ul>
-<h2 id="things-asobi-does-that-playfab-doesnt" tabindex="-1">Things asobi does that PlayFab doesn't</h2>
+<h2 id="what-asobi-does-that-playfab-does-not" tabindex="-1">What asobi does that PlayFab does not</h2>
 <ul>
-<li>Hot-reload game logic without dropping players</li>
-<li>Open-source — read the code, fork it, own it</li>
-<li>Linux servers are first-class</li>
-<li>One unified matchmaker, not three competing services</li>
-<li>Friends / groups / chat / votes / tournaments / seasons / phases as
-first-class primitives, not bolt-ons</li>
-<li>Built-in voting system (plurality, ranked, approval, weighted)</li>
-<li>Godot and Defold SDKs at engine-parity with Unity</li>
+<li>Live Lua reload without dropping players.</li>
+<li>Open source: read it, fork it, run it.</li>
+<li>Linux servers throughout.</li>
+<li>One matchmaker rather than several overlapping services.</li>
+<li>Friends, groups, chat, votes, tournaments and phases as first-class
+primitives; seasons ship as the
+<a href="https://github.com/widgrensit/asobi_seasons"><code>asobi_seasons</code></a> extension.</li>
+<li>Built-in voting: plurality, ranked, approval, weighted.</li>
+<li>First-class Godot, Defold and LÖVE SDKs alongside Unity, Unreal, JS and
+Dart, plus a Flame bridge on top of the Dart one.</li>
 </ul>
-<h2 id="cost-comparison" tabindex="-1">Cost comparison</h2>
-<table>
-<thead>
-<tr>
-<th></th>
-<th>PlayFab Essentials</th>
-<th>PlayFab paid</th>
-<th>asobi self-host</th>
-<th>asobi managed (soon)</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>Base</td>
-<td>Free tier</td>
-<td>$99+/mo</td>
-<td>€5–20/mo infra</td>
-<td>~€9–29/mo</td>
-</tr>
-<tr>
-<td>Multiplayer servers</td>
-<td>N/A</td>
-<td>VM-minute billing</td>
-<td>Same container</td>
-<td>Included</td>
-</tr>
-<tr>
-<td>Analytics add-ons</td>
-<td>Limited</td>
-<td>Data Explorer metered</td>
-<td>Bring your own stack</td>
-<td>Bring your own</td>
-</tr>
-<tr>
-<td>Egress</td>
-<td>N/A</td>
-<td>Azure rates</td>
-<td>Your host's rates</td>
-<td>Flat</td>
-</tr>
-<tr>
-<td>Vendor lock-in</td>
-<td>High (Azure)</td>
-<td>High</td>
-<td>None (Apache-2)</td>
-<td>Exit runbook</td>
-</tr>
-</tbody>
-</table>
+<h2 id="cost" tabindex="-1">Cost</h2>
+<p>PlayFab bills tiers, metered analytics and VM-minute multiplayer servers. asobi
+is a container whose cost you choose, plus a Postgres. A single node holds
+3,000-7,000 concurrent WebSocket connections in measurement - see
+<a href="https://hexdocs.pm/asobi/benchmarks.html">Benchmarks</a> - so most studios' first deployment is one small
+machine.</p>
+<p>If you plan to run more than one node, read <a href="/docs/clustering">Clustering</a> first:
+the matchmaker queue is per node, so players queuing against different nodes
+never match each other, rate limits are per node, and the console needs a
+sticky route.</p>
 <h2 id="do-this-today" tabindex="-1">Do this today</h2>
 <ul>
-<li>[ ] <code>git clone</code> <a href="https://github.com/widgrensit/asobi_lua">asobi_lua</a> and
-<code>docker compose up</code>. Register a player. Confirm it works.</li>
-<li>[ ] Pick the smallest PlayFab API your game calls (often leaderboards
-or a single CloudScript function). Port it to asobi in a feature flag.</li>
-<li>[ ] Join the <a href="https://discord.gg/vYSfYYyXpu">Discord</a> <code>#migrations</code>
-channel. We'll sanity-check your staging order.</li>
+<li>Run the Phase 1 compose locally and register a player.</li>
+<li>Pick the smallest PlayFab API your game calls, usually leaderboards or one
+CloudScript function, and port it behind a feature flag.</li>
+<li>Join the <a href="https://discord.gg/vYSfYYyXpu">Discord</a> <code>#migrations</code> channel.</li>
 </ul>
 <h2 id="getting-help" tabindex="-1">Getting help</h2>
 <ul>
-<li><strong>Discord</strong>: <a href="https://discord.gg/vYSfYYyXpu">#migrations</a> channel</li>
-<li><strong>Email</strong>: hello@asobi.dev</li>
-<li><strong>GitHub Discussions</strong>: <a href="https://github.com/widgrensit/asobi_lua/discussions">widgrensit/asobi_lua/discussions</a></li>
+<li>Discord: <a href="https://discord.gg/vYSfYYyXpu">#migrations</a></li>
+<li>Email: hello@asobi.dev</li>
+<li>GitHub Discussions:
+<a href="https://github.com/widgrensit/asobi/discussions">widgrensit/asobi/discussions</a></li>
 </ul>
 <h2 id="see-also" tabindex="-1">See also</h2>
 <ul>
 <li><a href="https://hexdocs.pm/asobi/migrate-from-hathora.html">Migrating from Hathora</a></li>
 <li><a href="https://hexdocs.pm/asobi/migrate-from-nakama.html">Migrating from Nakama self-host</a></li>
 <li><a href="https://hexdocs.pm/asobi/exit.html">Exit guarantee</a></li>
-<li><a href="https://hexdocs.pm/asobi/comparison.html">Comparison vs Nakama, Colyseus, SpacetimeDB</a></li>
+<li><a href="https://hexdocs.pm/asobi/comparison.html">Comparison</a></li>
 </ul>
 """}
     ]}.

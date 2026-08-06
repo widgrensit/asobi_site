@@ -1,4 +1,4 @@
-%% GENERATED from asobi guides/security-known-limitations.md - do not edit by hand.
+%% GENERATED from asobi guides/security-lua-known-limitations.md - do not edit by hand.
 %% Regenerate with scripts/gen-docs.sh
 -module(asobi_site_docs_security_lua_known_limits_view).
 -include("asobi_site_view.hrl").
@@ -21,67 +21,91 @@ render(Bindings) ->
             {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
             ~" / Security / Lua known limitations"
         ]},
-        {h1, [], [~"Known limitations"]},
+        {h1, [], [~"Known limitations (Lua sandbox)"]},
         {raw,
             ~"""
-<p>The asobi_lua sandbox closes a deliberate set of attack surfaces
-(documented in <a href="/docs/security/lua-sandbox">Sandbox model</a>). The list below is
-the complement: properties the sandbox does <strong>not</strong> enforce. Operators
-who care about any of these should plan their deployment accordingly.</p>
+<p>The Lua sandbox closes a deliberate set of attack surfaces, documented in
+<a href="/docs/security/lua-sandbox">Sandbox model</a>. This page is the complement: what it does
+not enforce. Plan the deployment around any of these that matter to you.</p>
 <h2 id="resource-bounds" tabindex="-1">Resource bounds</h2>
-<h3 id="no-reduction-limit-hard-cpu-cap" tabindex="-1">No reduction limit / hard CPU cap</h3>
-<p>The wall-clock timeout is the only resource bound today. A script can
-soak its full per-callback budget every tick without being throttled.
-Luerl upstream does not currently expose a &quot;reduction limit&quot; or
-&quot;process-bound state&quot; knob; a future hardening pass may add a soft
-budget on the Luerl scheduler.</p>
-<h3 id="no-per-script-heap-cap" tabindex="-1">No per-script heap cap</h3>
-<p>Lua tables grow inside the BEAM process heap. A pathological script
-that allocates 100 MB of tables and drops them every tick will pressure
-the OS memory allocator. The decode depth cap (64 levels) bounds
-recursion at the bridge boundary, but does not bound table <em>size</em>.</p>
-<h3 id="per-callback-state-copy-cost-is-linear" tabindex="-1">Per-callback state copy cost is linear</h3>
-<p>Each timeout-wrapped callback spawns a child process that takes a full
-copy of the Luerl state (<code>spawn(fun() -&gt; call(..., St) end)</code>). Cost is
-linear in script-side allocation. A script that intentionally builds
-large stable tables forces every later callback to pay the copy. Watch
-for unexplained per-tick latency growth on long-lived matches.</p>
+<h3 id="the-cpu-bound-is-sampled-not-exact" tabindex="-1">The CPU bound is sampled, not exact</h3>
+<p>Every callback that runs in a child process carries three bounds: a wall-clock
+timeout, a per-eval heap cap and a reduction budget. The reduction budget is
+the CPU bound, and it is needed because a timeout bounds latency, not work: a
+script can soak its whole wall-clock budget every tick and be killed at the
+deadline each time, burning a scheduler indefinitely.</p>
+<p>The budget is <code>max_reductions_per_ms</code> (50,000 by default) multiplied by that
+callback's own wall-clock budget, so it scales with the callback: <code>tick</code> at 500
+ms gets 25,000,000 reductions, a bot's <code>think</code> at 50 ms gets 2,500,000.
+Overrun surfaces as <code>{error, reductions_exhausted}</code>, distinct from <code>timeout</code>
+and <code>heap_exhausted</code>. As with the other two, the result is discarded and the
+previous Lua state is kept; a match or zone is never torn down because one
+callback overran. Set the rate to <code>0</code> to disable the check.</p>
+<p>Two limits are worth knowing:</p>
+<ul>
+<li>The parent samples the child's reduction count every 10 ms
+(<code>?REDUCTION_POLL_MS</code>), so a script can overshoot by up to one interval's
+work before it is killed. The budget bounds sustained CPU, not the
+instantaneous peak.</li>
+<li>asobi does not use <code>luerl_sandbox:run/3</code>, which offers the same idea
+upstream. That function evaluates a chunk, whereas asobi's hot path is
+<code>luerl:call_function/3</code> against an already-loaded state, so the polling loop
+lives in <code>bounded_eval</code> in <code>asobi_lua_loader</code>, which had already spawned and
+monitored the worker.</li>
+</ul>
+<p><code>handle_input/3</code> is the exception: it runs inline in the calling process with
+no child, so none of the three bounds apply. Its cost is a hung match or zone
+process, not a supervisor event - see <a href="/docs/security/lua-trust-model#handle-input-is-not-a-sandbox-boundary">handle-input is not a sandbox
+boundary</a>.</p>
+<h3 id="the-heap-cap-is-per-eval-not-per-script" tabindex="-1">The heap cap is per eval, not per script</h3>
+<p>Each callback child carries <code>max_heap_size</code> with <code>kill =&gt; true</code>
+(<code>max_heap_words</code>, 5,000,000 words by default), so one runaway allocation is
+killed and surfaces as <code>{error, heap_exhausted}</code>. Nothing caps a script's
+steady footprint: a state that sits just under the limit is copied into every
+later eval, and the total across concurrent matches is unbounded. The decode
+depth cap of 64 levels bounds recursion at the bridge boundary, not table size.</p>
+<h3 id="the-per-callback-state-copy-is-linear" tabindex="-1">The per-callback state copy is linear</h3>
+<p>Each bounded callback spawns a child that takes a full copy of the Luerl state.
+Cost is linear in script-side allocation, so a script that deliberately builds
+large stable tables makes every later callback pay the copy. Watch for
+unexplained per-tick latency growth on long-lived matches.</p>
 <h2 id="deployment-hygiene" tabindex="-1">Deployment hygiene</h2>
-<h3 id="the-container-release-tree-is-writable" tabindex="-1">The container release tree is writable</h3>
-<p>The shipped Dockerfile runs as the non-root <code>asobi</code> user but does not
-declare <code>--read-only</code>. The README example mounts <code>/app/game</code> <code>:ro</code>;
-that mode is the <strong>operator's</strong> responsibility, not the runtime's. We
-recommend <code>docker run --read-only --tmpfs /tmp</code> and chowning only
-<code>/app/game</code> to the runtime user (the rest of <code>/app</code> should stay
-root-owned + read-only).</p>
-<h3 id="symlinks-under-the-game-dir" tabindex="-1">Symlinks under the game dir</h3>
-<p><code>require</code> rejects symlinks at resolve time, so a misplaced symlink
-under <code>&lt;base&gt;/foo.lua</code> no longer slips through. This is defense in
-depth: keep the game dir mounted read-only and the build pipeline
-should not produce symlinks in the first place.</p>
+<h3 id="the-release-tree-in-the-container-is-writable" tabindex="-1">The release tree in the container is writable</h3>
+<p>The published image runs as the non-root <code>asobi</code> user, but its Dockerfile
+chowns all of <code>/app</code> to that user and the image does not declare <code>--read-only</code>.
+Mounting the game directory <code>:ro</code> is the operator's move, not the runtime's.
+<a href="/docs/security/known-limitations#the-release-tree-in-the-container-is-writable">Known limitations</a>
+carries the run command that makes the rest of the tree read-only.</p>
+<h3 id="symlinks-under-the-game-directory" tabindex="-1">Symlinks under the game directory</h3>
+<p><code>require</code> refuses a symlink at resolve time, so a symlink at <code>&lt;base&gt;/foo.lua</code>
+is not followed. That is defence in depth: keep the game directory mounted
+read-only, and keep symlinks out of the build pipeline in the first place.</p>
 <h2 id="behavioural" tabindex="-1">Behavioural</h2>
 <h3 id="mid-callback-rollback-is-best-effort" tabindex="-1">Mid-callback rollback is best-effort</h3>
-<p>If a callback is killed by its wall-clock timeout <em>after</em> it has
-already issued a side-effecting <code>game.*</code> API call (e.g.
-<code>game.economy.debit</code>), the side effect persists. The Lua-side state
-reverts to the prior tick but the asobi-side ledger does not. Treat
-economy / leaderboard / storage mutations as <strong>best-effort committed</strong>.
-For high-stakes flows, checkpoint state before/after the API call so
-the next tick reconciles, or wrap mutations in a transactional helper
-tagged with the call's ref.</p>
-<h3 id="bot-think2-errors-fall-back-to-the-built-in-default-ai" tabindex="-1">Bot <code>think/2</code> errors fall back to the built-in default AI</h3>
-<p>A rate-limited <code>logger:warning</code> is emitted (one line per bot per
-minute) when the fallback fires so persistently-broken scripts are
-visible — see the <code>maybe_log_think_error</code> helper in <code>asobi_bot</code>.
-Operators who rely on bot scripts should still monitor behaviour
-externally; a silent fallback bot will keep playing the match without
-ever calling your custom AI.</p>
+<p>If a callback is killed by its budget after it has already made a
+side-effecting <code>game.*</code> call (<code>game.economy.debit</code>, say), the side effect
+stands. The Lua state reverts to the previous tick; the asobi-side ledger does
+not. Treat economy, leaderboard and storage mutations as best-effort committed.
+For high-stakes flows, checkpoint state around the call so the next tick can
+reconcile.</p>
+<h3 id="a-failing-bot-think2-falls-back-to-the-built-in-ai" tabindex="-1">A failing bot <code>think/2</code> falls back to the built-in AI</h3>
+<p>When <code>think/2</code> errors, <code>asobi_bot</code> substitutes the default AI and emits a
+rate-limited warning, one line per bot per minute (<code>maybe_log_think_error</code>).
+The match keeps running, so a broken bot script is visible in the logs but not
+in the gameplay. Monitor for it if you rely on bot scripts.</p>
 <h2 id="logging" tabindex="-1">Logging</h2>
-<h3 id="require_failed-error-payload-is-truncated" tabindex="-1"><code>require_failed</code> error payload is truncated</h3>
-<p>When <code>luerl:do/2</code> rejects a <code>require</code>'d file (non-Lua content,
-syntactically invalid Lua), the compiler error list is truncated to the
-first three entries before propagating. This prevents a binary file
-mistakenly placed under the game dir from dumping arbitrary bytes into
-the structured log pipeline.</p>
+<h3 id="the-require_failed-payload-is-truncated" tabindex="-1">The <code>require_failed</code> payload is truncated</h3>
+<p>When <code>luerl:do/2</code> rejects a <code>require</code>d file - non-Lua content, invalid syntax -
+the compiler error list is cut to the first three entries plus a <code>truncated</code>
+marker before it propagates. A binary file placed under the game directory by
+mistake therefore cannot dump arbitrary bytes into the structured log pipeline.</p>
+<h2 id="related" tabindex="-1">Related</h2>
+<ul>
+<li><a href="/docs/security/lua-sandbox">Sandbox model</a> - what the sandbox removes, replaces and bounds.</li>
+<li><a href="/docs/security/lua-trust-model">Trust model</a> - what it is and is not a boundary against.</li>
+<li><a href="/docs/security/known-limitations">Known limitations</a> - the same for in-VM Erlang code.</li>
+<li><a href="/docs/security/threat-model">Threat model</a> - the node-level trust boundaries.</li>
+<li><a href="/docs/security/auth">Auth and rate limiting</a> - the request-side bounds.</li>
+</ul>
 """}
     ]}.

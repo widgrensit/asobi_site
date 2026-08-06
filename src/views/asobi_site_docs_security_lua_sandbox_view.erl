@@ -24,90 +24,112 @@ render(Bindings) ->
         {h1, [], [~"Sandbox model"]},
         {raw,
             ~"""
-<p>asobi_lua runs every Lua script in a hardened Luerl state. Sandbox
-construction lives in <code>asobi_lua_loader:new/1</code> and
-<code>asobi_lua_loader:init_sandboxed/0</code>.</p>
+<p>asobi runs every Lua script in a hardened Luerl state. Sandbox construction
+lives in <code>asobi_lua_loader:new/1</code> and <code>asobi_lua_loader:init_sandboxed/0</code>.</p>
 <h2 id="removed-from-the-global-environment" tabindex="-1">Removed from the global environment</h2>
-<p>The following standard-library entries are cleared (<code>= nil</code>) so a hostile
-script cannot reach them:</p>
+<p>These standard-library entries are erased (<code>strip_dangerous_globals/1</code> sets
+them to <code>nil</code>, which removes the key from the underlying table) so a script
+cannot reach them:</p>
 <ul>
-<li><strong>OS escape hatches:</strong> <code>os.execute</code>, <code>os.exit</code>, <code>os.getenv</code>,
-<code>os.remove</code>, <code>os.rename</code>, <code>os.tmpname</code></li>
-<li><strong>Code loading:</strong> <code>dofile</code>, <code>loadfile</code>, <code>load</code>, <code>loadstring</code></li>
-<li><strong>I/O:</strong> the entire <code>io</code> library</li>
-<li><strong>Package machinery:</strong> the entire <code>package</code> library, plus the default
-<code>require</code></li>
-<li><strong>Unstructured logging:</strong> <code>print</code>, <code>eprint</code> — Luerl's defaults bypass
-the structured logger and write straight to BEAM stdout. Use
-<code>game.log(level, message[, meta])</code> instead: it routes a structured,
-size-bounded line through the host logger behind a rate limit (per
-match/zone plus a node-wide backstop), closing the two holes <code>print</code>
-was removed for. See the Lua scripting guide's &quot;Logging&quot; section.</li>
+<li>OS escape hatches - <code>os.execute</code>, <code>os.exit</code>, <code>os.getenv</code>, <code>os.remove</code>,
+<code>os.rename</code>, <code>os.tmpname</code></li>
+<li>Code loading - <code>dofile</code>, <code>loadfile</code>, <code>load</code>, <code>loadstring</code></li>
+<li>I/O - the whole <code>io</code> library</li>
+<li>Package machinery - the whole <code>package</code> library, plus the default <code>require</code></li>
+<li>Unstructured logging - <code>print</code> and <code>eprint</code>. Luerl's versions bypass the
+structured logger and write straight to BEAM stdout. Use
+<code>game.log(level, message[, meta])</code>, which routes a structured, size-bounded
+line through the host logger behind a rate limit (per match or zone, plus a
+node-wide backstop). See the Logging section of the Lua scripting guide.</li>
 </ul>
-<p><code>os.clock</code>, <code>os.date</code>, <code>os.difftime</code>, and <code>os.time</code> remain available so
-games can timestamp.</p>
+<p><code>os.clock</code>, <code>os.date</code>, <code>os.difftime</code> and <code>os.time</code> stay, so games can timestamp.</p>
 <h2 id="replaced" tabindex="-1">Replaced</h2>
-<ul>
-<li><strong><code>require/1</code></strong> is provided by asobi_lua. Names must match
-<code>[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*</code> — letters, digits,
-underscores, with <code>.</code> separating segments. Names like <code>../foo</code>,
-<code>/etc/passwd</code>, <code>foo/bar</code>, <code>42</code>, or <code>''</code> are rejected. The validator
-uses the <code>dollar_endonly</code> regex flag so <code>require(&quot;foo\n&quot;)</code> does not
-slip through. The resolver joins the validated name to the directory
-of the script that was loaded (e.g. <code>require(&quot;bots.chaser&quot;)</code> →
-<code>&lt;base&gt;/bots/chaser.lua</code>) and reads the file with <code>file:read_file/1</code>.
-Symlinks at the resolved path are rejected before reading. Module
-results are cached in the Luerl state's private <code>_ASOBI_LOADED</code>
-table; <code>asobi_lua_match</code> clears that cache on hot-reload so changed
-modules pick up.</li>
-<li><strong><code>math.random</code></strong> dispatches to Erlang's <code>rand:uniform</code>. Single-arg
-form returns an integer in <code>[1, N]</code>; no-arg form returns a float in
-<code>[0, 1)</code>. The two-arg <code>math.random(a, b)</code> form upstream Lua exposes
-is <strong>not</strong> supported.</li>
-<li><strong><code>math.sqrt</code></strong> dispatches to Erlang's <code>math:sqrt/1</code>. Negative input
-returns <code>0.0</code> (upstream Lua returns NaN; Erlang would crash).</li>
-</ul>
-<h2 id="per-callback-wall-clock-limits" tabindex="-1">Per-callback wall-clock limits</h2>
-<p>Every Lua callback the bridges call (init, tick, join, leave,
-get_state, vote_requested, vote_resolved, generate_world,
-phases, spawn_templates, on_phase_started/ended, on_zone_loaded/unloaded,
-on_world_recovered, terrain_provider, spawn_position, post_tick,
-zone_tick, bot <code>think</code>) runs in a child process with a wall-clock
-budget. A runaway script (<code>while true do end</code>, deep recursion, huge
-allocation) is killed when its budget elapses; the parent gen_server
-logs a warning and continues with the previous state. Limits are tuned
-per callback — init/generate_world get more time, per-tick callbacks
-get less. See the <code>?*_TIMEOUT</code> macros in <code>asobi_lua_match.erl</code> and
-<code>asobi_lua_world.erl</code>.</p>
-<p><strong><code>handle_input/3</code> is the exception: it is <em>not</em> wall-clock-bounded.</strong> It runs
-inline for measured tail-latency wins at high input rates (ADR 0002), so a
-<code>while true do end</code> there hangs the match until the gen_server timeout (5 s) and
-the supervisor restarts the match — blast radius one match. It is not a sandbox
-boundary; see the <a href="/docs/security/lua-trust-model#per-callback-isolation">trust model</a>.</p>
-<p>The same wall-clock wrapper is applied to the <strong>initial script body</strong>
-load (<code>asobi_lua_loader:new/1</code>), the <strong>hot-reload</strong> path (in
-<code>asobi_lua_match</code>'s reload helper), and the <strong>config manifest</strong>
-evaluator (in <code>asobi_lua_config</code>). A <code>while true do end</code> at the top
-of <code>match.lua</code> therefore can no longer hang application start or the
-match gen_server.</p>
+<p><code>require/1</code> is asobi's own. A name must match
+<code>[A-Za-z_][A-Za-z0-9_]*(\.[A-Za-z_][A-Za-z0-9_]*)*</code> - letters, digits and
+underscores, with <code>.</code> separating segments. <code>../foo</code>, <code>/etc/passwd</code>, <code>foo/bar</code>,
+<code>42</code> and <code>''</code> are all rejected, and the validator runs with the
+<code>dollar_endonly</code> flag so <code>require(&quot;foo\n&quot;)</code> does not slip past the anchor. The
+resolver joins the validated name to the directory of the loaded script
+(<code>require(&quot;bots.chaser&quot;)</code> resolves to <code>&lt;base&gt;/bots/chaser.lua</code>) and reads it
+with <code>file:read_file/1</code>. A symlink at the resolved path is refused before the
+read. Results are cached in the state's <code>_ASOBI_LOADED</code> table, which
+<code>asobi_lua_reload</code> clears on hot-reload so a changed module is picked up.</p>
+<p><code>math.random</code> dispatches to <code>rand:uniform</code>. All three upstream forms work: no
+argument returns a float in <code>[0, 1)</code>, <code>math.random(n)</code> returns an integer in
+<code>[1, n]</code>, and <code>math.random(a, b)</code> returns an integer in <code>[a, b]</code>. An empty
+interval raises a proper Lua error, so <code>pcall</code> traps it.</p>
+<p><code>math.sqrt</code> dispatches to <code>math:sqrt/1</code>, and negative input returns <code>0.0</code>
+rather than crashing the process (upstream Lua returns NaN).</p>
+<h2 id="per-callback-budgets" tabindex="-1">Per-callback budgets</h2>
+<p>Every Lua callback the bridges call runs in a child process with three bounds:
+a wall-clock timeout, <code>max_heap_size</code> with <code>kill =&gt; true</code>, and a reduction
+budget. A runaway script - <code>while true do end</code>, deep recursion, a huge
+allocation - is killed, the parent logs a warning and keeps the previous Lua
+state, and the match or zone carries on. Failures surface as
+<code>{error, timeout}</code>, <code>{error, heap_exhausted}</code> or <code>{error, reductions_exhausted}</code>.</p>
+<p>The budgets are per callback: see the <a href="/docs/security/lua-trust-model#per-callback-budgets">trust
+model</a> for the full table and
+where each macro lives.</p>
+<p><code>handle_input/3</code> is the exception. It runs inline in the calling process, so
+none of the three bounds apply to it. See <a href="/docs/security/lua-trust-model#handle-input-is-not-a-sandbox-boundary">what that
+costs</a>.</p>
+<p>The same wrapper covers the three places script-author-controlled code is
+evaluated rather than called:</p>
+<table>
+<thead>
+<tr>
+<th>Path</th>
+<th>Module</th>
+<th>Budget</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Initial script body</td>
+<td><code>asobi_lua_loader:new/3</code></td>
+<td>the caller's init budget: 1000 ms for a match, 2000 ms for a world, 5000 ms when a zone VM boots</td>
+</tr>
+<tr>
+<td>Hot-reload</td>
+<td><code>asobi_lua_reload</code> (<code>?RELOAD_TIMEOUT_MS</code>)</td>
+<td>5000 ms</td>
+</tr>
+<tr>
+<td>Config manifest</td>
+<td><code>asobi_lua_config</code> (<code>?CONFIG_TIMEOUT_MS</code>)</td>
+<td>2000 ms</td>
+</tr>
+</tbody>
+</table>
+<p>So a <code>while true do end</code> at the top of <code>match.lua</code> cannot hang application
+start or the match process.</p>
 <h2 id="cross-script-isolation" tabindex="-1">Cross-script isolation</h2>
-<p>Each match and each zone gets its own Luerl state. Globals, modules,
-and the require cache live inside that state — there is no shared
-table reachable from script code that crosses match boundaries.</p>
+<p>Each match and each zone gets its own Luerl state. Globals, modules and the
+require cache live inside that state, and no table reachable from script code
+crosses a match boundary.</p>
 <h2 id="atom-exhaustion" tabindex="-1">Atom exhaustion</h2>
-<p><code>asobi_lua_api</code>'s <code>safe_to_atom</code> helper and <code>terrain_provider</code>
-decoding both use <code>binary_to_existing_atom/1</code> so a Lua-supplied string
-cannot inflate the global atom table. Additionally, the terrain
-provider module name is matched against an explicit allowlist
-(<code>asobi_terrain_flat</code>, <code>asobi_terrain_perlin</code> by default; configurable
-via the <code>asobi_lua, terrain_providers</code> env) so a script cannot
-dispatch into arbitrary loaded modules even if the underlying atom
-already exists. There is a regression test in
-<code>asobi_lua_sandbox_tests</code> that fails if the limit is widened.</p>
+<p><code>asobi_lua_api</code>'s <code>safe_to_atom</code> helper and the <code>terrain_provider</code> decoder both
+use <code>binary_to_existing_atom/1</code>, so a Lua-supplied string cannot inflate the
+global atom table. The terrain provider module is additionally matched against
+an explicit allowlist, so a script cannot dispatch into an arbitrary loaded
+module even when the atom already exists; a name outside the list is refused
+with a <code>terrain_provider_not_allowed</code> warning.
+<code>asobi_lua_sandbox_tests:atom_count_stable_under_unknown_keys_test/0</code> pins the
+atom-table property, and <code>asobi_lua_world_tests</code> pins the allowlist.</p>
+<p>The default list is <code>asobi_terrain_flat</code> and <code>asobi_terrain_perlin</code>, read
+through <code>asobi_lua_env:get_env(terrain_providers, ...)</code>.</p>
 <h2 id="decode-depth-cap" tabindex="-1">Decode depth cap</h2>
-<p><code>asobi_lua_api</code>'s deep-decode helper recurses on Lua-side tables;
-depth is capped at 64 levels and over-deep subtrees are replaced with
-the atom <code>too_deep</code>. A malicious script returning a 100k-deep table
-from a callback can no longer blow the parent process heap.</p>
+<p><code>asobi_lua_api</code>'s deep-decode helper recurses over Lua-side tables with a depth
+cap of 64 levels; an over-deep subtree is replaced with the atom <code>too_deep</code>. A
+script returning a 100k-deep table from a callback cannot blow the parent
+process heap.</p>
+<h2 id="related" tabindex="-1">Related</h2>
+<ul>
+<li><a href="/docs/security/lua-trust-model">Trust model</a> - what this sandbox is and is not a boundary against.</li>
+<li><a href="https://hexdocs.pm/asobi/security-lua-known-limitations.html">Known limitations (Lua)</a> - what it does not enforce.</li>
+<li><a href="/docs/security/threat-model">Threat model</a> - the node-level trust boundaries around it.</li>
+<li><a href="/docs/security/known-limitations">Known limitations</a> - the same for in-VM Erlang code.</li>
+<li><a href="/docs/security/auth">Auth and rate limiting</a> - the request-side bounds.</li>
+</ul>
 """}
     ]}.
