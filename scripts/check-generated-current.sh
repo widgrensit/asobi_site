@@ -23,14 +23,22 @@ done
 # Deterministic regeneration writes only the generated view modules.
 "$repo_root/scripts/gen-docs.sh" "$asobi" >/dev/null
 
-if git -C "$repo_root" diff --quiet -- src/views/; then
+# Only the generated modules. Diffing all of src/views/ made every edit to a
+# hand-written view look like "you forgot to regenerate", which is both wrong
+# and the most misleading thing a check can say.
+mapfile -t generated < <(
+	grep -oE 'asobi_site_docs_[a-z_]+_view' "$repo_root/scripts/gen-docs.sh" |
+		sort -u | sed "s|^|src/views/|; s|$|.erl|"
+)
+
+if git -C "$repo_root" diff --quiet -- "${generated[@]}"; then
 	echo "OK: generated docs views are current with the guides."
 	exit 0
 fi
 
 echo "DRIFT: committed docs views differ from a fresh regeneration." >&2
 echo "A guide changed without regenerating, or a generated view was hand-edited:" >&2
-git -C "$repo_root" --no-pager diff --stat -- src/views/ >&2
+git -C "$repo_root" --no-pager diff --stat -- "${generated[@]}" >&2
 echo "Fix: run scripts/gen-docs.sh <asobi-checkout> and commit the result." >&2
 
 # The regeneration above wrote into the working tree, so leave it there: it IS

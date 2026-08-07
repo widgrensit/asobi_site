@@ -17,11 +17,11 @@ render(Bindings) ->
                 {'div', [{class, ~"guide-header"}], [
                     {h1, [], [~"Lua SDK"]},
                     {p, [], [
-                        ~"Server-side game modes written in Lua, hosted by asobi_lua. No client integration - your game code runs on the asobi server."
+                        ~"Server-side game modes written in Lua, run by asobi itself. No client integration - your game code runs on the asobi server."
                     ]},
                     {a,
                         [
-                            {href, ~"https://github.com/widgrensit/asobi_lua"},
+                            {href, ~"https://github.com/widgrensit/asobi"},
                             {class, ~"guide-github"}
                         ],
                         [~"View on GitHub"]}
@@ -41,7 +41,7 @@ render(Bindings) ->
                     {p, [], [
                         ~"Mount your Lua game-mode files under ",
                         {code, [], [~"/app/game"]},
-                        ~". asobi_lua hot-reloads them on save."
+                        ~". asobi hot-reloads them on save."
                     ]}
                 ]},
 
