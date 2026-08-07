@@ -72,7 +72,7 @@ bots = { script = &quot;bots/arena_bot.lua&quot; }
 <td><code>bots</code></td>
 <td>no</td>
 <td>none</td>
-<td><code>{ script = &quot;path/to/bot.lua&quot; }</code> - see <a href="https://hexdocs.pm/asobi/lua-bots.html">Bots</a></td>
+<td><code>{ script = &quot;path/to/bot.lua&quot; }</code> - see <a href="/docs/lua/bots">Bots</a></td>
 </tr>
 <tr>
 <td><code>game_type</code></td>
@@ -267,7 +267,7 @@ have.</p>
 <tr>
 <td><code>bots</code></td>
 <td><code>#{}</code></td>
-<td>Bot configuration - see <a href="https://hexdocs.pm/asobi/lua-bots.html">Bots</a></td>
+<td>Bot configuration - see <a href="/docs/lua/bots">Bots</a></td>
 </tr>
 <tr>
 <td><code>listed</code></td>

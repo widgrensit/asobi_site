@@ -53,6 +53,7 @@ asobi|migrate-from-nakama|asobi_site_docs_migrate_nakama_view|docs-migrate-nakam
 asobi|migrate-from-hathora|asobi_site_docs_migrate_hathora_view|docs-migrate-hathora|Migrate from Hathora — Asobi docs|Migrate / Hathora|mighathora
 asobi|migrate-from-playfab|asobi_site_docs_migrate_playfab_view|docs-migrate-playfab|Migrate from PlayFab — Asobi docs|Migrate / PlayFab|migplayfab
 asobi|lua-bots|asobi_site_docs_lua_bots_view|docs-lua-bots|Lua bots — Asobi docs|Lua / Bots|luabots
+asobi|testing-multiple-players|asobi_site_docs_testing_players_view|docs-testing-players|Testing with multiple players — Asobi docs|Testing with multiple players|testplayers
 asobi|security-sandbox|asobi_site_docs_security_lua_sandbox_view|docs-sec-lua-sandbox|Lua sandbox — Asobi docs|Security / Lua sandbox|luasandbox
 asobi|security-trust-model|asobi_site_docs_security_lua_trust_view|docs-sec-lua-trust|Lua trust model — Asobi docs|Security / Lua trust model|luatrust
 asobi|security-lua-known-limitations|asobi_site_docs_security_lua_known_limits_view|docs-sec-lua-known|Lua known limitations — Asobi docs|Security / Lua known limitations|lualim

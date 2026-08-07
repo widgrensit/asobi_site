@@ -229,6 +229,8 @@ reads the queue and cannot act on it - there is no cancel-ticket button, and the
 numbers are this node's queue only. See <a href="https://hexdocs.pm/asobi/console.html">Operator console</a>.</p>
 <h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
+<li><a href="/docs/tools/multiple-players">Testing with multiple players</a> - why your two
+test clients are one player, and why they land in separate matches.</li>
 <li><a href="/docs/protocols/websocket">WebSocket protocol</a> - the <code>matchmaker.*</code> and <code>match.*</code> frames.</li>
 <li><a href="/docs/configuration">Configuration</a> - per-mode matchmaker tuning.</li>
 <li><a href="/docs/clustering">Clustering</a> - what a second node does to the queue.</li>

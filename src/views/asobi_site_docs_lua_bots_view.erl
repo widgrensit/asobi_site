@@ -273,6 +273,8 @@ function reports whether the id is addressable. Filter on the <code>bot_</code> 
 if you need the human answer.</p>
 <h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
+<li><a href="/docs/tools/multiple-players">Testing with multiple players</a> - bot fill is why
+two humans testing together each get their own match.</li>
 <li><a href="https://hexdocs.pm/asobi/lua-api.html">The game.* API</a> - what match and world scripts can call, and
 bots cannot (see <a href="#what-a-bot-script-gets">What a bot script gets</a>).</li>
 <li><a href="/docs/lua/api">Lua scripting</a> - the match callbacks a bot's input feeds.</li>

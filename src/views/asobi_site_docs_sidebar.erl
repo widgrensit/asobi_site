@@ -69,6 +69,7 @@ render(Bindings) ->
             {~"/docs/tools/cli", ~"asobi CLI"},
             {~"/docs/tools/dev", ~"asobi dev (live loop)"},
             {~"/docs/tools/testing", ~"Testing"},
+            {~"/docs/tools/multiple-players", ~"Testing with multiple players"},
             {~"/docs/lua/cookbook", ~"Cookbook"}
         ]},
         {~"Operate", [
