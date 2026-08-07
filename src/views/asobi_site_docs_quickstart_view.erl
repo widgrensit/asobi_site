@@ -113,7 +113,7 @@ function get_state(_player_id, state) return { hits = state.hits } end
             {h2, [], [~"2. Run the server"]},
             {p, [], [
                 ~"The server is the ",
-                {code, [], [~"asobi_lua"]},
+                {code, [], [~"asobi"]},
                 ~" runtime image plus Postgres. It loads your Lua from ",
                 {code, [], [~"/app/game"]},
                 ~", so mount the ",

@@ -50,7 +50,7 @@ render(Bindings) ->
                 {a, [{href, ~"/docs/security/lua-sandbox"}, {class, ~"docs-card"}, az_navigate], [
                     {h3, [], [~"Lua sandbox model"]},
                     {p, [], [
-                        ~"What asobi_lua removes, replaces, and time-budgets in the Luerl state hosting your game."
+                        ~"What asobi removes, replaces, and time-budgets in the Luerl state hosting your game."
                     ]}
                 ]},
                 {a, [{href, ~"/docs/security/lua-trust-model"}, {class, ~"docs-card"}, az_navigate],

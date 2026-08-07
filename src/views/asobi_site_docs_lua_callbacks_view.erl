@@ -272,20 +272,33 @@ get_state(PlayerId, #{players := P} = State) ->
                 ~" using explicit state fields."
             ]},
             code(
-                ~"erlang",
+                ~"lua",
                 ~"""
-phases(_Config) ->
-    [
-        #{name => <<"lobby">>,   duration => 30000},
-        #{name => <<"active">>,  duration => 180000},
-        #{name => <<"results">>, duration => 15000}
-    ].
+-- No phases/1 in Lua yet, so a phase is a field and a tick count you own.
+-- Durations are in ticks: 300 at the default 10 ticks/sec is 30 seconds.
+function init(config)
+  return { phase = "lobby", ticks = 0 }
+end
 
-on_phase_started(Name, State) ->
-    asobi_match_server:broadcast_event(self(), <<"phase">>, #{name => Name}),
-    {ok, State}.
+function tick(state)
+  state.ticks = state.ticks + 1
 
-on_phase_ended(_Name, State) -> {ok, State}.
+  if state.phase == "lobby" and state.ticks >= 300 then
+    enter(state, "active")
+  elseif state.phase == "active" and state.ticks >= 2100 then
+    enter(state, "results")
+  elseif state.phase == "results" and state.ticks >= 2250 then
+    state._finished = true
+    state._result = { status = "completed" }
+  end
+
+  return state
+end
+
+function enter(state, name)
+  state.phase = name
+  game.broadcast("phase", { name = name })
+end
 """
             ),
 

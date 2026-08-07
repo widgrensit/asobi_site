@@ -218,7 +218,7 @@ render(Bindings) ->
             {p, [], [
                 {strong, [], [~"Self-hosted."]},
                 ~" Bring up the ",
-                {code, [], [~"asobi_lua"]},
+                {code, [], [~"asobi"]},
                 ~" Docker image with your game directory mounted at ",
                 {code, [], [~"/app/game/"]},
                 ~" (",

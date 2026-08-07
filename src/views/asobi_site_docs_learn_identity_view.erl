@@ -128,7 +128,7 @@ guest_auth = true
                 ~" in Lua, and supply the pepper yourself. There is no ",
                 {code, [], [~"ASOBI_GUEST_AUTH"]},
                 ~" env var; the pepper is the switch. Provide it via the env var on the ",
-                {code, [], [~"asobi_lua"]},
+                {code, [], [~"asobi"]},
                 ~" image:"
             ]},
             code(

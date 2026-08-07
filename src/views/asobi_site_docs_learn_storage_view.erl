@@ -135,7 +135,7 @@ end
             {p, [], [
                 {strong, [], [~"Self-hosted."]},
                 ~" You bring your own Postgres (17+) and point Asobi at it. On the ",
-                {code, [], [~"asobi_lua"]},
+                {code, [], [~"asobi"]},
                 ~" Docker image this is a handful of ",
                 {code, [], [~"ASOBI_*"]},
                 ~" env vars:"

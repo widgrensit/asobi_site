@@ -104,18 +104,6 @@ render(Bindings) ->
                 {code, [], [~"post_tick/2"]},
                 ~"."
             ]},
-            {details, [], [
-                {summary, [], [~"Erlang tab"]},
-                code(
-                    ~"erlang",
-                    ~"""
-                    post_tick(Tick, State) when Tick >= 3600 ->
-                        {finished, #{reason => time_up, ticks => Tick}, State};
-                    post_tick(_Tick, State) ->
-                        {ok, State}.
-                    """
-                )
-            ]},
 
             {h2, [], [~"Finish when the world empties"]},
             {p, [], [
