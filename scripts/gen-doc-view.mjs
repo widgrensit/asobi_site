@@ -128,6 +128,8 @@ const SITE_ROUTES = {
   'clustering': '/docs/clustering',
   'configuration': '/docs/configuration',
   'performance-tuning': '/docs/performance',
+  'lua-bots': '/docs/lua/bots',
+  'testing-multiple-players': '/docs/tools/multiple-players',
   'security-auth': '/docs/security/auth',
   'security-threat-model': '/docs/security/threat-model',
   'security-known-limitations': '/docs/security/known-limitations',

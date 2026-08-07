@@ -304,6 +304,11 @@ is already revoked, so call <code>clear</code> to drop the now-dead local pair.<
 <p>Names vary by SDK: <code>guest_device</code> (the snake-case SDKs), <code>guestDevice</code> (Dart and
 JS), <code>GuestDevice</code>/<code>GuestDeviceAsync</code> (Unreal and Unity). See the SDK's README
 for the exact name and the storage location on each platform.</p>
+<p>Because the pair identifies the device, two clients started on one machine share
+it and resume the <em>same</em> player. That is correct behaviour and it is also the
+first thing to trip over when testing multiplayer locally. See
+<a href="/docs/tools/multiple-players">Testing with multiple players</a> for the ways round
+it.</p>
 <h3 id="create-or-resume" tabindex="-1">Create or resume</h3>
 <pre><code class="language-bash">curl -X POST http://localhost:8084/api/v1/auth/guest \
   -H 'Content-Type: application/json' \

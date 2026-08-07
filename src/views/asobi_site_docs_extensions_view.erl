@@ -411,7 +411,7 @@ inert stub, so a <code>write</code> declared <code>none</code> fires twice on ev
 <code>zone</code>. A <code>match</code> binding is absent from a world's zone VMs, and its namespace
 table is not even created there.</p>
 <p><code>bot</code> is refused at <code>rebar3 asobi check</code>, not ignored. A bot script is loaded
-with no <code>game</code> table at all - see <a href="https://hexdocs.pm/asobi/lua-bots.html">Bots</a> - so a binding declaring
+with no <code>game</code> table at all - see <a href="/docs/lua/bots">Bots</a> - so a binding declaring
 <code>bot</code> would install nothing, and a declaration that silently does nothing is a
 defect. Making it work was rejected: a bot has no <code>players.id</code>, so the argument
 every extension binding takes cannot be supplied. A bot decides from the state

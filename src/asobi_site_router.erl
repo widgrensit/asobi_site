@@ -69,6 +69,7 @@ routes(_Environment) ->
                 docs(~"/docs/configuration", asobi_site_docs_configuration_view),
                 docs(~"/docs/performance", asobi_site_docs_performance_view),
                 docs(~"/docs/lua/bots", asobi_site_docs_lua_bots_view),
+                docs(~"/docs/tools/multiple-players", asobi_site_docs_testing_players_view),
                 docs(~"/docs/errors", asobi_site_docs_errors_view),
                 docs(~"/docs/security", asobi_site_docs_security_view),
                 docs(~"/docs/security/threat-model", asobi_site_docs_security_threat_model_view),
