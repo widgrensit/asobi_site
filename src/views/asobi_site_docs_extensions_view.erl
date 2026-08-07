@@ -73,7 +73,7 @@ extension means building your own release from the Hex package.</p>
 </tr>
 <tr>
 <td>Game client, over the network</td>
-<td><code>asobi.rpc(&quot;quests.claim&quot;, ...)</code></td>
+<td>an <code>rpc.call</code> frame - <code>ws.rpc(...)</code> in JS, <code>rpc_call(...)</code> in Godot, <code>realtime:rpc(...)</code> in Defold and LÖVE</td>
 <td>&quot;give me my reward&quot;</td>
 </tr>
 <tr>
@@ -174,6 +174,24 @@ try {
 realtime.rpc_call(&quot;quests.claim&quot;, {&quot;quest_id&quot;: &quot;q-1&quot;}, func(ok, data):
     if ok: print(data[&quot;reward&quot;])
     else:  print(data[&quot;code&quot;]))
+</code></pre>
+<p>Without an SDK - to check a method by hand, or from a language with no asobi
+SDK yet - it is two frames on the socket. RPC rides the game WebSocket, so this
+is <code>websocat</code> rather than <code>curl</code>, and the socket must be authenticated first:
+an <code>rpc.call</code> on an unauthenticated socket is rejected, because <code>rpc/0</code> is
+player-scoped and there is no player yet.</p>
+<pre><code class="language-bash">TOKEN=$(curl -sX POST https://your-host/api/v1/auth/login \
+  -H 'content-type: application/json' \
+  -d '{&quot;username&quot;:&quot;alice&quot;,&quot;password&quot;:&quot;...&quot;}' | jq -r .access_token)
+
+printf '%s\n%s\n' \
+  &quot;{\&quot;type\&quot;:\&quot;session.connect\&quot;,\&quot;cid\&quot;:\&quot;1\&quot;,\&quot;payload\&quot;:{\&quot;token\&quot;:\&quot;$TOKEN\&quot;}}&quot; \
+  '{&quot;type&quot;:&quot;rpc.call&quot;,&quot;cid&quot;:&quot;2&quot;,&quot;payload&quot;:{&quot;protocol&quot;:1,&quot;method&quot;:&quot;quests.claim&quot;,&quot;params&quot;:{&quot;quest_id&quot;:&quot;q-1&quot;}}}' \
+  | websocat wss://your-host/ws
+</code></pre>
+<p>The reply carries the <code>cid</code> you sent, which is what lets several calls be in
+flight at once:</p>
+<pre><code class="language-json">{&quot;type&quot;:&quot;rpc.ok&quot;,&quot;cid&quot;:&quot;2&quot;,&quot;payload&quot;:{&quot;result&quot;:{&quot;reward&quot;:100}}}
 </code></pre>
 <p>Branch on <code>code</code>, never on <code>message</code>. The shape is the same in every SDK - a
 method name, a params object, and a reply that is either a result object or the

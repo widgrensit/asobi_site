@@ -288,10 +288,13 @@ Analytics plus a store validator is cheaper than any backend here.</li>
 </ul>
 <h2 id="clustering" tabindex="-1">Clustering</h2>
 <p>Multiple nodes share Postgres and <code>pg</code>-scoped presence, chat and process
-lookups. Three things stay node-local and change how you deploy: the matchmaker
-queue, the rate-limit buckets and the console session store, so the console
-needs a sticky route and players queuing against different nodes never match
-each other. <a href="/docs/clustering">Clustering</a> has the full list.</p>
+lookups. Four things stay node-local and change how you deploy: the matchmaker
+queue, the rate-limit buckets, the console session store and the player-to-world
+table - so the console needs a sticky route, players queuing against different
+nodes never match each other, and a player who reconnects to a different node
+loses their world with no error. That last one is the only item here a player
+notices and an operator does not, which is why it belongs in the summary rather
+than only in the full list. <a href="/docs/clustering">Clustering</a> has the rest.</p>
 <h2 id="client-sdks" tabindex="-1">Client SDKs</h2>
 <p>Seven first-class SDKs: <a href="https://github.com/widgrensit/asobi-godot">Godot</a>,
 <a href="https://github.com/widgrensit/asobi-defold">Defold</a>,
