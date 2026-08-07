@@ -145,10 +145,10 @@ owns. <code>extension_version</code> is recorded in the registry and printed by
 <h2 id="writing-an-rpc-handler" tabindex="-1">Writing an RPC handler</h2>
 <p>A client calls a declared method over the WebSocket:</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;rpc.call&quot;, &quot;cid&quot;: &quot;c-1&quot;,
- &quot;payload&quot;: {&quot;protocol&quot;: 1, &quot;method&quot;: &quot;quests.claim&quot;, &quot;params&quot;: {&quot;quest_id&quot;: &quot;q-1&quot;}}}
+ &quot;payload&quot;: {&quot;protocol&quot;: 1, &quot;method&quot;: &quot;quests.claim&quot;, &quot;params&quot;: {&quot;quest_key&quot;: &quot;daily_kills&quot;}}}
 </code></pre>
 <p>and gets back one of:</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;rpc.ok&quot;,    &quot;cid&quot;: &quot;c-1&quot;, &quot;payload&quot;: {&quot;result&quot;: {&quot;reward&quot;: 100}}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;rpc.ok&quot;,    &quot;cid&quot;: &quot;c-1&quot;, &quot;payload&quot;: {&quot;result&quot;: {&quot;quest_key&quot;: &quot;daily_kills&quot;, &quot;currency&quot;: &quot;gold&quot;, &quot;amount&quot;: 100}}}
 {&quot;type&quot;: &quot;rpc.error&quot;, &quot;cid&quot;: &quot;c-1&quot;, &quot;payload&quot;: {&quot;error&quot;: {&quot;code&quot;: &quot;quests.already_claimed&quot;, &quot;message&quot;: &quot;...&quot;, &quot;details&quot;: {}}}}
 </code></pre>
 <p>See <a href="/docs/protocols/websocket">WebSocket protocol</a> for the frames either side of
@@ -165,14 +165,14 @@ from <code>asobi_rpc:protocol/0</code>.</p>
 <code>cid</code> and correlates the reply for you:</p>
 <pre><code class="language-js">// asobi-js: resolves with `result`, rejects with an AsobiRpcError
 try {
-  const { reward } = await ws.rpc(&quot;quests.claim&quot;, { quest_id: &quot;q-1&quot; });
+  const { currency, amount } = await ws.rpc(&quot;quests.claim&quot;, { quest_key: &quot;daily_kills&quot; });
 } catch (e) {
   if (e.code === &quot;quests.already_claimed&quot;) { /* domain outcome */ }
 }
 </code></pre>
 <pre><code class="language-gdscript"># asobi-godot: the reply arrives on the callable, keyed by the returned cid
-realtime.rpc_call(&quot;quests.claim&quot;, {&quot;quest_id&quot;: &quot;q-1&quot;}, func(ok, data):
-    if ok: print(data[&quot;reward&quot;])
+realtime.rpc_call(&quot;quests.claim&quot;, {&quot;quest_key&quot;: &quot;daily_kills&quot;}, func(ok, data):
+    if ok: print(data[&quot;amount&quot;], data[&quot;currency&quot;])
     else:  print(data[&quot;code&quot;]))
 </code></pre>
 <p>Without an SDK - to check a method by hand, or from a language with no asobi
@@ -186,7 +186,7 @@ player-scoped and there is no player yet.</p>
 
 printf '%s\n%s\n' \
   &quot;{\&quot;type\&quot;:\&quot;session.connect\&quot;,\&quot;cid\&quot;:\&quot;1\&quot;,\&quot;payload\&quot;:{\&quot;token\&quot;:\&quot;$TOKEN\&quot;}}&quot; \
-  '{&quot;type&quot;:&quot;rpc.call&quot;,&quot;cid&quot;:&quot;2&quot;,&quot;payload&quot;:{&quot;protocol&quot;:1,&quot;method&quot;:&quot;quests.claim&quot;,&quot;params&quot;:{&quot;quest_id&quot;:&quot;q-1&quot;}}}' \
+  '{&quot;type&quot;:&quot;rpc.call&quot;,&quot;cid&quot;:&quot;2&quot;,&quot;payload&quot;:{&quot;protocol&quot;:1,&quot;method&quot;:&quot;quests.claim&quot;,&quot;params&quot;:{&quot;quest_key&quot;:&quot;daily_kills&quot;}}}' \
   | websocat wss://your-host/ws
 </code></pre>
 <p>The reply carries the <code>cid</code> you sent, which is what lets several calls be in
@@ -201,11 +201,12 @@ Dart SDK rather than a protocol implementation of its own, so it inherits
 <code>rpc</code> from it.</p>
 <p>The handler is <code>(Params, Ctx)</code>, which is why the arity in <code>rpc/0</code> is always 2:</p>
 <pre><code class="language-erlang">-spec claim(asobi_rpc:params(), asobi_rpc:ctx()) -&gt; asobi_rpc:reply().
-claim(#{~&quot;quest_id&quot; := QuestId}, #{player_id := PlayerId}) -&gt;
-    case asobi_quests:claim(PlayerId, QuestId) of
-        {ok, Reward}               -&gt; {ok, #{reward =&gt; Reward}};
-        {error, already_claimed}   -&gt; {error, ~&quot;quests.already_claimed&quot;};
-        {error, {no_such, Id}}     -&gt; {error, ~&quot;quests.not_found&quot;, #{quest_id =&gt; Id}}
+claim(#{~&quot;quest_key&quot; := QuestKey}, #{player_id := PlayerId}) -&gt;
+    case asobi_quests:claim(PlayerId, QuestKey) of
+        {ok, #{currency := C, amount := A}} -&gt;
+            {ok, #{quest_key =&gt; QuestKey, currency =&gt; C, amount =&gt; A}};
+        {error, already_claimed} -&gt; {error, ~&quot;quests.already_claimed&quot;};
+        {error, {no_such, Key}}  -&gt; {error, ~&quot;quests.not_found&quot;, #{quest_key =&gt; Key}}
     end.
 </code></pre>
 <p><code>{ok, map()} | {error, Code} | {error, Code, Details}</code>.</p>
