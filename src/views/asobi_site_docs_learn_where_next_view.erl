@@ -194,8 +194,6 @@ render(Bindings) ->
                     {strong, [], [~"Self-hosted"]},
                     ~" (your own release of ",
                     {code, [], [~"asobi"]},
-                    ~" + ",
-                    {code, [], [~"asobi_lua"]},
                     ~", your own Postgres) you supply those yourself: the guest pepper via ",
                     {code, [], [~"ASOBI_GUEST_VERIFIER_PEPPER"]},
                     ~", and, for IAP, the store credentials via ",

@@ -199,7 +199,7 @@ asobi init mygame
                 ~"Want to run it before deploying? ",
                 {code, [], [~"asobi dev"]},
                 ~" boots the ",
-                {code, [], [~"asobi_lua"]},
+                {code, [], [~"asobi"]},
                 ~" image and Postgres locally in Docker - no account, no keys - and hot-reloads ",
                 {code, [], [~"lua/"]},
                 ~" as you edit."

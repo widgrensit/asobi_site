@@ -80,8 +80,6 @@ client input  --->  server decides  --->  server broadcasts  --->  every client 
                 {strong, [], [~"Self-hosted "]},
                 ~"- your own release of ",
                 {code, [], [~"asobi"]},
-                ~" + ",
-                {code, [], [~"asobi_lua"]},
                 ~" against your own Postgres. You configure it with ",
                 {code, [], [~"ASOBI_*"]},
                 ~" environment variables (the Docker image) or ",

@@ -93,22 +93,12 @@ POST /api/v1/leaderboards/:id                  Submit a score
                 {code, [], [~"rank"]},
                 ~" with a board ID starts a dedicated ",
                 {code, [], [~"asobi_leaderboard_server"]},
-                ~" process. You can also start one eagerly:"
+                ~" process. There is nothing to start and nothing to configure: submit a score and the board exists."
             ]},
-            code(
-                ~"erlang",
-                ~"""
-{ok, _Pid} = asobi_leaderboard_sup:start_board(<<"arena:weekly">>).
-"""
-            ),
 
             {h2, [], [~"Tournaments"]},
             {p, [], [
-                ~"A tournament wraps a leaderboard with a time window and prize pool. Tournaments are created by inserting a row via ",
-                {code, [], [~"asobi_repo"]},
-                ~" and then booting a server under ",
-                {code, [], [~"asobi_tournament_sup"]},
-                ~":"
+                ~"A tournament wraps a leaderboard with a time window and prize pool. Players list, read and join them over the API:"
             ]},
             code(
                 ~"bash",
@@ -118,15 +108,13 @@ GET  /api/v1/tournaments/:id           Get tournament details
 POST /api/v1/tournaments/:id/join      Join a tournament
 """
             ),
-            code(
-                ~"erlang",
-                ~"""
-{ok, _Pid} = asobi_tournament_sup:start_tournament(#{
-    tournament_id => <<"arena:2026-w17">>,
-    leaderboard   => <<"arena:weekly">>
-}).
-"""
-            ),
+            {p, [], [
+                ~"There is no route that ",
+                {strong, [], [~"creates"]},
+                ~" one. Listing, reading and joining are all a client can do today; a tournament is brought into existence by the release itself, which means a self-hoster does it in their own application code and a cloud tenant cannot do it at all. See the ",
+                {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
+                ~"."
+            ]},
 
             {h2, [], [~"Seasons"]},
             {p, [], [

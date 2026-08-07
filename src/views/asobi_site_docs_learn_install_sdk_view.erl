@@ -75,8 +75,6 @@ render(Bindings) ->
                     {strong, [], [~"Self-hosted"]},
                     ~": your own release of ",
                     {code, [], [~"asobi"]},
-                    ~" + ",
-                    {code, [], [~"asobi_lua"]},
                     ~" on your own host, plain HTTP/WS on port 8084 by default, e.g. ",
                     {code, [], [~"localhost:8084"]},
                     ~" in dev. See ",

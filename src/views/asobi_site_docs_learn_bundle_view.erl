@@ -224,7 +224,7 @@ render(Bindings) ->
             ]},
             {p, [], [
                 ~"Under the bonnet that is nothing more than the ",
-                {code, [], [~"asobi_lua"]},
+                {code, [], [~"asobi"]},
                 ~" image next to a Postgres, so if you would rather run it by hand, the same thing in ",
                 {code, [], [~"docker-compose.yml"]},
                 ~" is:"
@@ -274,10 +274,8 @@ render(Bindings) ->
                     {strong, [], [~"Self-hosted"]},
                     ~" (your own release of ",
                     {code, [], [~"asobi"]},
-                    ~" + ",
-                    {code, [], [~"asobi_lua"]},
                     ~", your own Postgres): you run the ",
-                    {code, [], [~"asobi_lua"]},
+                    {code, [], [~"asobi"]},
                     ~" image (or embed asobi as an Erlang dependency), point it at your Postgres, and set the ",
                     {code, [], [~"ASOBI_*"]},
                     ~" environment variables yourself. Guest auth additionally needs you to supply the pepper via ",
