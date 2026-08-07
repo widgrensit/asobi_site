@@ -32,7 +32,7 @@ render(Bindings) ->
             {h2, [], [~"What it is"]},
             {p, [], [
                 ~"A minimal, deterministic Asobi backend for CI: a Docker Compose stack (Postgres plus ",
-                {code, [], [~"ghcr.io/widgrensit/asobi_lua:latest"]},
+                {code, [], [~"ghcr.io/widgrensit/asobi:latest"]},
                 ~") running two tiny Lua fixtures - a ",
                 {code, [], [~"smoke"]},
                 ~" match mode and a ",

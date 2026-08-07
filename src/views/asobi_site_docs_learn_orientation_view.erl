@@ -110,7 +110,7 @@ client input  --->  server decides  --->  server broadcasts  --->  every client 
                     ~"The device-code prompt should complete and report you as authenticated."
                 ]},
                 {p, [], [{strong, [], [~"Self-hosted"]}, ~" - pull the runtime image:"]},
-                code(~"bash", ~"docker pull ghcr.io/widgrensit/asobi_lua:latest\n"),
+                code(~"bash", ~"docker pull ghcr.io/widgrensit/asobi:latest\n"),
                 {p, [], [
                     ~"The pull should finish without error. You are ready when one of these succeeds."
                 ]}
