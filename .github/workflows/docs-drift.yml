@@ -20,6 +20,7 @@ on:
       - 'src/views/asobi_site_docs_*_view.erl'
       - 'scripts/check-quickstart-drift.sh'
       - 'scripts/check-generated-current.sh'
+      - 'scripts/check-archived-refs.sh'
       - 'scripts/gen-doc-view.mjs'
       - 'scripts/gen-docs.sh'
       - 'scripts/package.json'
@@ -29,6 +30,7 @@ on:
       - 'src/views/asobi_site_docs_*_view.erl'
       - 'scripts/check-quickstart-drift.sh'
       - 'scripts/check-generated-current.sh'
+      - 'scripts/check-archived-refs.sh'
       - 'scripts/gen-doc-view.mjs'
       - 'scripts/gen-docs.sh'
       - 'scripts/package.json'
@@ -71,11 +73,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Fetch the guide sources (asobi + asobi_lua)
+      - name: Fetch the guide sources
         run: |
           git clone --depth 1 https://github.com/widgrensit/asobi "$RUNNER_TEMP/asobi"
-          git clone --depth 1 https://github.com/widgrensit/asobi_lua "$RUNNER_TEMP/asobi_lua"
       - name: Install generator deps
         run: npm --prefix scripts ci
       - name: Check generated views are current with the guides
-        run: scripts/check-generated-current.sh "$RUNNER_TEMP/asobi" "$RUNNER_TEMP/asobi_lua"
+        run: scripts/check-generated-current.sh "$RUNNER_TEMP/asobi"
+
+      - name: No page points at an archived repository
+        run: scripts/check-archived-refs.sh
