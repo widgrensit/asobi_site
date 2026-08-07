@@ -36,6 +36,7 @@ asobi|economy|asobi_site_docs_economy_view|docs-economy|Economy & IAP — Asobi 
 asobi|voting|asobi_site_docs_voting_view|docs-voting|Voting — Asobi docs|Voting|vote
 asobi|world-server|asobi_site_docs_world_server_view|docs-world-server|World server — Asobi docs|World server|world
 asobi|console|asobi_site_docs_console_view|docs-console|Operator console — Asobi docs|Operator console|console
+asobi|extensions|asobi_site_docs_extensions_view|docs-extensions|Extensions — Asobi docs|Extensions|extensions
 asobi|configuration|asobi_site_docs_configuration_view|docs-configuration|Configuration — Asobi docs|Configuration|config
 asobi|security-auth|asobi_site_docs_security_auth_view|docs-sec-auth|Auth & rate limiting — Asobi docs|Security / Authentication & rate limiting|secauth
 asobi|clustering|asobi_site_docs_clustering_view|docs-clustering|Clustering — Asobi docs|Clustering|cluster

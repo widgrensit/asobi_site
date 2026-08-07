@@ -28,6 +28,20 @@ render(Bindings) ->
                 ~"EU-hosted, and the core is open source, so you can self-host any time."
             ]},
 
+            %% The marketing page says invite-only; this page walked a reader
+            %% into signing in as though anyone could, so they met the wall
+            %% instead of being told about it.
+            {'div', [{class, ~"docs-callout"}], [
+                {p, [], [
+                    {strong, [], [~"Invite-only for now. "]},
+                    ~"We onboard each studio personally, so an account is a ",
+                    {a, [{href, ~"/cloud"}, az_navigate], [~"conversation"]},
+                    ~" rather than a signup form. Everything below works the moment you have one - and every word of it is equally true self-hosted, where you need no invite at all: see ",
+                    {a, [{href, ~"/docs/self-host"}, az_navigate], [~"self-hosting"]},
+                    ~"."
+                ]}
+            ]},
+
             {'div', [{class, ~"docs-callout docs-callout-success"}], [
                 {p, [], [
                     {strong, [], [~"About 10 minutes to a running game. "]},

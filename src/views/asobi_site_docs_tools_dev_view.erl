@@ -56,7 +56,7 @@ asobi dev          # backend on http://localhost:8084, WS at /ws
                 ~" (regenerated each run) and runs it in the foreground. That stack is ",
                 {code, [], [~"postgres:16"]},
                 ~" plus ",
-                {code, [], [~"ghcr.io/widgrensit/asobi_lua:latest"]},
+                {code, [], [~"ghcr.io/widgrensit/asobi:latest"]},
                 ~", with your Lua directory mounted read-only at ",
                 {code, [], [~"/app/game"]},
                 ~". The container - not the CLI - watches that volume and hot-reloads. It needs Docker ",

@@ -40,8 +40,8 @@ and friends), the <code>ASOBI_LUA_RELOAD</code> variable, and <code>{asobi_lua, 
 blocks, which are still read - see
 <a href="/docs/configuration#which-application-key">Which application key</a>.</p>
 <p>The one stale <code>asobi_lua</code> is the image name. <code>ghcr.io/widgrensit/asobi_lua</code>
-still publishes, so an existing compose file keeps working; change it to
-<code>ghcr.io/widgrensit/asobi</code> when convenient.</p>
+is no longer rebuilt: tags already published keep working and are never
+deleted, but they receive no fixes. Use <code>ghcr.io/widgrensit/asobi</code>.</p>
 <h2 id="client-sdks" tabindex="-1">Client SDKs</h2>
 <p>One per engine, all speaking the same WebSocket and REST protocol:
 <a href="https://github.com/widgrensit/asobi-love2d">asobi-love2d</a> (LÖVE),

@@ -139,7 +139,7 @@ services:
       retries: 5
 
   asobi:
-    image: ghcr.io/widgrensit/asobi_lua:latest
+    image: ghcr.io/widgrensit/asobi:latest
     depends_on:
       postgres:
         condition: service_healthy
@@ -269,7 +269,7 @@ docker compose restart asobi
             code(
                 ~"docker",
                 ~"""
-FROM ghcr.io/widgrensit/asobi_lua:latest
+FROM ghcr.io/widgrensit/asobi:latest
 COPY game/ /app/game
 """
             ),

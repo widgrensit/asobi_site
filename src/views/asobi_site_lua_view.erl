@@ -33,8 +33,8 @@ render(Bindings) ->
                     {'div', [{class, ~"guide-code"}], [
                         {pre, [], [
                             {code, [], [
-                                ~"docker pull ghcr.io/widgrensit/asobi_lua:latest\n",
-                                ~"docker run -p 8084:8084 -v $(pwd)/game:/app/game ghcr.io/widgrensit/asobi_lua"
+                                ~"docker pull ghcr.io/widgrensit/asobi:latest\n",
+                                ~"docker run -p 8084:8084 -v $(pwd)/game:/app/game ghcr.io/widgrensit/asobi"
                             ]}
                         ]}
                     ]},

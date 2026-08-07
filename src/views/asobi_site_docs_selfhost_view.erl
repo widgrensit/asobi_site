@@ -73,7 +73,7 @@ services:
     ports: ["5432:5432"]
 
   asobi:
-    image: ghcr.io/widgrensit/asobi_lua:latest
+    image: ghcr.io/widgrensit/asobi:latest
     depends_on: [postgres]
     environment:
       ASOBI_DB_HOST: postgres
@@ -205,7 +205,7 @@ spec:
     spec:
       containers:
         - name: engine
-          image: ghcr.io/widgrensit/asobi_lua:latest
+          image: ghcr.io/widgrensit/asobi:latest
           env:
             - name: ASOBI_DB_HOST
               valueFrom:

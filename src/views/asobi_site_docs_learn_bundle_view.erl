@@ -239,7 +239,7 @@ render(Bindings) ->
                     healthcheck: { test: ["CMD-SHELL", "pg_isready -U postgres"], interval: 5s }
 
                   asobi:
-                    image: ghcr.io/widgrensit/asobi_lua:latest
+                    image: ghcr.io/widgrensit/asobi:latest
                     depends_on: { postgres: { condition: service_healthy } }
                     ports: ["8084:8084"]
                     volumes: ["./lua:/app/game:ro"]

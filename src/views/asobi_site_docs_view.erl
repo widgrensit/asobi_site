@@ -166,6 +166,13 @@ asobi deploy prod lua
                 ]}
             ]},
 
+            {h2, [], [~"Extending the server"]},
+            {p, [], [
+                ~"Game logic that outgrows Lua goes in an extension: an OTP application that declares what it owns and exposes methods over RPC on the same socket the game already uses. Every client SDK can call them. See ",
+                {a, [{href, ~"/docs/extensions"}, az_navigate], [~"extensions"]},
+                ~"."
+            ]},
+
             {h2, [], [~"Operating a live game"]},
             {p, [], [
                 ~"Every node serves an operator console at ",
