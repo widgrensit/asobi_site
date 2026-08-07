@@ -118,17 +118,21 @@ local nearby = game.spatial.query_radius(100, 200, 50)
                 {code, [], [~"matchmaker.add"]},
                 ~" → server replies with ",
                 {code, [], [~"match.matched"]},
-                ~"). Server-side, you can also enqueue from Erlang:"
+                ~"). There is no Lua entry point: a match script runs inside a match, and matchmaking is what decides a match should exist. The queue frame is the whole client side:"
             ]},
             code(
-                ~"erlang",
+                ~"json",
                 ~"""
-{ok, TicketId} = asobi_matchmaker:add(PlayerId, #{
-    mode       => <<"ranked">>,
-    properties => #{skill => 1250, region => <<"eu_west">>}
-}).
+{"type": "matchmaker.add",
+ "payload": {"mode": "ranked",
+             "properties": {"skill": 1250, "region": "eu_west"}}}
 """
             ),
+            {p, [], [
+                ~"Your SDK wraps that. Server-side enqueueing from Erlang is in the ",
+                {a, [{href, ~"/docs/erlang/api"}, az_navigate], [~"Erlang API reference"]},
+                ~"."
+            ]},
 
             {h2, [], [~"Voting"]},
             {p, [], [
@@ -141,8 +145,24 @@ local nearby = game.spatial.query_radius(100, 200, 50)
                 {code, [], [~"vote_requested(state)"]},
                 ~" callback - return a vote config and the match server starts the vote. From Erlang, you can open one directly:"
             ]},
-            code(
-                ~"erlang",
+            asobi_site_tabbed_code:lua_erlang(
+                ~"concepts-voting",
+                ~"""
+-- Return a config to open a vote, or nil to skip.
+function vote_requested(state)
+  if state.boss_defeated and not state.boon_picked then
+    return {
+      template  = "boon_pick",
+      method    = "plurality",
+      options   = { { id = "fireball", label = "Fireball" },
+                    { id = "shield",   label = "Shield" },
+                    { id = "speed",    label = "Speed" } },
+      window_ms = 30000
+    }
+  end
+  return nil
+end
+""",
                 ~"""
 {ok, _} = asobi_match_server:start_vote(MatchPid, #{
     template  => <<"boon_pick">>,
