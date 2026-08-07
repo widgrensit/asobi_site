@@ -40,6 +40,7 @@ asobi|extensions|asobi_site_docs_extensions_view|docs-extensions|Extensions — 
 asobi|configuration|asobi_site_docs_configuration_view|docs-configuration|Configuration — Asobi docs|Configuration|config
 asobi|security-auth|asobi_site_docs_security_auth_view|docs-sec-auth|Auth & rate limiting — Asobi docs|Security / Authentication & rate limiting|secauth
 asobi|clustering|asobi_site_docs_clustering_view|docs-clustering|Clustering — Asobi docs|Clustering|cluster
+asobi|observability|asobi_site_docs_observability_view|docs-observability|Observability — Asobi docs|Observability|observability
 asobi|security-known-limitations|asobi_site_docs_security_known_limits_view|docs-sec-known|Known limitations — Asobi docs|Security / Known limitations|seclim
 asobi|large-worlds|asobi_site_docs_large_worlds_view|docs-large-worlds|Large worlds — Asobi docs|Large worlds|worlds
 asobi|phases|asobi_site_docs_phases_view|docs-phases|Phases and seasons — Asobi docs|Phases and seasons|phases

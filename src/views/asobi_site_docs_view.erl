@@ -166,6 +166,13 @@ asobi deploy prod lua
                 ]}
             ]},
 
+            {h2, [], [~"Watching it in production"]},
+            {p, [], [
+                ~"asobi emits 37 telemetry events and structured JSON logs, and deliberately ships no metrics endpoint or dashboards - wire the events to Prometheus and let Grafana own the graphs. See ",
+                {a, [{href, ~"/docs/observability"}, az_navigate], [~"observability"]},
+                ~"."
+            ]},
+
             {h2, [], [~"Extending the server"]},
             {p, [], [
                 ~"Game logic that outgrows Lua goes in an extension: an OTP application that declares what it owns and exposes methods over RPC on the same socket the game already uses. Every client SDK can call them. See ",
