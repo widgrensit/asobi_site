@@ -582,6 +582,12 @@ limiter, since <code>asobi_zone</code> owns them outright.</p>
 <p><code>listed</code> and <code>quick_play</code> are independent axes, so a mode can be browsable
 but out of quick-play rotation, or reachable by quick-play while hidden from
 the browser.</p>
+<p>In Lua, as globals on the mode script:</p>
+<pre><code class="language-lua">game_type  = &quot;world&quot;
+listed     = false    -- never shows up in the browser
+quick_play = false    -- and never absorbs a quick-play request
+</code></pre>
+<p>Or in an operator <code>game_modes</code> entry:</p>
 <pre><code class="language-erlang">~&quot;tutorial&quot; =&gt; #{
     type =&gt; world,
     module =&gt; my_tutorial,
@@ -589,6 +595,9 @@ the browser.</p>
     quick_play =&gt; false   %% and never absorbs a quick-play request
 }
 </code></pre>
+<p>Both default to <code>true</code> for a world, so a mode that says nothing is browsable
+and quick-playable. A match mode is the inverse for <code>listed</code>: unlisted until
+it opts in.</p>
 <p>Neither flag gates joining. A client that already knows a <code>world_id</code> can
 still <code>world.join</code> it. Both flags control discovery only.</p>
 <p>Both are properties of the <strong>mode</strong>, not of a world instance, so a player

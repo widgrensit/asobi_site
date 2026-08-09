@@ -81,6 +81,18 @@ bots = { script = &quot;bots/arena_bot.lua&quot; }
 <td><code>&quot;match&quot;</code> or <code>&quot;world&quot;</code></td>
 </tr>
 <tr>
+<td><code>listed</code></td>
+<td>no</td>
+<td><code>false</code> for matches, <code>true</code> for worlds</td>
+<td>Whether instances appear in discovery (<code>match.list</code> / <code>world.list</code>). Never gates joining</td>
+</tr>
+<tr>
+<td><code>quick_play</code></td>
+<td>no</td>
+<td><code>true</code></td>
+<td>Whether <code>world.find_or_create</code> may place a player into an existing instance of this mode</td>
+</tr>
+<tr>
 <td><code>state_strategy</code></td>
 <td>no</td>
 <td>none</td>
@@ -101,7 +113,9 @@ bots = { script = &quot;bots/arena_bot.lua&quot; }
 </tbody>
 </table>
 <p>World-mode games (<code>game_type = &quot;world&quot;</code>) read a further set of globals -
-<code>tick_rate</code>, <code>grid_size</code>, <code>zone_size</code>, <code>view_radius</code>, <code>empty_grace_ms</code>,
+<code>tick_rate</code>, <code>grid_size</code>, <code>zone_size</code>, <code>view_radius</code>, <code>persistent</code>,
+<code>lazy_zones</code>, <code>zone_idle_timeout</code>, <code>max_active_zones</code>,
+<code>spatial_grid_cell_size</code>, <code>cold_tick_divisor</code>, <code>empty_grace_ms</code>,
 <code>player_ttl_ms</code>. <a href="/docs/world-server">World server</a> documents those.</p>
 <p><strong>Where you put <code>guest_auth</code> and <code>registration</code> matters.</strong> They are read from
 <code>match.lua</code> in single-mode and from <code>config.lua</code> in multi-mode. A game with a
@@ -277,7 +291,7 @@ have.</p>
 <tr>
 <td><code>quick_play</code></td>
 <td><code>true</code></td>
-<td>Worlds only. Whether <code>world.find_or_create</code> may place a player into an existing world of this mode. Independent of <code>listed</code> - see <a href="/docs/world-server#visibility">World server</a></td>
+<td>Whether <code>world.find_or_create</code> may place a player into an existing world of this mode. Read on the world entry path for whatever mode name it is handed, so setting it <code>false</code> on a match mode is protective rather than inert. Independent of <code>listed</code> - see <a href="/docs/world-server#visibility">World server</a></td>
 </tr>
 </tbody>
 </table>
@@ -295,6 +309,15 @@ of lingering until a restart.</li>
 an operator mode wins a name clash and a game bundle can never drop or redefine
 it. Read it with <code>asobi_game_config:modes/0</code>. The raw <code>game_modes</code> app-env key
 is only the operator half.</p>
+<p><strong>The override is whole-entry, not per-key.</strong> The merge happens at the mode
+name, so an operator entry replaces the game's entire map for that mode rather
+than layering onto it. Writing the minimal-looking</p>
+<pre><code class="language-erlang">{game_modes, #{~&quot;arena&quot; =&gt; #{listed =&gt; true}}}
+</code></pre>
+<p>does not force <code>listed</code> on top of the game's config - it replaces the mode with
+one that declares no <code>module</code>, and the mode then fails to resolve. To override
+one key you must restate the whole shape, including
+<code>module =&gt; {lua, &quot;...&quot;}</code>.</p>
 <h2 id="game-directory" tabindex="-1">Game directory</h2>
 <pre><code class="language-erlang">{game_dir, &quot;/app/game&quot;}
 </code></pre>
@@ -614,7 +637,7 @@ operator half.</p>
 <tr>
 <td><code>guest_unlinked_cap</code></td>
 <td><code>100000</code></td>
-<td>Soft ceiling on unclaimed guests, or <code>infinity</code></td>
+<td>Soft ceiling on unclaimed guests, or <code>infinity</code>. Anything else falls back to the default and logs <code>invalid_guest_unlinked_cap</code></td>
 </tr>
 <tr>
 <td><code>guest_reap_after</code></td>
@@ -623,6 +646,17 @@ operator half.</p>
 </tr>
 </tbody>
 </table>
+<p>The cap is a soft ceiling, not an exact one: the count comes from a short-TTL
+cache rather than a <code>COUNT</code> per create, so it can overshoot by roughly (TTL x
+create rate). Reaching it answers <code>503 guest.capacity_reached</code>. If the node
+cannot run the count at all it refuses too, but under <code>503 guest.unavailable</code> -
+a different problem with a different fix, and a database fault rather than a
+full deployment. Both log <code>guest_create_denied</code> with a <code>reason</code>; the cap denial
+also logs the <code>count</code> and <code>cap</code> it compared, which is what tells you whether
+the ceiling is anywhere near.</p>
+<p>Clients can shed guests themselves with <code>POST /api/v1/players/me/erase</code>
+(see <a href="/docs/protocols/rest#erasing-your-own-account">REST API</a>), which is the only guest
+removal available when <code>guest_reap_after</code> is not settable.</p>
 <p>Measured from the last resume, not from account creation. Under device auth a
 guest stays unclaimed for life - there is no password to set - so account age
 would say nothing about whether anyone is still playing, and a returning player

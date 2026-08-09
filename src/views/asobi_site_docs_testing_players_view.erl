@@ -113,7 +113,13 @@ end</code></pre><pre class="tabbed-code-panel"><code class="language-gdscript">f
 	print("player_id: %s" % resp.player_id)
 	Asobi.realtime.connect_to_server()</code></pre></div></div>
 <p>Every run leaves another guest account on the node. That is harmless locally,
-and <code>guest_reap_after</code> clears unclaimed guests on a real deployment. Ship
+and <code>guest_reap_after</code> clears unclaimed guests on a self-hosted deployment. On
+cloud that key is not yours to set, so a test client pointed at a cloud
+environment should call <code>POST /api/v1/players/me/erase</code>
+(<a href="/docs/protocols/rest#erasing-your-own-account">REST API</a>) when it shuts down. A crash
+still leaks one, so for anything you run repeatedly against cloud prefer
+<a href="#stable-test-players-across-runs">stable test players</a> below, which reuse one
+account per instance instead of minting a new one each launch. Ship
 <code>guest_device</code> in the build players actually install.</p>
 <h2 id="stable-test-players-across-runs" tabindex="-1">Stable test players across runs</h2>
 <p>A throwaway guest has no history, so it is no use for testing progression,
