@@ -117,12 +117,12 @@ grid_size   = 1       -- one zone: no spatial partitioning needed to stand aroun
 tick_rate   = 200     -- 5 Hz is plenty; the 50ms default is for action games
 match_size  = 1
 </code></pre>
-<p><code>listed</code> and <code>quick_play</code> are not Lua globals - the loader does not read them,
-so writing them in a script does nothing. Both default to true, which is what a
-hub wants: it is browsable and <code>world.find_or_create</code> drops everyone into the
-same one. Changing either needs an operator <code>game_modes</code> entry for that mode,
-which replaces the script's mode config rather than merging into it - so
-declare <code>module =&gt; {lua, &quot;hub.lua&quot;}</code> and the rest of the shape in it too.</p>
+<p><code>listed</code> and <code>quick_play</code> are Lua globals, both defaulting to true for a world -
+which is what a hub wants: it is browsable and <code>world.find_or_create</code> drops
+everyone into the same one. Set either to <code>false</code> in the script to change it.
+An operator <code>game_modes</code> entry still wins, and it replaces the script's mode
+config rather than merging into it - so if you add one, declare
+<code>module =&gt; {lua, &quot;hub.lua&quot;}</code> and the rest of the shape in it too.</p>
 <p><code>persistent</code> is the flag that makes it a hub rather than a session. Without it a
 world finishes the moment the last player leaves, so the next player gets a
 fresh empty one.</p>
@@ -146,11 +146,11 @@ is whatever the client put in the join payload; asobi never reads it.</p>
 	return state
 end
 </code></pre>
-<p>Hiding it from the browser needs <code>listed =&gt; false</code> in an Erlang <code>game_modes</code>
-entry; a Lua-only game cannot set it, so its code-gated world stays listed and
-the join callback is the whole gate. <code>listed</code> and <code>quick_play</code> are properties
-of the mode, not of one instance, so every world of that mode is equally
-hidden. See <a href="/docs/protocols/websocket#join-context">Join context</a>.</p>
+<p>Hide it from the browser with <code>listed = false</code> in the script. That is discovery
+only - it never gates joining, so the join callback above is still the whole
+gate. <code>listed</code> and <code>quick_play</code> are properties of the mode, not of one
+instance, so every world of that mode is equally hidden. See
+<a href="/docs/protocols/websocket#join-context">Join context</a>.</p>
 <h3 id="telling-the-room-someone-arrived" tabindex="-1">Telling the room someone arrived</h3>
 <p>Core does not push a join notification to the players already waiting. That is
 deliberate: what a lobby shows differs per game - a bare count, a full roster,

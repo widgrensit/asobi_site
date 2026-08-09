@@ -214,7 +214,7 @@ mutation, which is well within the scope of one Lua file.</p>
 <tr>
 <td><code>listActivePublicLobbies</code></td>
 <td><code>GET /api/v1/matches/live</code></td>
-<td>Live, joinable matches; filter with <code>mode</code> and <code>has_capacity</code>. Matches are unlisted by default and a mode opts in with <code>listed =&gt; true</code> in the operator's <code>game_modes</code> config; the Lua config reader does not pick up a <code>listed</code> global. Not <code>GET /api/v1/matches</code>, which is the finished-match record table.</td>
+<td>Live, joinable matches; filter with <code>mode</code> and <code>has_capacity</code>. Matches are unlisted by default and a mode opts in with <code>listed = true</code> (a Lua global, or <code>listed =&gt; true</code> in the operator's <code>game_modes</code> config). Not <code>GET /api/v1/matches</code>, which is the finished-match record table.</td>
 </tr>
 <tr>
 <td><code>getConnectionInfo(roomId)</code></td>

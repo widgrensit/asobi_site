@@ -347,6 +347,31 @@ non-guest provider, is refused.</p>
 <p>Upgrade revokes every token the guest held (a fresh pair is returned) and
 deletes the device verifier, so the old device secret can no longer sign in.
 Player id, progress, wallets, and inventory are preserved.</p>
+<h3 id="delete-the-account" tabindex="-1">Delete the account</h3>
+<p>Guest removal is not a guest route. <code>POST /api/v1/players/me/erase</code> erases the
+calling player whatever kind of account it is, and a guest is simply the case
+with no credential to re-confirm. See
+<a href="/docs/protocols/rest#erasing-your-own-account">Erasing your own account</a> for the
+contract; the guest-specific part is only that no <code>password</code> is required,
+because a guest has none.</p>
+<pre><code class="language-bash">curl -X POST http://localhost:8084/api/v1/players/me/erase \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
+  -H 'Content-Type: application/json' -d '{}'
+</code></pre>
+<p>It is the only erasure path that needs no operator secret, which makes it the
+only one a cloud tenant can reach: <code>guest_reap_after</code> and the ops erasure route
+are both operator keys a cloud tenant cannot set.</p>
+<p><strong>A device secret is now a destruction credential, not just an impersonation
+one.</strong> Anyone holding it can resume the account and erase it, with no password
+to stop them, because there is no password. That is a deliberate trade - the
+alternative is a guest who can never delete their account - but it raises the
+bar on where a shipping client stores the pair: treat it the way you would treat
+a password, not a cache key.</p>
+<p>A device pair written to disk once and reused does not need this route at all,
+and that is what a shipping client should do. A fresh pair per launch is a
+testing trick (see <a href="/docs/tools/multiple-players">Testing with multiple
+players</a>), and it is the pattern that accumulates
+accounts.</p>
 <h3 id="errors" tabindex="-1">Errors</h3>
 <table>
 <thead>
@@ -428,6 +453,11 @@ Player id, progress, wallets, and inventory are preserved.</p>
 <td>On upgrade: the new username or password failed validation. <code>details.fields</code> is per-field, for a form UI</td>
 </tr>
 <tr>
+<td><code>429</code></td>
+<td><code>guest.rate_limited</code></td>
+<td>The deployment-wide guest-create limiter is saturated. <code>details.retry_after</code> is seconds; retry then</td>
+</tr>
+<tr>
 <td><code>500</code></td>
 <td><code>guest.create_failed</code></td>
 <td>The player row could not be created</td>
@@ -440,10 +470,20 @@ Player id, progress, wallets, and inventory are preserved.</p>
 <tr>
 <td><code>503</code></td>
 <td><code>guest.capacity_reached</code></td>
-<td>Global create limit or the unlinked-guest cap was hit</td>
+<td>The unlinked-guest cap is reached. Raise <code>guest_unlinked_cap</code>, set <code>guest_reap_after</code>, or have clients delete guests they abandon</td>
+</tr>
+<tr>
+<td><code>503</code></td>
+<td><code>guest.unavailable</code></td>
+<td>The node could not count existing guests, so it refused rather than create without a bound. Not a full deployment - look for a database fault, and check the <code>guest_create_denied</code> log line</td>
 </tr>
 </tbody>
 </table>
+<p>The three refusals above are deliberately distinct. Until asobi#419 they shared
+<code>guest.capacity_reached</code>, which reported a transient database fault as a
+deployment that was full and gave an operator nothing to act on. Every denial
+now logs <code>guest_create_denied</code> with a <code>reason</code> and, for the cap, the <code>count</code>
+and <code>cap</code> it compared.</p>
 <h3 id="configuration-2" tabindex="-1">Configuration</h3>
 <p>Guest auth is on only if both halves below are satisfied; either alone fails
 closed with <code>403 guest.disabled</code>. The toggle belongs to the game, the pepper to

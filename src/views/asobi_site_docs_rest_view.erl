@@ -76,7 +76,9 @@ idempotent and reports nothing about which token was valid.</p>
 <h3 id="guest" tabindex="-1">Guest</h3>
 <p>Anonymous device-based auth, opt-in via config. <code>POST /auth/guest</code> creates a
 player on first call and resumes the same one on later calls; <code>/auth/guest/upgrade</code>
-(authenticated) claims it with a username and password. See the
+(authenticated) claims it with a username and password. To delete a guest, use
+<a href="#erasing-your-own-account">the account-erasure route</a> - guest removal is not a
+guest-specific endpoint. See the
 <a href="/docs/authentication#guest-anonymous">Authentication guide</a> for the device-secret
 contract, config, and error codes.</p>
 <pre><code class="language-bash">curl -X POST /api/v1/auth/guest \
@@ -89,18 +91,103 @@ contract, config, and error codes.</p>
 <p><code>created</code> is present only on the call that created the player. A resume
 returns the same body without it, so treat a missing <code>created</code> as <code>false</code>
 rather than expecting the key.</p>
+<p>To delete a guest account, call
+<a href="#erasing-your-own-account"><code>POST /players/me/erase</code></a> on its session. No
+<code>password</code> is needed, because a guest has none.</p>
 <h2 id="players" tabindex="-1">Players</h2>
 <pre><code>GET /api/v1/players/:id        Get player profile
 PUT /api/v1/players/:id        Update own profile
 </code></pre>
+<h3 id="erasing-your-own-account" tabindex="-1">Erasing your own account</h3>
+<pre><code>POST /api/v1/players/me/erase
+</code></pre>
+<p>Erases the calling player and everything core holds about them. The subject is
+always the caller - the id comes from the session and there is no id in the
+path or body - so this route can never reach another account. An operator
+erasing somebody else is a different route with a different credential:
+<a href="#erasing-and-exporting-a-player"><code>/ops/players/:id/erase</code></a>.</p>
+<p>An account with a password must echo it. One without - a guest, or a
+provider-only account - has no credential the client can re-present, so its
+session is the whole confirmation.</p>
+<pre><code class="language-bash"># password account
+curl -X POST /api/v1/players/me/erase \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
+  -H 'Content-Type: application/json' \
+  -d '{&quot;password&quot;: &quot;secret123&quot;}'
+
+# guest or provider-only account
+curl -X POST /api/v1/players/me/erase \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
+  -H 'Content-Type: application/json' -d '{}'
+</code></pre>
+<pre><code class="language-json">{&quot;deleted&quot;: true}
+</code></pre>
+<p>POST rather than DELETE because the confirmation travels in the body, and a
+DELETE body has no defined semantics - the same shape the operator route uses.</p>
+<p>Irreversible, and it takes the children with it: wallets, ledger, inventory,
+storage, cloud saves, notifications, leaderboard entries, chat, group
+memberships, friendships, stats, sessions and identities. Purchase receipts are
+severed rather than deleted, for the reason described under
+<a href="#erasing-and-exporting-a-player">the operator route</a>. Every erasure writes an
+audit row whose actor is the player themselves.</p>
+<p>A refused confirmation is <code>403</code>, not <code>401</code>, on purpose: the caller is
+authenticated and failed a step-up check, so an SDK that treats <code>401</code> as
+&quot;refresh the token pair and replay the request&quot; must not do either of those
+things here.</p>
+<p><strong>The session dies with the account.</strong> A retried call after a successful one
+answers <code>401</code>, not <code>200</code> or <code>404</code>, because the token it presents was deleted
+inside the same transaction. A client whose request timed out should read a
+subsequent <code>401</code> as &quot;it worked&quot;, not as &quot;sign in again&quot;.</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th><code>error.code</code></th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>400</code></td>
+<td><code>missing_field</code></td>
+<td>The account has a password and the body carried none</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td><code>unauthenticated</code></td>
+<td>No session, or the account is already gone</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td><code>player.confirmation_failed</code></td>
+<td>The password does not match. Nothing was deleted, and the session is still valid</td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td><code>player.credentials_changed</code></td>
+<td>The password changed while the request was in flight. Nothing was deleted; retry</td>
+</tr>
+<tr>
+<td><code>429</code></td>
+<td><code>rate_limited</code></td>
+<td>Erasure has its own tight bucket, because the wrong-password path runs the password KDF</td>
+</tr>
+<tr>
+<td><code>500</code></td>
+<td><code>player.erase_failed</code></td>
+<td>The transaction rolled back. Nothing was deleted</td>
+</tr>
+</tbody>
+</table>
 <h2 id="worlds" tabindex="-1">Worlds</h2>
 <pre><code>GET  /api/v1/worlds         Browse live worlds
 GET  /api/v1/worlds/:id     Get one world
 POST /api/v1/worlds         Create a world
 </code></pre>
 <p><code>GET /api/v1/worlds</code> accepts <code>mode</code> (ignored above 64 bytes) and
-<code>has_capacity=true</code>. Only worlds whose mode sets <code>listed</code> (the default) are
-returned. Results are cached for 500ms.</p>
+<code>has_capacity=true</code>. Only worlds whose mode sets <code>listed</code> (the default for a
+world; set <code>listed = false</code> in the script to hide one) are returned. Results
+are cached for 500ms.</p>
 <p><code>POST /api/v1/worlds</code> returns <strong>201</strong> with the world info, <strong>429</strong>
 <code>world.player_limit_reached</code> when the player is at their per-player cap, and
 <strong>503</strong> <code>world.capacity_reached</code> when the global cap is reached. See
@@ -122,8 +209,9 @@ matches, an audit trail, nothing you can join. It accepts <code>mode</code>, <co
 and <code>limit</code> (1-200, default 50), newest first.</p>
 <p><code>GET /api/v1/matches/live</code> enumerates running match processes and is what a
 lobby browser wants. It accepts <code>mode</code> and <code>has_capacity=true</code>. Matches are
-<strong>unlisted by default</strong> - a mode opts in with <code>listed =&gt; true</code> - so an empty
-result usually means no mode has opted in yet.</p>
+<strong>unlisted by default</strong> - a mode opts in with <code>listed = true</code> (a Lua global, or
+<code>listed =&gt; true</code> in the operator's <code>game_modes</code> config) - so an empty result
+usually means no mode has opted in yet.</p>
 <p>Neither returns the player roster. As with worlds, joining is <code>match.join</code>
 over WS.</p>
 <h2 id="social" tabindex="-1">Social</h2>
@@ -354,7 +442,88 @@ minus the page:</p>
 return a field the list withheld. An id that is not a uuid is
 <code>400 ops.invalid_id</code> and never reaches the database; a real miss is
 <code>404 ops.not_found</code>.</p>
-<h3 id="players-and-matches" tabindex="-1">Players and matches</h3>
+<h3 id="players-1" tabindex="-1">Players</h3>
+<h3 id="erasing-your-own-account-1" tabindex="-1">Erasing your own account</h3>
+<pre><code>POST /api/v1/players/me/erase
+</code></pre>
+<p>Erases the calling player and everything core holds about them. The subject is
+always the caller - the id comes from the session and there is no id in the
+path or body - so this route can never reach another account. An operator
+erasing somebody else is a different route with a different credential:
+<a href="#erasing-and-exporting-a-player"><code>/ops/players/:id/erase</code></a>.</p>
+<p>An account with a password must echo it. One without - a guest, or a
+provider-only account - has no credential the client can re-present, so its
+session is the whole confirmation.</p>
+<pre><code class="language-bash"># password account
+curl -X POST /api/v1/players/me/erase \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
+  -H 'Content-Type: application/json' \
+  -d '{&quot;password&quot;: &quot;secret123&quot;}'
+
+# guest or provider-only account
+curl -X POST /api/v1/players/me/erase \
+  -H 'Authorization: Bearer &lt;access_token&gt;' \
+  -H 'Content-Type: application/json' -d '{}'
+</code></pre>
+<pre><code class="language-json">{&quot;deleted&quot;: true}
+</code></pre>
+<p>POST rather than DELETE because the confirmation travels in the body, and a
+DELETE body has no defined semantics - the same shape the operator route uses.</p>
+<p>Irreversible, and it takes the children with it: wallets, ledger, inventory,
+storage, cloud saves, notifications, leaderboard entries, chat, group
+memberships, friendships, stats, sessions and identities. Purchase receipts are
+severed rather than deleted, for the reason described under
+<a href="#erasing-and-exporting-a-player">the operator route</a>. Every erasure writes an
+audit row whose actor is the player themselves.</p>
+<p>A refused confirmation is <code>403</code>, not <code>401</code>, on purpose: the caller is
+authenticated and failed a step-up check, so an SDK that treats <code>401</code> as
+&quot;refresh the token pair and replay the request&quot; must not do either of those
+things here.</p>
+<p><strong>The session dies with the account.</strong> A retried call after a successful one
+answers <code>401</code>, not <code>200</code> or <code>404</code>, because the token it presents was deleted
+inside the same transaction. A client whose request timed out should read a
+subsequent <code>401</code> as &quot;it worked&quot;, not as &quot;sign in again&quot;.</p>
+<table>
+<thead>
+<tr>
+<th>Status</th>
+<th><code>error.code</code></th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>400</code></td>
+<td><code>missing_field</code></td>
+<td>The account has a password and the body carried none</td>
+</tr>
+<tr>
+<td><code>401</code></td>
+<td><code>unauthenticated</code></td>
+<td>No session, or the account is already gone</td>
+</tr>
+<tr>
+<td><code>403</code></td>
+<td><code>player.confirmation_failed</code></td>
+<td>The password does not match. Nothing was deleted, and the session is still valid</td>
+</tr>
+<tr>
+<td><code>409</code></td>
+<td><code>player.credentials_changed</code></td>
+<td>The password changed while the request was in flight. Nothing was deleted; retry</td>
+</tr>
+<tr>
+<td><code>429</code></td>
+<td><code>rate_limited</code></td>
+<td>Erasure has its own tight bucket, because the wrong-password path runs the password KDF</td>
+</tr>
+<tr>
+<td><code>500</code></td>
+<td><code>player.erase_failed</code></td>
+<td>The transaction rolled back. Nothing was deleted</td>
+</tr>
+</tbody>
+</table>
 <p><code>ops/players</code> sorts on <code>id</code>, <code>username</code>, <code>display_name</code>, <code>inserted_at</code>,
 <code>updated_at</code>, and searches username and display name. <code>ops/matches</code> sorts on
 <code>id</code>, <code>mode</code>, <code>status</code>, <code>started_at</code>, <code>finished_at</code>, <code>inserted_at</code>, filters on

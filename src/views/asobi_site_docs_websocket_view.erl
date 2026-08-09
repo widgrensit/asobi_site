@@ -165,7 +165,8 @@ included; see <a href="/docs/world-server">World Server</a> for why discovery an
 membership are separate surfaces.</p>
 <p><strong>Matches are unlisted by default.</strong> A matchmaker-spawned match is already
 assigned to its players, so it has no reason to appear in a browser. A mode
-opts in with <code>listed =&gt; true</code>. This is the inverse of worlds, which default
+opts in with <code>listed = true</code> (a Lua global, or <code>listed =&gt; true</code> in the
+operator's <code>game_modes</code> config). This is the inverse of worlds, which default
 to listed.</p>
 <p>Distinct from <code>GET /api/v1/matches</code>, which reads the match <em>record</em> table
 (finished matches, an audit trail). <code>GET /api/v1/matches/live</code> is the REST
