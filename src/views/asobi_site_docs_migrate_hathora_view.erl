@@ -363,9 +363,10 @@ rather than a throwaway username, but it stays off until the game declares
 <li><strong>No automatic multi-region.</strong> One container per region, deployed by you.</li>
 <li><strong>No rollback netcode or lag compensation.</strong> No server-side replay, no hitbox
 rewind; over TCP (above) asobi is not for twitch shooters. But the server half
-of <em>client-side prediction</em> is available: a game stamps each input with a
-sequence number, echoes the last-applied one back on the player's own entity,
-and the client reconciles against it. See
+of <em>client-side prediction</em> is a first-class primitive: the client stamps each
+<code>world.input</code> with an increasing <code>seq</code>, and the server returns the highest one
+it has consumed as a per-connection <code>world.ack</code> for the client to reconcile
+against. See
 <a href="/docs/protocols/websocket#client-side-prediction">Client-side prediction</a>.</li>
 <li><strong>Pre-1.0 API.</strong> Minor breaking changes are possible until 1.0.</li>
 </ul>
