@@ -96,12 +96,32 @@ client can create, so it is the only lobby a Lua-only game can build. Skip to
 <pre><code>GET /api/v1/matches/live        REST
 match.list                      WebSocket
 </code></pre>
-<p>Both filter on <code>mode</code> and <code>has_capacity</code>. Matches are unlisted by default - a
-matchmaker-spawned match is already assigned to its players and has no reason to
-be browsable - so a mode opts in with <code>listed = true</code>.</p>
+<p>Both filter on <code>mode</code>, <code>has_capacity</code> and <code>joinable</code>. Matches are unlisted by
+default - a matchmaker-spawned match is already assigned to its players and has
+no reason to be browsable - so a mode opts in with <code>listed = true</code>.</p>
 <p>Do not use <code>GET /api/v1/matches</code> for this. It reads the match record table:
 finished matches, an audit trail, nothing joinable. See
 <a href="/docs/protocols/rest">REST API</a>.</p>
+<h3 id="joining-a-match-already-in-progress" tabindex="-1">Joining a match already in progress</h3>
+<p>A <code>running</code> match accepts joins exactly as a <code>waiting</code> one does, so backfill is
+<code>match.list</code> then <code>match.join</code> with the <code>match_id</code> - there is no separate call
+and no backfill mode to turn on. Your <code>join</code> callback runs mid-match, so it has
+to cope with a player arriving into a live game state.</p>
+<p>Ask for both filters when you are looking for somewhere to play:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.join&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;}}
+</code></pre>
+<pre><code>match.list  { &quot;has_capacity&quot;: true, &quot;joinable&quot;: true }
+</code></pre>
+<p>They are different questions. A match with three free slots may have closed
+itself to new players; a full one has not closed, and may free a slot on the
+next leave. Every listing carries <code>joinable</code>, so a browser can show both and
+grey one out.</p>
+<p>To close a match to backfill, call
+<a href="https://hexdocs.pm/asobi/lua-api.html#match"><code>game.match.set_joinable(false)</code></a> from the script - at the
+end of round one, once the objective spawns, whenever the game says so. A
+closed match answers <code>match.locked</code>; a full one answers <code>match.full</code>. To turn
+away one specific player rather than everybody, return <code>nil</code> from
+<a href="/docs/lua/api#refusing-a-join"><code>join</code></a> instead.</p>
 <h3 id="the-60-second-timeout" tabindex="-1">The 60-second timeout</h3>
 <p>A match that does not reach <code>min_players</code> within 60 seconds stops itself. That
 value is fixed (<code>?WAITING_TIMEOUT</code> in <code>asobi_match_server</code>) and is not exposed
@@ -182,9 +202,12 @@ wants a shared one can ship it as an extension method and call it over the
 <li><strong>Party.</strong> You cannot queue as a group through the matchmaker. Play with
 specific people by sharing a world id or a join code, or add party grouping as
 an extension.</li>
-<li><strong>Rich filters.</strong> Discovery filters on <code>mode</code> and <code>has_capacity</code> only.
-Anything richer belongs in your strategy module, or in an extension method
-that returns the filtered list.</li>
+<li><strong>Rich filters.</strong> Discovery filters on <code>mode</code>, <code>has_capacity</code> and <code>joinable</code>
+only. Anything richer belongs in your strategy module, or in an extension
+method that returns the filtered list.</li>
+<li><strong>Backfill matchmaking.</strong> The matchmaker builds matches out of the queue; it
+never routes a queued player into a match that is already running. Backfill
+is a client browsing and joining, not a strategy the matchmaker runs.</li>
 <li><strong>Member roster API.</strong> The joiner receives the roster on <code>match.joined</code> /
 <code>world.joined</code>; there is no separate &quot;who is here&quot; call. Keep the list in your
 game state, or expose it as an extension method.</li>

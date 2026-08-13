@@ -208,10 +208,15 @@ this API.</strong> <code>GET /api/v1/matches</code> queries the match <em>record
 matches, an audit trail, nothing you can join. It accepts <code>mode</code>, <code>status</code>
 and <code>limit</code> (1-200, default 50), newest first.</p>
 <p><code>GET /api/v1/matches/live</code> enumerates running match processes and is what a
-lobby browser wants. It accepts <code>mode</code> and <code>has_capacity=true</code>. Matches are
-<strong>unlisted by default</strong> - a mode opts in with <code>listed = true</code> (a Lua global, or
-<code>listed =&gt; true</code> in the operator's <code>game_modes</code> config) - so an empty result
-usually means no mode has opted in yet.</p>
+lobby browser wants. It accepts <code>mode</code>, <code>has_capacity=true</code> and
+<code>joinable=true|false</code>. Matches are <strong>unlisted by default</strong> - a mode opts in
+with <code>listed = true</code> (a Lua global, or <code>listed =&gt; true</code> in the operator's
+<code>game_modes</code> config) - so an empty result usually means no mode has opted in
+yet.</p>
+<p>Every entry carries <code>joinable</code>, and a browser looking for somewhere to play
+should filter on both it and <code>has_capacity</code>: a match with room may have closed
+itself to new players, and a full one has not closed. <code>running</code> matches are
+included, because a running match takes joins - that is how backfill works.</p>
 <p>Neither returns the player roster. As with worlds, joining is <code>match.join</code>
 over WS.</p>
 <h2 id="social" tabindex="-1">Social</h2>
@@ -309,6 +314,9 @@ GET    /api/v1/storage/:collection/:key        Read object
 PUT    /api/v1/storage/:collection/:key        Write object
 DELETE /api/v1/storage/:collection/:key        Delete object
 </code></pre>
+<p>The whole subsystem is on by default and switches off with <code>{storage, false}</code>;
+off, all seven routes answer 404 - see
+<a href="/docs/configuration#storage">Configuration</a>.</p>
 <h2 id="ops" tabindex="-1">Ops</h2>
 <pre><code>GET /api/v1/ops/stats                        Runtime health of this node
 GET /api/v1/ops/players                      Paginated player list
@@ -653,15 +661,18 @@ ships in asobi.</p>
 <p><code>extensions</code> is the resolved extension set, in dependency order and in the
 same shape as <code>core</code>, so a client reads one row type:</p>
 <pre><code class="language-json">{ &quot;name&quot;: &quot;quests&quot;, &quot;version&quot;: &quot;1.0.0&quot;,
-  &quot;capabilities&quot;: [{ &quot;name&quot;: &quot;lua&quot;, &quot;enabled&quot;: true },
+  &quot;capabilities&quot;: [{ &quot;name&quot;: &quot;console&quot;, &quot;enabled&quot;: true },
+                   { &quot;name&quot;: &quot;lua&quot;, &quot;enabled&quot;: true },
+                   { &quot;name&quot;: &quot;ops&quot;, &quot;enabled&quot;: true },
                    { &quot;name&quot;: &quot;rpc&quot;, &quot;enabled&quot;: true },
                    { &quot;name&quot;: &quot;tables&quot;, &quot;enabled&quot;: true }] }
 </code></pre>
-<p>An extension's capabilities are the manifest keys it declares something under.
-They say what it contributes, never what it contains - no method name, no
-table name. <code>[]</code> when nothing is installed.</p>
-<p>This is what a console reads to decide which of its built-in screens to
-render, and to surface a version it was not built against.</p>
+<p>An extension's capabilities are the seams it declares something under, plus
+<code>console</code> for one that ships operator screens - which is a file check rather
+than a manifest key. They say what it contributes, never what it contains - no
+method name, no action name, no table name. <code>[]</code> when nothing is installed.</p>
+<p>This is what a console reads to decide which of its screens to render, and to
+surface a version it was not built against.</p>
 <h3 id="stats" tabindex="-1">Stats</h3>
 <p><code>GET /api/v1/ops/stats</code> is the runtime health of <strong>one node</strong>. Everything in
 it comes from the VM or from presence, so it stays answerable when Postgres
@@ -711,12 +722,12 @@ an undeclared code is refused and answered <code>internal</code>.</p>
 cannot write on this plane without core recording who asked. Declaring a
 method other than <code>get</code> is what opts an action in; there is nothing to
 configure.</p>
-<p>That recording is currently incomplete. Only a failure returned without
-details reaches <code>ops_audit_entries</code>; a successful call, and a failure carrying
-details, raise inside the audit path and are logged at error level as
-<code>ops audit row not written</code>, carrying the action but not the row's own
-fields. The call itself still runs and still answers normally. Ship your logs
-and treat them as part of the audit trail until that is fixed.</p>
+<p>A successful call is stored as outcome <code>ok</code> with a succeeded count of one. A
+failure is stored as outcome <code>error</code> whether or not it carried details, and
+the row's <code>details</code> holds the returned code; the details map itself is the
+caller's diagnostic and is not stored. A handler that raises, or answers
+something outside the reply contract, is answered <code>internal</code> and still
+audited as an <code>error</code> outcome.</p>
 <p>While the node is still running migrations the route answers <strong>503</strong>
 <code>not_ready</code>, before the extension's handler runs.</p>
 <h3 id="ops-authentication" tabindex="-1">Ops authentication</h3>
@@ -759,6 +770,12 @@ row through a positive allowlist. Credentials are never in it: no
 <code>hashed_password</code>, and a session is reported as having existed without its
 bearer token. Class <code>player_data</code>, not <code>read</code> - a leaderboard view is one
 thing, and the whole of one identified person's record is another.</p>
+<p>The payload also names every installed extension under an <code>extensions</code> key:
+the data its <code>export_player/1</code> returned, or a <code>skipped</code> marker when the
+extension does not export one - a skipped extension is visible in the
+artefact, never silently absent. An extension that fails to export fails the
+whole request with <code>500 ops.export_incomplete</code>, and no partial artefact is
+returned. See <a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a>.</p>
 <p><code>erase</code> deletes the player and every row core holds for them, in one
 transaction, and it cannot be undone. The body must echo the player's username
 and the server checks it against the row:</p>

@@ -35,7 +35,7 @@ which is a different question with a different tool. See
 <a href="https://hexdocs.pm/asobi/console.html">Operator console</a> for the first one.</p>
 <h2 id="what-you-get" tabindex="-1">What you get</h2>
 <ul>
-<li><strong>37 telemetry events</strong>, listed below. Stable names; the measurement and
+<li><strong>40 telemetry events</strong>, listed below. Stable names; the measurement and
 metadata keys are documented per-event in <code>m:asobi_telemetry</code>.</li>
 <li><strong>Structured JSON logs</strong> on stdout, one object per line, via
 <code>nova_jsonlogger</code>. No configuration needed - a container log shipper reads
@@ -132,8 +132,9 @@ shipper at the container's logs.</p>
 <code>console_disabled_without_secret</code> both mean a deployment came up wrong, and
 both are the kind of thing that is otherwise noticed a day later.</p>
 <h2 id="the-events" tabindex="-1">The events</h2>
-<p>Thirty-seven, grouped by what they are about. Measurement and metadata keys
-are in <code>m:asobi_telemetry</code>.</p>
+<p>Forty, grouped by what they are about. Measurement and metadata keys
+are in <code>m:asobi_telemetry</code>, which is also the list <code>asobi_telemetry:events/0</code>
+returns - attach to that rather than restating the names.</p>
 <h3 id="sessions-and-the-socket" tabindex="-1">Sessions and the socket</h3>
 <pre><code>asobi.session.connected          asobi.session.disconnected
 asobi.ws.connected               asobi.ws.disconnected
@@ -148,26 +149,67 @@ misconfiguration, and both are invisible in game metrics.</p>
 <pre><code>asobi.match.started              asobi.match.finished
 asobi.match.player_joined        asobi.match.player_left
 asobi.matchmaker.queued          asobi.matchmaker.removed
-asobi.matchmaker.formed          asobi.matchmaker.failed
+asobi.matchmaker.deduped         asobi.matchmaker.formed
+asobi.matchmaker.failed
 </code></pre>
 <p>Queue depth is the number worth watching, and in a cluster it is per-node -
 each node's matchmaker holds its own tickets, so a fleet-wide total is a sum
 across nodes, not a reading from one. See <a href="/docs/clustering">Clustering</a>.</p>
+<p><strong>The alert worth having is <code>removed{reason=expired}</code> rising while <code>formed</code>
+stays flat.</strong> That pair says exactly one thing, with no interpretation needed:
+players waited the full <code>max_wait_seconds</code> and got nothing. Removals carry
+<code>reason</code> - <code>cancelled</code> when a client withdraws, <code>expired</code> when the ticket times
+out - and only <code>expired</code> means the matchmaker failed to do its job.</p>
+<p><code>deduped</code> fires when a player asks to queue for a mode they already have an
+open ticket on and gets that ticket back. (The client-facing field on the reply
+is named <code>already_queued</code>; the metric keeps the mechanism's name.) Some of it
+is routine: a double-tapped <em>find match</em>, and reconnect resubmits, which are
+idempotent by design. It is a hint, not a diagnosis. A sustained rate is worth looking at -
+one cause is several clients authenticated as the same player, which no amount
+of waiting will fix because one player cannot fill a two-player match - but a
+bored player re-tapping in an empty queue produces the same shape.</p>
+<p>Note what this view <strong>cannot</strong> tell you. Distinguishing &quot;one player re-tapping&quot;
+from &quot;several clients sharing one identity&quot; needs a distinct-player count, and
+<code>player_id</code> is unbounded so an exporter must never make it a label (see
+<a href="https://github.com/widgrensit/asobi/blob/main/docs/adr/0005-telemetry-event-surface.md">ADR 0005</a>).
+<code>queued</code> and <code>deduped</code> are counters of events, not a live-ticket count - queue
+depth is the snapshot gauge described above. To separate those two cases you
+need the node's queue snapshot or its logs, not Prometheus.</p>
+<p>Handlers run <strong>synchronously in the process that emitted the event</strong>, so a
+handler attached to a matchmaker event runs inside the matchmaker's own message
+loop. Never call <code>asobi_matchmaker:get_queue_stats/0</code> from one - that is a
+<code>gen_server:call</code> to the process currently executing your handler, so it
+deadlocks until the call times out and stalls matchmaking for every player
+meanwhile. Read <code>asobi_matchmaker:snapshot/0</code> instead: it reads ETS and never
+messages the matchmaker.</p>
 <h3 id="worlds-and-zones" tabindex="-1">Worlds and zones</h3>
 <pre><code>asobi.world.started              asobi.world.finished
 asobi.world.player_joined        asobi.world.player_left
 asobi.world.phase_changed        asobi.world.tick
 asobi.zone.opened                asobi.zone.closed
-asobi.join.rate_limited          asobi.rehome.rate_limited
+asobi.zone.tick_skipped          asobi.join.rate_limited
+asobi.rehome.rate_limited
 </code></pre>
 <p><code>asobi.world.tick</code> is sampled rather than emitted every tick - at 20 Hz per
 world an unsampled event is a metrics pipeline of its own.</p>
+<p><code>asobi.zone.tick_skipped</code> is the one to alert on. It counts zones the world
+tick skipped because they had not finished the previous one, so a healthy
+world never emits it at all and a sustained non-zero rate means a world that
+can no longer keep up. A single event is a zone that ran long once, which is
+normal; alert on the rate, not the event. Rising counts here usually mean a
+<code>zone_tick</code> doing too much, too many entities in one zone, or Lua memory that
+is no longer being collected - see
+<a href="/docs/performance#lua-memory">Performance tuning</a>.</p>
 <h3 id="gameplay-systems" tabindex="-1">Gameplay systems</h3>
 <pre><code>asobi.vote.started               asobi.vote.cast
 asobi.vote.resolved              asobi.chat.message_sent
 asobi.economy.transaction        asobi.store.purchase
-asobi.anticheat.violation
+asobi.anticheat.violation        asobi.error
 </code></pre>
+<p><code>asobi.error</code> is game-code failing rather than asobi failing - a Lua callback
+raising, a spawn naming a template that does not exist, a zone that could not
+be reached. Its <code>kind</code> is a fixed enum and safe as a label; its <code>details</code> are
+not.</p>
 <h3 id="auth-cache" tabindex="-1">Auth cache</h3>
 <pre><code>asobi.auth_cache.hit             asobi.auth_cache.miss
 asobi.auth_cache.sweep

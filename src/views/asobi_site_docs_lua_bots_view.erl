@@ -29,7 +29,11 @@ are no fake clients and no network hop; a bot's decisions go through the same
 <li>Load-testing a tick loop without spawning real WebSocket sessions.</li>
 <li>Replay and record-and-replay testing.</li>
 </ul>
-<h2 id="how-it-works" tabindex="-1">How it works</h2>
+<p>There are two ways a bot gets into a match. <strong>Queue fill</strong> is automatic and
+answers &quot;not enough humans are waiting&quot;. <strong><code>game.bots.add</code></strong> is your script
+placing one deliberately, at any point in the match. They are independent:
+leave <code>bots.enabled</code> off and nothing arrives that your script did not ask for.</p>
+<h2 id="how-queue-fill-works" tabindex="-1">How queue fill works</h2>
 <ol>
 <li>A player queues for matchmaking.</li>
 <li>Every 8 seconds the spawner looks at each mode with someone queued. If
@@ -49,6 +53,24 @@ setting that exists, <code>max_wait_seconds</code> (60 by default, under <code>{
 instead - it does not trigger bot fill.</p>
 <p>Bot fill is per node, because the matchmaker queue is per node. Each node
 fills its own queue from its own view. See <a href="/docs/clustering">Clustering</a>.</p>
+<h2 id="placing-a-bot-from-a-match-script" tabindex="-1">Placing a bot from a match script</h2>
+<pre><code class="language-lua">game.bots.add(&quot;Spark&quot;)        -- bot_Spark joins this match
+game.bots.remove(&quot;bot_Spark&quot;) -- and leaves
+</code></pre>
+<p>This is the route to take when the <em>game</em> decides, not the queue: a co-op
+mission that needs an escort, a boss that fights alongside the players, a
+practice mode with no queue at all, a slot backfilled the moment a human
+drops. It works in <code>waiting</code> and in <code>running</code>, so a bot can arrive mid-match.</p>
+<p><code>name</code> is bare and gets the <code>bot_</code> prefix here, so the roster shows
+<code>bot_Spark</code>; <code>remove</code> takes either form. Names are 1-32 characters of
+<code>[A-Za-z0-9_-]</code>. The bot runs the mode's <code>bots.script</code> if the mode has one and
+the built-in AI otherwise, so a mode can leave <code>bots.enabled</code> off - that flag
+governs queue fill only - and still configure a script.</p>
+<p>Both calls are asynchronous and neither fails at the call site. A match that is
+full, already holds that bot, or is at the 64-bot ceiling is a no-op with a line
+in the node log. The bot appears in your <code>players</code> table through the same <code>join</code>
+callback a human goes through, so a script that rejects unknown players will
+reject bots too.</p>
 <h2 id="configuration" tabindex="-1">Configuration</h2>
 <p>Add a <code>bots</code> table to the match script's globals, and a <code>names</code> list to the
 bot script:</p>

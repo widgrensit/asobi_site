@@ -70,10 +70,10 @@ byte-identical to an authoritative event such as <code>world.tick</code> or
 <code>asobi_ws_handler:reserved_event_names/0</code>:</li>
 </ul>
 <p>&lt;!-- BEGIN reserved-event-names (verified against asobi_ws_handler:reserved_event_names/0 by asobi_protocol_coverage_tests) --&gt;</p>
-<pre><code>finished            joined              left                list
-matched             matchmaker_expired  matchmaker_failed   phase_changed
-state               terrain             tick                vote_result
-vote_start          vote_tally          vote_vetoed
+<pre><code>ack                 finished            joined              left
+list                matched             matchmaker_expired  matchmaker_failed
+phase_changed       state               terrain             tick
+vote_result         vote_start          vote_tally          vote_vetoed
 </code></pre>
 <p>&lt;!-- END reserved-event-names --&gt;</p>
 <p>The payload is also capped at 64 KiB encoded, the same bound as an inbound
@@ -157,12 +157,18 @@ one receive callback - see the realtime section of your <a href="https://asobi.d
 </blockquote>
 <h3 id="matchlist" tabindex="-1"><code>match.list</code></h3>
 <p>Browse live, joinable matches. Filters are optional.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;match.list&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;has_capacity&quot;: true}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.list&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;has_capacity&quot;: true, &quot;joinable&quot;: true}}
 </code></pre>
 <p>Reply payload is <code>{&quot;matches&quot;: [...]}</code>, each entry carrying <code>match_id</code>,
-<code>mode</code>, <code>status</code>, <code>player_count</code> and <code>max_players</code>. The roster is not
-included; see <a href="/docs/world-server">World Server</a> for why discovery and
+<code>mode</code>, <code>status</code>, <code>player_count</code>, <code>max_players</code> and <code>joinable</code>. The roster is
+not included; see <a href="/docs/world-server">World Server</a> for why discovery and
 membership are separate surfaces.</p>
+<p><code>has_capacity</code> and <code>joinable</code> are separate questions and a client looking for
+somewhere to play should ask both: a match with room may have closed itself to
+new players, and a full one has not closed - it may free a slot on the next
+leave. <code>joinable</code> accepts <code>false</code> too, for a browser that wants to show
+in-progress matches it cannot enter. A filter of the wrong type is rejected
+with <code>invalid_joinable_filter</code>.</p>
 <p><strong>Matches are unlisted by default.</strong> A matchmaker-spawned match is already
 assigned to its players, so it has no reason to appear in a browser. A mode
 opts in with <code>listed = true</code> (a Lua global, or <code>listed =&gt; true</code> in the
@@ -179,13 +185,55 @@ equivalent of this message.</p>
 <p>Joining is WebSocket-only by design: the join binds the match to your
 session so subsequent <code>match.input</code> is routed. There is no REST join, the
 same as for worlds.</p>
+<p>A <code>running</code> match takes joins exactly as a <code>waiting</code> one does, so this is also
+how a player backfills into a game already in progress. There is no separate
+backfill call.</p>
 <h4 id="matchjoined-reply" tabindex="-1"><code>match.joined</code> (reply)</h4>
 <p>The full match info, including the roster:</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;match.joined&quot;, &quot;cid&quot;: &quot;j-1&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;mode&quot;: &quot;arena&quot;, &quot;status&quot;: &quot;waiting&quot;, &quot;player_count&quot;: 1, &quot;max_players&quot;: 4, &quot;players&quot;: [&quot;...&quot;], &quot;listed&quot;: false}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.joined&quot;, &quot;cid&quot;: &quot;j-1&quot;, &quot;payload&quot;: {&quot;match_id&quot;: &quot;...&quot;, &quot;mode&quot;: &quot;arena&quot;, &quot;status&quot;: &quot;waiting&quot;, &quot;player_count&quot;: 1, &quot;max_players&quot;: 4, &quot;players&quot;: [&quot;...&quot;], &quot;listed&quot;: false, &quot;joinable&quot;: true}}
 </code></pre>
-<p>An unknown id is <code>match_not_found</code> (<code>match.not_found</code>); over the join rate
-it is <code>join_rate_limited</code>; a game module that refuses the join answers with
-whatever reason it returned, wrapped as <code>ws.request_failed</code>.</p>
+<table>
+<thead>
+<tr>
+<th>Reason</th>
+<th>Code</th>
+<th>Means</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>match_not_found</code></td>
+<td><code>match.not_found</code></td>
+<td>No live match with that id</td>
+</tr>
+<tr>
+<td><code>join_rate_limited</code></td>
+<td><code>join_rate_limited</code></td>
+<td>Over 10 joins per 60 seconds</td>
+</tr>
+<tr>
+<td><code>match_full</code></td>
+<td><code>match.full</code></td>
+<td>No room. May free a slot on the next leave</td>
+</tr>
+<tr>
+<td><code>match_locked</code></td>
+<td><code>match.locked</code></td>
+<td>The game closed the match to new players</td>
+</tr>
+<tr>
+<td><code>join_refused</code></td>
+<td><code>match.join_refused</code></td>
+<td>The game turned this player away</td>
+</tr>
+</tbody>
+</table>
+<p><code>join_refused</code> carries the game's own reason string in
+<code>error.details.refused_reason</code> when the script gave one. It is game
+vocabulary, never an asobi code - see
+<a href="/docs/lua/api#refusing-a-join">Refusing a join</a>.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;cid&quot;: &quot;j-1&quot;, &quot;payload&quot;: {&quot;reason&quot;: &quot;join_refused&quot;, &quot;error&quot;: {&quot;code&quot;: &quot;match.join_refused&quot;, &quot;message&quot;: &quot;The game refused this join. See `details.refused_reason`.&quot;, &quot;details&quot;: {&quot;refused_reason&quot;: &quot;wrong_code&quot;}}}}
+</code></pre>
 <h4 id="join-context" tabindex="-1">Join context</h4>
 <p>Both <code>match.join</code> and <code>world.join</code> accept an optional <code>ctx</code>, passed through
 to your game module untouched:</p>
@@ -276,6 +324,18 @@ asobi owns; the rest of the payload is the extension's.</p>
 raw, because it may be any scripting value (string, number, table).</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;module.message&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;lua&quot;, &quot;message&quot;: &quot;you are player 3&quot;}}
 </code></pre>
+<h3 id="moduleevent-server-push" tabindex="-1"><code>module.event</code> (server push)</h3>
+<p>A named, routable event an extension pushes to a player from its own Erlang
+code with <code>asobi_extensions:emit/4</code>. Unlike <code>module.message</code> (an unnamed dev
+message) this frame carries a routing key clients dispatch on. It is emitted as
+a single frame with no legacy alias.</p>
+<p><code>module</code> is the emitter's registered short name. <code>event</code> is <code>&lt;domain&gt;.&lt;name&gt;</code>,
+where <code>domain</code> is an RPC prefix the extension owns. <code>data</code> is always an object.</p>
+<p><code>module</code> may legitimately differ from the <code>event</code> domain, because an extension
+can own an RPC prefix that is not its own name - so a consumer should key off
+whichever of the two it actually means, deliberately.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;module.event&quot;, &quot;payload&quot;: {&quot;module&quot;: &quot;quests&quot;, &quot;event&quot;: &quot;quests.completed&quot;, &quot;data&quot;: {&quot;quest_id&quot;: &quot;01j8x000000000000000000042&quot;, &quot;reward&quot;: 250}}}
+</code></pre>
 <h3 id="gameerror-gamemessage-server-push-deprecated" tabindex="-1"><code>game.error</code> / <code>game.message</code> (server push, deprecated)</h3>
 <p>The pre-rename names for the two frames above. Deprecated. <strong>New SDK code
 dispatches on <code>module.error</code> and <code>module.message</code>.</strong> The pair is removed
@@ -353,7 +413,7 @@ world or match on any node. See <a href="/docs/clustering">Clustering</a>.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.add&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;, &quot;properties&quot;: {&quot;skill&quot;: 1200}}}
 </code></pre>
 <h4 id="matchmakerqueued-reply" tabindex="-1"><code>matchmaker.queued</code> (reply)</h4>
-<pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.queued&quot;, &quot;cid&quot;: &quot;q-1&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;, &quot;status&quot;: &quot;pending&quot;, &quot;players_needed&quot;: 4}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.queued&quot;, &quot;cid&quot;: &quot;q-1&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;, &quot;status&quot;: &quot;pending&quot;, &quot;players_needed&quot;: 4, &quot;already_queued&quot;: false}}
 </code></pre>
 <p><code>players_needed</code> is the mode's configured <code>match_size</code>, or <code>null</code> when the
 mode declares none. How many others are already waiting is deliberately not
@@ -361,7 +421,12 @@ reported.</p>
 <p>A mode that resolves to no game module is <code>unknown_mode</code>
 (<code>matchmaker.unknown_mode</code>); a full queue is <code>queue_full</code>
 (<code>matchmaker.queue_full</code>). Re-adding for a mode you already have an open
-ticket for returns that same ticket rather than a second one.</p>
+ticket for returns that same ticket rather than a second one, and sets
+<code>already_queued</code> to <code>true</code>.</p>
+<p><code>already_queued</code> exists so a reconnecting client can tell &quot;my resubmit was
+absorbed, my original wait still stands&quot; from &quot;freshly queued&quot;. Keep the
+elapsed timer running on <code>true</code> - <code>max_wait_seconds</code> counts from the ticket's
+original submission, not from the resubmit.</p>
 <h3 id="matchmakerremove" tabindex="-1"><code>matchmaker.remove</code></h3>
 <p>Cancel a matchmaking ticket.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;matchmaker.remove&quot;, &quot;payload&quot;: {&quot;ticket_id&quot;: &quot;...&quot;}}
@@ -433,7 +498,12 @@ right call for &quot;drop me into a shared room&quot; flows.</strong></p>
 <p>Send game input to your zone. The <code>payload</code> IS the input map - there is
 no inner <code>data</code> wrapper. Field names are entirely up to your game; the
 server only forwards the map verbatim to your <code>handle_input/3</code> callback.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;world.input&quot;, &quot;payload&quot;: {&quot;kind&quot;: &quot;move&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480}}
+<p>For client-side prediction, add an optional <code>seq</code> <em>alongside</em> <code>payload</code> (a
+sibling, so &quot;the payload IS the input map&quot; stays true). The server echoes the
+highest consumed <code>seq</code> back as a <a href="#worldack-server-push"><code>world.ack</code></a>; see
+<a href="#client-side-prediction">Client-side prediction</a>. A <code>seq</code> that is not a
+non-negative integer below 2^53 is ignored.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.input&quot;, &quot;seq&quot;: 412, &quot;payload&quot;: {&quot;kind&quot;: &quot;move&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480}}
 </code></pre>
 <p>The server routes the message to whichever zone owns your player
 entity - clients do not specify zone coordinates. Input sent while not in a
@@ -481,6 +551,38 @@ handler before sending the join message or you miss it.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="client-side-prediction" tabindex="-1">Client-side prediction</h3>
+<p>asobi is server-authoritative, and server-side rollback, replay and lag
+compensation are out of scope (TCP transport - see
+<a href="https://hexdocs.pm/asobi/migrate-from-hathora.html">migrate-from-hathora</a>). The server half that
+<em>client-side</em> prediction needs - an ack telling a client which of its inputs the
+authoritative state already includes - is a first-class primitive:</p>
+<ol>
+<li>The client stamps each <code>world.input</code> with its own increasing <code>seq</code> (a sibling
+of <code>payload</code>) and applies the input locally right away (the prediction).</li>
+<li>The server records the highest <code>seq</code> it consumed for that player - a rejected
+input still counts, so a dropped input never strands the client - and sends it
+back on the next broadcast as a per-connection
+<a href="#worldack-server-push"><code>world.ack</code></a>.</li>
+<li>The client discards every predicted input up to that <code>seq</code> and replays the
+rest on top of the authoritative <code>world.tick</code> state (the reconciliation).</li>
+</ol>
+<p>Set <a href="/docs/world-server"><code>broadcast_interval</code></a> to 1 so the ack returns every tick.</p>
+<p>The ack is per-connection: it is sent only to clients that opted in by stamping a
+<code>seq</code>, and never rides the shared <code>world.tick</code>, so one player's input stream is
+never broadcast to the rest of the zone.</p>
+<p><strong>If your SDK does not yet surface <code>world.ack</code></strong>, the same reconciliation works
+in userland: write the <code>seq</code> onto the player's entity in <code>handle_input/3</code>
+(<code>entity.last_seq = input.seq</code>) and read it back off the <code>world.tick</code> delta. The
+tradeoff is that <code>last_seq</code> then sits on the shared entity delta, so it reaches
+every subscriber in the zone - its bandwidth scales with zone population, which
+is exactly what the <code>world.ack</code> frame avoids.</p>
+<h3 id="worldack-server-push" tabindex="-1"><code>world.ack</code> (server push)</h3>
+<p>Per-connection acknowledgement of the highest <code>world.input</code> <code>seq</code> the server has
+consumed for you as of <code>tick</code>. Sent only to clients that stamped a <code>seq</code> on their
+input; use it to reconcile prediction (above).</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.ack&quot;, &quot;payload&quot;: {&quot;tick&quot;: 42, &quot;seq&quot;: 412}}
+</code></pre>
 <h3 id="worldterrain-server-push" tabindex="-1"><code>world.terrain</code> (server push)</h3>
 <p>Sent on zone subscription when the world has a terrain provider. The
 chunk data is base64-encoded compressed binary; see
@@ -719,7 +821,8 @@ changing your vote more times than the vote's <code>max_revotes</code> allows (3
 default) is <code>rate_limited</code>. The refusals that come from the vote itself -
 <code>vote_not_found</code>, <code>vote_closed</code>, <code>not_eligible</code>, <code>invalid_option</code> - have no
 code of their own and arrive as <code>ws.request_failed</code> with the reason in
-<code>details</code>.</p>
+<code>details</code>. A vote in a world that has not finished loading is
+<code>world_not_ready</code>, carried the same way.</p>
 <h3 id="voteveto" tabindex="-1"><code>vote.veto</code></h3>
 <p>Use a veto token to cancel the current vote. Requires <code>veto_tokens_per_player &gt; 0</code>
 in match config and <code>veto_enabled</code> on the vote.</p>
@@ -730,7 +833,8 @@ in match config and <code>veto_enabled</code> on the vote.</p>
 </code></pre>
 <p>An unknown vote is <code>vote_not_found</code>, a player out of tokens is
 <code>no_veto_tokens</code>, and a vote that did not enable vetoes is <code>veto_disabled</code>.
-None of the three has a code of its own either.</p>
+None of the three has a code of its own either. A veto in a world that has not
+finished loading is <code>world_not_ready</code>, carried the same way.</p>
 <h3 id="matchvote_start-server-push" tabindex="-1"><code>match.vote_start</code> (server push)</h3>
 <p>A new vote has started.</p>
 <pre><code class="language-json">{
@@ -876,6 +980,36 @@ reflected back. Codes core itself adds for this surface:</p>
 </tr>
 </tbody>
 </table>
+<h3 id="http-transport" tabindex="-1">HTTP transport</h3>
+<p>The same RPC also answers over HTTP, for a client with no open socket:</p>
+<pre><code>POST /api/v1/rpc/quests.claim
+</code></pre>
+<ul>
+<li>The method is the last path segment, so <code>quests.claim</code> here is the method the
+socket names in its payload. The body carries only <code>params</code>:</li>
+</ul>
+<pre><code class="language-json">{&quot;params&quot;: {&quot;quest_id&quot;: &quot;q-1&quot;}}
+</code></pre>
+<ul>
+<li><code>protocol</code> is injected server-side, so an HTTP client never sends it, and
+<code>rpc.unsupported_protocol</code> cannot fire here; the version lives in the
+<code>/api/v1/</code> path instead.</li>
+<li>There is no <code>cid</code>. An HTTP reply is self-correlating - it is the response to
+this one request and nothing else.</li>
+</ul>
+<p>The reply is the <strong>same envelope</strong> the socket sends,
+<code>{&quot;type&quot;: ..., &quot;payload&quot;: ...}</code>, carrying the same <code>rpc.ok</code> or <code>rpc.error</code>
+below it, plus an HTTP status: <code>200</code> for <code>rpc.ok</code>, and the error object's own
+status otherwise (the status the <a href="/docs/protocols/rest#errors">REST API</a> gives that
+code).</p>
+<pre><code class="language-json">200 OK
+{&quot;type&quot;: &quot;rpc.ok&quot;, &quot;payload&quot;: {&quot;result&quot;: {&quot;reward&quot;: 100}}}
+</code></pre>
+<pre><code class="language-json">404 Not Found
+{&quot;type&quot;: &quot;rpc.error&quot;, &quot;payload&quot;: {&quot;error&quot;: {&quot;code&quot;: &quot;rpc.unknown_method&quot;, &quot;message&quot;: &quot;No installed extension serves this RPC method.&quot;, &quot;details&quot;: {}}}}
+</code></pre>
+<p>Both transports share one envelope below the transport, so a single SDK decoder
+reads a reply whether it arrived on the socket or from this endpoint.</p>
 <h2 id="next-steps" tabindex="-1">Next steps</h2>
 <ul>
 <li><a href="/docs/protocols/rest">REST API</a> - the request/response surface alongside this socket protocol.</li>

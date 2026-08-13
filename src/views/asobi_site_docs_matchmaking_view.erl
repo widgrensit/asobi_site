@@ -49,10 +49,20 @@ tickets form a match.</li>
   }
 }</code></pre><pre class="tabbed-code-panel"><code class="language-erlang">{ok, TicketId, Meta} = asobi_matchmaker:add(PlayerId, #{mode =&gt; ~"arena", properties =&gt; #{skill =&gt; 1200, region =&gt; ~"eu-west"}}).</code></pre></div></div>
 <p>The reply - the <code>matchmaker.queued</code> frame over WS, the JSON body over REST -
-carries <code>ticket_id</code>, <code>status: &quot;pending&quot;</code> and <code>players_needed</code>: the mode's
-<code>match_size</code>, or <code>null</code> if the mode declares none. Show it as &quot;waiting for N
-players&quot; so a queued client is not staring at silence. The <code>Meta</code> map in the
-Erlang return holds the same <code>players_needed</code>.</p>
+carries <code>ticket_id</code>, <code>status: &quot;pending&quot;</code>, <code>players_needed</code> (the mode's
+<code>match_size</code>, or <code>null</code> if the mode declares none) and <code>already_queued</code>. Show
+<code>players_needed</code> as &quot;waiting for N players&quot; so a queued client is not staring
+at silence. The <code>Meta</code> map in the Erlang return holds the same fields.</p>
+<p><code>already_queued</code> is <code>true</code> when you already had an open ticket for that mode
+and got it back rather than a new one. One live ticket per (player, mode) is
+deliberate, and it is what makes <code>add</code> safe to retry: a client that resumes a
+backgrounded socket can resubmit without minting a second ticket that would
+fill into a self-match.</p>
+<p>Use it to decide what your UI does with the reply. On <code>false</code>, start the wait
+from now. On <code>true</code>, you are re-attaching to a wait already in progress - keep
+the elapsed timer running rather than resetting it, since the ticket's
+<code>max_wait_seconds</code> is counted from its original submission, not from your
+resubmit.</p>
 <h3 id="testing-solo" tabindex="-1">Testing solo</h3>
 <p>A match forms only once <code>match_size</code> players have queued, and a mode that
 declares no <code>match_size</code> groups in twos: <code>fill</code> falls back to 2, and
@@ -184,6 +194,13 @@ spawning a degenerate self-match, whatever a strategy returns.</p>
     }}
 ]}
 </code></pre>
+<p><code>max_queue</code> also bounds the worst tick. Expiry is swept in one pass, and each
+expired ticket costs a <code>matchmaker.removed</code> telemetry emit plus a push to its
+player, all inside the tick - so if something stops matches forming entirely,
+one sweep can walk the whole queue while the matchmaker answers nothing else.
+The default is comfortable; if you raise it a long way, raise <code>tick_interval</code>
+with it and keep telemetry handlers on these events cheap (they run
+synchronously in the matchmaker's own process).</p>
 <p><code>match_size</code>, <code>strategy</code> and the rest of a mode's shape are read into
 <code>game_modes</code> at boot, and a config watcher polls the manifest and each mode
 script for changes. With the default reload mode, editing <code>match_size</code> in a
@@ -199,6 +216,17 @@ there is no ticket table in Postgres - so players queuing against different
 nodes never match each other, and a restart drops every waiting ticket. Behind a
 load balancer this is the fact that decides whether matchmaking works at all;
 see <a href="/docs/clustering">Clustering</a>.</p>
+<h2 id="backfill" tabindex="-1">Backfill</h2>
+<p>The matchmaker builds matches out of the queue. It never routes a queued player
+into a match that is already running, and there is no backfill strategy to
+enable.</p>
+<p>Backfill is a discovery flow instead: the client calls <code>match.list</code> with
+<code>has_capacity</code> and <code>joinable</code>, picks one, and joins it by id with <code>match.join</code>.
+A <code>running</code> match accepts joins exactly as a <code>waiting</code> one does. Your <code>join</code>
+callback runs mid-match, so it has to cope with a player arriving into a live
+game state, and the script decides when to stop taking them with
+<a href="https://hexdocs.pm/asobi/lua-api.html#match"><code>game.match.set_joinable(false)</code></a>. See
+<a href="https://hexdocs.pm/asobi/lobbies.html#joining-a-match-already-in-progress">Lobbies</a>.</p>
 <h2 id="playing-with-friends" tabindex="-1">Playing with friends</h2>
 <p>Gathering players before a game starts is covered in <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a>.</p>
 <p>The matchmaker has no party grouping. It queues individual players, a ticket
