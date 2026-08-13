@@ -376,7 +376,16 @@ post_migrating_from_hathora(_Bindings) ->
                     ~"No auto-multi-region. Deploy one container per region yourself."
                 ]},
                 {li, [], [
-                    ~"No client-side prediction / rollback primitives yet. On the roadmap."
+                    ~"No rollback netcode or lag compensation. No server-side replay, no hitbox rewind. ",
+                    {strong, [], [~"Correction, 2026-08-13:"]},
+                    ~" this bullet used to say client-side prediction was on the roadmap. The server half of it shipped in asobi v0.84.0 and every client SDK surfaces it: stamp each ",
+                    {code, [], [~"world.input"]},
+                    ~" with a sequence number and the server acks the highest one it consumed, per connection. See ",
+                    {a, [{href, ~"/docs/protocols/websocket#client-side-prediction"}, az_navigate],
+                        [
+                            ~"Client-side prediction"
+                        ]},
+                    ~"."
                 ]},
                 {li, [], [
                     ~"Pre-1.0 API. Minor breaks possible before 1.0."
