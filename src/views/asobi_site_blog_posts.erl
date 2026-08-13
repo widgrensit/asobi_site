@@ -397,10 +397,14 @@ post_migrating_from_hathora(_Bindings) ->
                 {li, [], [
                     {code, [], [~"git clone"]},
                     ~" the ",
-                    {a, [{href, ~"https://github.com/widgrensit/asobi_lua"}], [~"asobi_lua"]},
+                    {a, [{href, ~"https://github.com/widgrensit/asobi"}], [~"asobi"]},
                     ~" repo and run ",
                     {code, [], [~"docker compose up"]},
-                    ~". Register a player. Confirm it works."
+                    ~". Register a player. Confirm it works. (This post pointed at a separate ",
+                    {code, [], [~"asobi_lua"]},
+                    ~" repo; the Lua runtime has since merged into ",
+                    {code, [], [~"asobi"]},
+                    ~" and that repo is archived.)"
                 ]},
                 {li, [], [
                     ~"Pick one SDK call in your client (",
