@@ -68,13 +68,25 @@ before a single zone beyond the first.</p>
 <h3 id="tick-cycle" tabindex="-1">Tick cycle</h3>
 <p>Every tick (default 20 Hz, 50ms):</p>
 <ol>
-<li>The ticker sends <code>tick(N)</code> to every zone in parallel.</li>
+<li>The ticker sends <code>tick(N)</code> in parallel to every zone that has acked its
+previous tick. A zone still working on the last one is skipped for this
+tick rather than sent another - see below.</li>
 <li>Each zone applies queued player inputs, runs <code>zone_tick/2</code>, computes deltas
 from the previous state and broadcasts them to its subscribers.</li>
 <li>Each zone acks back to the ticker.</li>
-<li>When every zone has acked, the ticker calls <code>post_tick/2</code> on the world
-server for global events: boss phases, quest triggers, vote requests.</li>
+<li>When every zone sent this tick has acked, the ticker calls <code>post_tick/2</code> on
+the world server for global events: boss phases, quest triggers, vote
+requests. <code>post_tick/2</code> runs at most once per tick and never runs
+backwards, so a zone acking late cannot replay an earlier tick's global
+events.</li>
 </ol>
+<p>A zone whose <code>zone_tick/2</code> takes longer than <code>tick_rate</code> is skipped, not
+queued. Sending it another tick would only grow its mailbox: it cannot catch
+up by definition, the zone tick is idempotent upkeep, and the next tick
+carries the same work. Without this a slow zone accumulates ticks without
+bound until the node runs out of memory. Each skip increments
+<code>[asobi, zone, tick_skipped]</code>; see <a href="https://hexdocs.pm/asobi/observability.html#the-events">Observability</a>
+for what to alert on.</p>
 <h3 id="delta-compression" tabindex="-1">Delta compression</h3>
 <p>Zones send only what changed since the last tick:</p>
 <pre><code class="language-json">{
@@ -480,6 +492,11 @@ shapes within one entity is not supported - keep an entity's keys consistent.</p
 <td>Milliseconds between ticks (50 = 20 Hz)</td>
 </tr>
 <tr>
+<td><code>broadcast_interval</code></td>
+<td>3</td>
+<td>Simulation ticks per wire delta; deltas go out every <code>tick_rate * broadcast_interval</code> ms. Set to 1 for a delta every tick, which client-side prediction wants</td>
+</tr>
+<tr>
 <td><code>view_radius</code></td>
 <td>1</td>
 <td>Zones visible in each direction from the player's zone</td>
@@ -745,8 +762,8 @@ its updates.</p>
 </tr>
 <tr>
 <td><code>world.input</code></td>
-<td><code>{&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 100, &quot;y&quot;: 200}</code></td>
-<td>Send input to your zone</td>
+<td><code>{&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 100, &quot;y&quot;: 200}</code>, optional top-level <code>seq</code></td>
+<td>Send input to your zone; a <code>seq</code> opts into <code>world.ack</code></td>
 </tr>
 </tbody>
 </table>
@@ -774,6 +791,11 @@ its updates.</p>
 <td><code>world.tick</code></td>
 <td><code>{tick, updates: [{op, id, ...}]}</code></td>
 <td>Zone delta broadcast</td>
+</tr>
+<tr>
+<td><code>world.ack</code></td>
+<td><code>{tick, seq}</code></td>
+<td>Per-connection input ack for prediction; see <a href="/docs/protocols/websocket#client-side-prediction">Client-side prediction</a></td>
 </tr>
 <tr>
 <td><code>world.phase_changed</code></td>

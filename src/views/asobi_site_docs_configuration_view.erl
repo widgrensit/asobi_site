@@ -199,7 +199,8 @@ you write <code>sys.config</code> instead.</p>
 <p>Everything below goes under <code>{asobi, [...]}</code>.</p>
 <p>The Lua runtime used to be its own OTP application, so the keys it owns -
 <code>max_heap_words</code>, <code>max_reductions_per_ms</code>, <code>reload_mode</code>,
-<code>config_watch_interval</code>, <code>dev_errors</code>, <code>terrain_providers</code> and <code>rate_limits</code> -
+<code>config_watch_interval</code>, <code>dev_errors</code>, <code>terrain_providers</code>, <code>lua_gc</code> and
+<code>rate_limits</code> -
 are still read from <code>asobi_lua</code> first and <code>asobi</code> second
 (<code>asobi_lua_env:get_env/2</code>). An existing <code>{asobi_lua, [...]}</code> block keeps
 working and there is nothing to migrate. Put new configuration under <code>{asobi, [...]}</code>.</p>
@@ -812,14 +813,24 @@ operator surface on a public port has to be asked for.</p>
 <td><code>false</code></td>
 <td>Let a console session erase players. Off because a browser can be clickjacked and an erasure cannot be undone; a bearer secret holds the class regardless</td>
 </tr>
+<tr>
+<td><code>console_bundle_app</code></td>
+<td><code>asobi</code></td>
+<td>Which application's <code>priv/console</code> is served. Point it at the application <code>rebar3 asobi console</code> wrote a composed bundle into. An application that is not in the release makes <code>/console</code> answer 503 and logs <code>bundle_app_unavailable</code>; it never falls back to asobi's own bundle</td>
+</tr>
 </tbody>
 </table>
 <p><code>console</code>, <code>console_label</code> and <code>console_production</code> also read
 <code>ASOBI_CONSOLE</code>, <code>ASOBI_CONSOLE_LABEL</code> and <code>ASOBI_CONSOLE_PRODUCTION</code>, and
 <code>ops_secret</code> reads <code>ASOBI_OPS_SECRET_FILE</code> or <code>ASOBI_OPS_SECRET</code>. The other
-four - <code>console_session_ttl</code>, <code>console_secure_cookie</code>, <code>console_api_base</code> and
-<code>console_erasure</code> - have no environment variable and need a <code>sys.config</code>. A variable overrides
-<code>sys.config</code> only when it is set, so the two coexist.</p>
+five - <code>console_session_ttl</code>, <code>console_secure_cookie</code>, <code>console_api_base</code>,
+<code>console_erasure</code> and <code>console_bundle_app</code> - have no environment variable and
+need a <code>sys.config</code>. A variable overrides <code>sys.config</code> only when it is set, so
+the two coexist.</p>
+<p><code>console_bundle_app</code> is only for a host whose extensions ship their own operator
+screens; see <a href="https://hexdocs.pm/asobi/console-extensions.html">Extending the operator console</a>. It has no
+environment variable on purpose: it names an application in the release, so it
+is decided when the release is built, not when the container starts.</p>
 <p>There is no <code>ASOBI_DB_PASSWORD_FILE</code>. The database password is substituted into
 <code>sys.config</code> before any Erlang runs, so it cannot be read from a file the way
 the ops secret can.</p>
@@ -828,6 +839,30 @@ the console needs a sticky route behind a load balancer and a restart signs
 everyone out - see <a href="/docs/clustering">Clustering</a> and
 <a href="https://hexdocs.pm/asobi/console.html">Operator console</a>, which owns turning it on, signing in, what the
 screens show and the troubleshooting.</p>
+<h2 id="storage" tabindex="-1">Storage</h2>
+<p>Cloud saves and the generic key-value store, served at <code>/api/v1/saves*</code> and
+<code>/api/v1/storage*</code> and exposed to Lua as <code>game.storage.*</code>. On by default; set
+<code>storage</code> to <code>false</code> to switch the whole subsystem off - the opposite default
+to the console, which is off until asked for.</p>
+<pre><code class="language-erlang">{storage, false}
+</code></pre>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Default</th>
+<th>Description</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>storage</code></td>
+<td><code>true</code></td>
+<td>Serve the storage subsystem. When <code>false</code> the seven <code>/saves</code> and <code>/storage</code> routes answer 404 and the <code>game.storage.*</code> Lua namespace is withheld at VM install</td>
+</tr>
+</tbody>
+</table>
+<p>It has no environment variable; set it in <code>sys.config</code>.</p>
 <h2 id="vote-templates" tabindex="-1">Vote templates</h2>
 <p>Reusable vote configurations, merged with the per-vote config from your game
 module:</p>

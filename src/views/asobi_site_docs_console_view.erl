@@ -192,9 +192,11 @@ ticket cancel and no match end. If you arrived expecting Nakama Console,
 PlayFab Game Manager or the Hathora console, that expectation gap is real and
 this is where it is.</p>
 <p>The third mutating route takes its method, its handler and its capability class
-from an installed extension's manifest. The console cannot invoke it today;
-that surface is HTTP only. See <a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a> for how an extension
-declares one.</p>
+from an installed extension's manifest. An extension that ships its own
+operator screens calls it from them, in a console composed with
+<code>rebar3 asobi console</code> - see
+<a href="https://hexdocs.pm/asobi/console-extensions.html">Extending the operator console</a>. See
+<a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a> for how an extension declares one.</p>
 <h2 id="capability-classes" tabindex="-1">Capability classes</h2>
 <p>Four: <code>read</code>, <code>player_data</code>, <code>config</code> and <code>erasure</code>. Every route on the plane
 carries exactly one, and membership of that class in the caller's capabilities
@@ -301,7 +303,12 @@ answered. Every console route answers the same 404 an unknown asset gets, so a
 deployment with the console switched off is indistinguishable from one that has
 it on and was asked for a file that does not exist.</p>
 <p><strong><code>/console</code> returns 503.</strong> The console bundle is missing from the release.
-This is a build problem, not a configuration one.</p>
+This is a build problem, not a configuration one. On a host that composes its
+own console, the log says which: <code>bundle_app_unavailable</code> means
+<code>console_bundle_app</code> names an application the release does not have, and
+<code>manifest_unreadable</code> means it has it and <code>rebar3 asobi console</code> never wrote a
+bundle into it. See
+<a href="https://hexdocs.pm/asobi/console-extensions.html#when-something-does-not-appear">Extending the operator console</a>.</p>
 <p><strong>The node is up but the console is off.</strong> Grep the boot log for
 <code>console_disabled_without_credential</code>, <code>ops_secret_file_unreadable</code> and
 <code>ops_secret_file_empty</code>. The line that says it worked is <code>console_enabled</code>.</p>
@@ -321,6 +328,8 @@ front of more than one node. Make the route sticky.</p>
 without an operator secret.</li>
 <li><a href="/docs/clustering">Clustering</a> - what is per node.</li>
 <li><a href="https://hexdocs.pm/asobi/extensions.html">Extensions</a> - declaring an operator action.</li>
+<li><a href="https://hexdocs.pm/asobi/console-extensions.html">Extending the operator console</a> - adding screens for
+one, and building the console that carries them.</li>
 </ul>
 """}
     ]}.
