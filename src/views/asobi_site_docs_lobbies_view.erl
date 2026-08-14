@@ -70,16 +70,40 @@ picking one and wiring it up.</p>
 <h2 id="waiting-match" tabindex="-1">Waiting match</h2>
 <p>A match starts in the <code>waiting</code> state and transitions to <code>running</code> when
 <code>min_players</code> is reached. That waiting period is the lobby.</p>
-<p><strong>No client-facing call brings a waiting match into existence.</strong>
-<code>asobi_match_sup:start_match/1</code> is the only thing that creates a match, and its
-only caller in the release is the matchmaker - which spawns a match with
-<code>min_players</code> already equal to the group it just formed, so the waiting state
-lasts as long as the join fan-out and no longer. There is no <code>match.create</code>
-frame and no <code>POST /api/v1/matches</code>.</p>
-<p>So the waiting-match lobby is an <strong>Erlang-only</strong> route: it needs a module in
-your release that calls <code>asobi_match_sup:start_match/1</code> with a <code>min_players</code>
-higher than the number of players it seeds, and <code>listed =&gt; true</code> so clients can
-find it.</p>
+<p><strong><code>match.find_or_create</code> is the client-facing route into a live match.</strong> Send a
+mode; the server returns the first listed match of that mode with room that is
+still accepting players, and spawns one if there is none. The reply is
+<code>match.joined</code>, the same frame <code>match.join</code> answers with.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.find_or_create&quot;, &quot;cid&quot;: &quot;1&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;}}
+</code></pre>
+<p>Opt in with <code>quick_play = true</code>. It defaults to <code>false</code> for match modes, so a
+ranked mode the matchmaker owns is refused with <code>quick_play_disabled</code> until you
+say otherwise - and a mode written before this frame existed is safe on upgrade
+without touching it.</p>
+<p><code>quick_play</code> and <code>listed</code> are independent: <code>listed</code> decides whether a match
+appears in <code>match.list</code>, <code>quick_play</code> decides whether a player may be dropped
+into an existing one. Hidden but auto-filled is a legitimate combination.</p>
+<p>Prefer it over <code>match.list</code> then <code>match.join</code>. Browsing and then joining is two
+round trips with a race in the middle: two clients that both read an empty list
+both create, and you get two half-empty matches that may each fail to reach
+<code>min_players</code>. <code>find_or_create</code> resolves server-side, serialized, so
+simultaneous callers land in the same match.</p>
+<p>There is still no bare <code>match.create</code>, and no <code>POST /api/v1/matches</code>. Creating a
+match without reusing one is what the matchmaker is for.</p>
+<p>But the waiting state is reachable from mode config. Declare a <code>min_players</code>
+higher than <code>match_size</code> and the matchmaker spawns on the group it formed while
+the match sits in <code>waiting</code> until backfill brings it up to the threshold:</p>
+<pre><code class="language-lua">match_size  = 2   -- the matchmaker forms and spawns on two
+min_players = 4   -- the loop does not start until four are in
+max_players = 8
+listed      = true
+</code></pre>
+<p>It gives up at <code>?WAITING_TIMEOUT</code> (60s) if the fourth never arrives.</p>
+<p>Before asobi v0.85.0 the matchmaker overwrote <code>min_players</code> with <code>match_size</code>,
+so declaring it was silently ignored and this was an Erlang-only route through
+<code>asobi_match_sup:start_match/1</code>. That call is still available to an operator
+shipping their own module, and is still the only way to create a match outside
+the matchmaker.</p>
 <pre><code class="language-erlang">{ok, Pid} = asobi_match_sup:start_match(#{
     mode         =&gt; ~&quot;arena&quot;,
     game_module  =&gt; my_arena,
@@ -154,8 +178,8 @@ it and it stays up from then on; after a restart the first player recreates it.<
 <p>Worlds are subject to <code>world_max_per_player</code> (5) and <code>world_max</code> (1000) - see
 <a href="/docs/configuration#world-capacity">World capacity</a>.</p>
 <h3 id="private-lobbies" tabindex="-1">Private lobbies</h3>
-<p>Because only a world can be created by a client, a code-gated private lobby is a
-world too. Share a code out of band and check it on the way in. The join context
+<p>A code-gated private lobby can be a match as well as a world: <code>match.find_or_create</code>
+forwards the join context, so a <code>join</code> callback can refuse on a bad code. Share a code out of band and check it on the way in. The join context
 is whatever the client put in the join payload; asobi never reads it.</p>
 <pre><code class="language-lua">function join(player_id, state, ctx)
 	if ctx.code ~= state.room_code then

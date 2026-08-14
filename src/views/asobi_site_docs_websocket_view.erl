@@ -177,6 +177,27 @@ to listed.</p>
 <p>Distinct from <code>GET /api/v1/matches</code>, which reads the match <em>record</em> table
 (finished matches, an audit trail). <code>GET /api/v1/matches/live</code> is the REST
 equivalent of this message.</p>
+<h3 id="matchfind_or_create" tabindex="-1"><code>match.find_or_create</code></h3>
+<p>Get into a live match of a mode, spawning one if there is none.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;match.find_or_create&quot;, &quot;cid&quot;: &quot;1&quot;, &quot;payload&quot;: {&quot;mode&quot;: &quot;arena&quot;}}
+</code></pre>
+<p>Replies with <code>match.joined</code>, exactly as <code>match.join</code> does. The payload takes
+<code>mode</code> only - every other match parameter comes from mode config, so a client
+cannot choose <code>max_players</code> or the tick rate.</p>
+<p>Eligibility is <code>quick_play</code>, not <code>listed</code> - they are independent axes. A match
+mode <strong>defaults to <code>quick_play = false</code></strong>, so a mode is reachable through the
+matchmaker alone until you opt it in. A mode that is not eligible answers
+<code>quick_play_disabled</code>, the same reason <code>world.find_or_create</code> uses.</p>
+<p>That default is deliberate: every match mode written before this frame existed
+declares no <code>quick_play</code>, and defaulting it open would expose a ranked mode to a
+client that had never been rated or queued.</p>
+<p>Prefer this to <code>match.list</code> followed by <code>match.join</code>: the two-step version
+races, and two clients reading the same empty listing will each create a match.
+This resolves server-side and is serialized, so simultaneous callers converge on
+one match.</p>
+<p>Subject to the same join rate limit as <code>match.join</code> and <code>world.join</code>, and to a
+node-wide cap on live matches (<code>asobi.match_max</code>, default 1000), which answers
+<code>match_capacity_reached</code>. A world mode is refused with <code>wrong_mode_type</code>.</p>
 <h3 id="matchjoin" tabindex="-1"><code>match.join</code></h3>
 <p>Join a match (after being matched via matchmaker, discovered via
 <code>match.list</code>, or a direct invite).</p>
