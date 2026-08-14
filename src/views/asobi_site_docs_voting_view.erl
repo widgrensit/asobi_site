@@ -92,18 +92,16 @@ vote starts this way. The Lua bridge does not export it, so a Lua
 end
 </code></pre>
 <p>Clear whatever condition set <code>_vote</code>, or the next tick sets it again.</p>
-<h3 id="known-gap-a-lua-config-does-not-start-a-vote-today" tabindex="-1">Known gap: a Lua config does not start a vote today</h3>
-<p>Both triggers are called and both decode your table, but the decoded table
-reaches the vote server with <strong>string keys</strong>, and the vote server reads atom
-keys. It therefore fails to start and the failure is swallowed at both call
-sites, so the vote silently never happens: no <code>vote_start</code> frame, no log line
-naming your script.</p>
-<p>This is a defect, not a design. Until it is fixed, a vote has to be started
-from Erlang. If you are writing a Lua-only game and you need voting now, this
-is the one feature you cannot reach.</p>
+<p>Before asobi v0.87.0 neither trigger worked. The decoded table reached the vote
+server with string keys where it reads atom ones, so the vote failed to start
+and the failure was swallowed at both call sites - no <code>vote_start</code> frame, no log
+line naming the script. If you are on an older server, a vote has to be started
+from Erlang.</p>
 <h2 id="starting-a-vote-from-erlang" tabindex="-1">Starting a vote from Erlang</h2>
-<p><code>asobi_match_server:start_vote/2</code> and <code>asobi_world_server:start_vote/2</code> take the
-session pid and a config map with <strong>atom keys</strong>. There is no Lua equivalent.</p>
+<p>A game module written in Erlang calls <code>asobi_match_server:start_vote/2</code> or
+<code>asobi_world_server:start_vote/2</code> directly, with the session pid and a config
+map. A Lua script does not need this - return the config from <code>vote_requested</code>
+instead, as above.</p>
 <pre><code class="language-erlang">asobi_match_server:start_vote(MatchPid, #{
     template   =&gt; ~&quot;path_choice&quot;,
     options    =&gt; [
