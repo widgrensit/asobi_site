@@ -140,11 +140,16 @@ returns - attach to that rather than restating the names.</p>
 asobi.ws.connected               asobi.ws.disconnected
 asobi.ws.message_in              asobi.ws.message_out
 asobi.ws.connect_rate_limited    asobi.ws.idle_auth_timeout
-asobi.ws.origin_rejected
+asobi.ws.origin_rejected         asobi.ws.legacy_input_unwrap
 </code></pre>
 <p><code>asobi.ws.origin_rejected</code> and <code>asobi.ws.connect_rate_limited</code> are the two
 worth alerting on: a spike in either is either an attack or a client
 misconfiguration, and both are invisible in game metrics.</p>
+<p><code>asobi.ws.legacy_input_unwrap</code> counts input frames sent in the deprecated
+sole-<code>data</code> shape (see <a href="/docs/protocols/websocket#worldinput">WebSocket protocol</a>).
+It is not an error, and not worth an alert: it exists so the carve-out can be
+retired once the counter reaches zero for a release, instead of guessing which
+clients still depend on it.</p>
 <h3 id="matches-and-matchmaking" tabindex="-1">Matches and matchmaking</h3>
 <pre><code>asobi.match.started              asobi.match.finished
 asobi.match.player_joined        asobi.match.player_left

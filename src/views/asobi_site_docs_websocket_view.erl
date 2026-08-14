@@ -271,6 +271,15 @@ that ignores it stays open to anyone holding a <code>world_id</code>.</p>
 <p>Send game input to the match server.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.input&quot;, &quot;payload&quot;: {&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 10, &quot;y&quot;: 5}}
 </code></pre>
+<p>As with <a href="#worldinput"><code>world.input</code></a>, the <code>payload</code> IS the input map. Two
+<strong>deprecated</strong> compatibility shapes survive here and will go at the next
+protocol break: a payload whose only key is <code>data</code> mapped to an object is
+unwrapped to that object, and one whose only key is <code>data</code> mapped to a JSON
+<em>string</em> is decoded and unwrapped. A malformed string, a decoded value that is
+not an object, or a <code>payload</code> that is not an object at all is answered with
+<code>error</code>, reason <code>invalid_payload</code>.</p>
+<p>When the connection is in a world rather than a match, <code>match.input</code> is routed
+to your zone, so the two frames reach the same <code>handle_input/3</code>.</p>
 <p>Input sent while not in a match or world is dropped. The first drop (at
 most one per 5 seconds per connection) is answered with an error event so
 the client can tell input is going nowhere:</p>
@@ -495,9 +504,17 @@ right call for &quot;drop me into a shared room&quot; flows.</strong></p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.join&quot;, &quot;payload&quot;: {&quot;world_id&quot;: &quot;...&quot;}}
 </code></pre>
 <h3 id="worldinput" tabindex="-1"><code>world.input</code></h3>
-<p>Send game input to your zone. The <code>payload</code> IS the input map - there is
-no inner <code>data</code> wrapper. Field names are entirely up to your game; the
-server only forwards the map verbatim to your <code>handle_input/3</code> callback.</p>
+<p>Send game input to your zone. The <code>payload</code> IS the input map; the server
+forwards it verbatim to your <code>handle_input/3</code> callback and field names are
+entirely up to your game.</p>
+<p>One <strong>deprecated</strong> compatibility shape survives: a payload whose <em>only</em> key is
+<code>data</code>, mapped to an object, is unwrapped to that object. It exists for clients
+that predate this rule and will be removed at the next protocol break; do not
+send it. A <code>data</code> key alongside any other key is not special, and neither is a
+<code>data</code> whose value is not an object - both reach <code>handle_input/3</code> untouched,
+with the rest of the payload intact.</p>
+<p>A <code>payload</code> that is not an object at all is rejected with an <code>error</code> frame,
+reason <code>invalid_payload</code>. It is not silently treated as empty input.</p>
 <p>For client-side prediction, add an optional <code>seq</code> <em>alongside</em> <code>payload</code> (a
 sibling, so &quot;the payload IS the input map&quot; stays true). The server echoes the
 highest consumed <code>seq</code> back as a <a href="#worldack-server-push"><code>world.ack</code></a>; see
@@ -562,15 +579,20 @@ authoritative state already includes - is a first-class primitive:</p>
 of <code>payload</code>) and applies the input locally right away (the prediction).</li>
 <li>The server records the highest <code>seq</code> it consumed for that player - a rejected
 input still counts, so a dropped input never strands the client - and sends it
-back on the next broadcast as a per-connection
-<a href="#worldack-server-push"><code>world.ack</code></a>.</li>
+back on the next broadcast as a <a href="#worldack-server-push"><code>world.ack</code></a>
+addressed to that connection alone.</li>
 <li>The client discards every predicted input up to that <code>seq</code> and replays the
 rest on top of the authoritative <code>world.tick</code> state (the reconciliation).</li>
 </ol>
 <p>Set <a href="/docs/world-server"><code>broadcast_interval</code></a> to 1 so the ack returns every tick.</p>
-<p>The ack is per-connection: it is sent only to clients that opted in by stamping a
-<code>seq</code>, and never rides the shared <code>world.tick</code>, so one player's input stream is
-never broadcast to the rest of the zone.</p>
+<p>The ack is addressed to one connection: it is sent only to clients that opted in
+by stamping a <code>seq</code>, and never rides the shared <code>world.tick</code>, so one player's
+input stream is never broadcast to the rest of the zone.</p>
+<p><strong><code>seq</code> never goes backwards on a connection.</strong> The high-water mark is recorded
+per zone, and a player is subscribed to their whole interest ring, so during a
+crossing more than one zone can hold a mark for them. The connection drops any
+ack that does not advance the highest <code>seq</code> it has already sent you, so you can
+prune against the value you receive without tracking a maximum yourself.</p>
 <p><strong>If your SDK does not yet surface <code>world.ack</code></strong>, the same reconciliation works
 in userland: write the <code>seq</code> onto the player's entity in <code>handle_input/3</code>
 (<code>entity.last_seq = input.seq</code>) and read it back off the <code>world.tick</code> delta. The
@@ -578,9 +600,10 @@ tradeoff is that <code>last_seq</code> then sits on the shared entity delta, so 
 every subscriber in the zone - its bandwidth scales with zone population, which
 is exactly what the <code>world.ack</code> frame avoids.</p>
 <h3 id="worldack-server-push" tabindex="-1"><code>world.ack</code> (server push)</h3>
-<p>Per-connection acknowledgement of the highest <code>world.input</code> <code>seq</code> the server has
-consumed for you as of <code>tick</code>. Sent only to clients that stamped a <code>seq</code> on their
-input; use it to reconcile prediction (above).</p>
+<p>Acknowledgement of the highest <code>world.input</code> <code>seq</code> the server has consumed for
+you as of <code>tick</code>, and monotonic for the life of the connection. Addressed to your
+connection alone, and sent only to clients that stamped a <code>seq</code> on their input;
+use it to reconcile prediction (above).</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.ack&quot;, &quot;payload&quot;: {&quot;tick&quot;: 42, &quot;seq&quot;: 412}}
 </code></pre>
 <h3 id="worldterrain-server-push" tabindex="-1"><code>world.terrain</code> (server push)</h3>

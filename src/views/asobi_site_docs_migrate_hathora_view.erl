@@ -365,8 +365,8 @@ rather than a throwaway username, but it stays off until the game declares
 rewind; over TCP (above) asobi is not for twitch shooters. But the server half
 of <em>client-side prediction</em> is a first-class primitive: the client stamps each
 <code>world.input</code> with an increasing <code>seq</code>, and the server returns the highest one
-it has consumed as a per-connection <code>world.ack</code> for the client to reconcile
-against. See
+it has consumed as a <code>world.ack</code> on that connection for the client to
+reconcile against. See
 <a href="/docs/protocols/websocket#client-side-prediction">Client-side prediction</a>.</li>
 <li><strong>Pre-1.0 API.</strong> Minor breaking changes are possible until 1.0.</li>
 </ul>
