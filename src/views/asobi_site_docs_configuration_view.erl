@@ -37,6 +37,8 @@ scripts. No Erlang syntax needed.</p>
 <pre><code class="language-lua">-- match.lua
 match_size = 4
 max_players = 10
+min_players = 4     -- defaults to match_size; higher makes the match wait for backfill
+quick_play = true   -- defaults to FALSE for matches: without it match.find_or_create refuses
 strategy = &quot;fill&quot;
 bots = { script = &quot;bots/arena_bot.lua&quot; }
 </code></pre>
@@ -61,6 +63,12 @@ bots = { script = &quot;bots/arena_bot.lua&quot; }
 <td>no</td>
 <td><code>match_size</code></td>
 <td>Maximum players per match</td>
+</tr>
+<tr>
+<td><code>min_players</code></td>
+<td>no</td>
+<td><code>match_size</code></td>
+<td>Players needed before the loop starts. Higher than <code>match_size</code> spawns a match that waits for backfill, and gives up after 60s</td>
 </tr>
 <tr>
 <td><code>strategy</code></td>
@@ -89,8 +97,8 @@ bots = { script = &quot;bots/arena_bot.lua&quot; }
 <tr>
 <td><code>quick_play</code></td>
 <td>no</td>
-<td><code>true</code></td>
-<td>Whether <code>world.find_or_create</code> may place a player into an existing instance of this mode</td>
+<td><code>false</code> for matches, <code>true</code> for worlds</td>
+<td>Whether <code>match.find_or_create</code> / <code>world.find_or_create</code> may place a player into an existing instance of this mode. A match mode that does not set it is refused with <code>quick_play_disabled</code>. Independent of <code>listed</code></td>
 </tr>
 <tr>
 <td><code>state_strategy</code></td>

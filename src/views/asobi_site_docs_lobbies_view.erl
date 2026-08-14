@@ -96,26 +96,22 @@ the match sits in <code>waiting</code> until backfill brings it up to the thresh
 <pre><code class="language-lua">match_size  = 2   -- the matchmaker forms and spawns on two
 min_players = 4   -- the loop does not start until four are in
 max_players = 8
-listed      = true
+quick_play  = true   -- so match.find_or_create can bring the other two in
+listed      = true   -- so match.list can find it too
 </code></pre>
 <p>It gives up at <code>?WAITING_TIMEOUT</code> (60s) if the fourth never arrives.</p>
 <p>Before asobi v0.85.0 the matchmaker overwrote <code>min_players</code> with <code>match_size</code>,
-so declaring it was silently ignored and this was an Erlang-only route through
-<code>asobi_match_sup:start_match/1</code>. That call is still available to an operator
-shipping their own module, and is still the only way to create a match outside
-the matchmaker.</p>
-<pre><code class="language-erlang">{ok, Pid} = asobi_match_sup:start_match(#{
-    mode         =&gt; ~&quot;arena&quot;,
-    game_module  =&gt; my_arena,
-    game_config  =&gt; #{},
-    min_players  =&gt; 4,
-    max_players  =&gt; 4,
-    listed       =&gt; true
-}).
-</code></pre>
-<p><strong>If you are writing Lua, use a world instead.</strong> A world is the only session a
-client can create, so it is the only lobby a Lua-only game can build. Skip to
-<a href="#persistent-world-as-a-hub">Persistent world as a hub</a>.</p>
+so declaring it was silently ignored and a waiting lobby needed an Erlang module
+in your release calling <code>asobi_match_sup:start_match/1</code>. That function still
+exists for an operator shipping their own module, but nothing about a lobby
+needs it any more.</p>
+<p><strong>A match is a client-creatable session too.</strong> That was not true before
+<code>match.find_or_create</code>, and this page used to send Lua readers to a world for
+that reason. A world is still the better hub when you want somewhere persistent
+that survives empty - see <a href="#persistent-world-as-a-hub">Persistent world as a hub</a></p>
+<ul>
+<li>but it is a choice now, not the only option.</li>
+</ul>
 <h3 id="letting-players-find-it" tabindex="-1">Letting players find it</h3>
 <pre><code>GET /api/v1/matches/live        REST
 match.list                      WebSocket
