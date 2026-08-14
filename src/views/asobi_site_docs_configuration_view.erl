@@ -291,8 +291,8 @@ have.</p>
 </tr>
 <tr>
 <td><code>quick_play</code></td>
-<td><code>true</code></td>
-<td>Whether <code>world.find_or_create</code> may place a player into an existing world of this mode. Read on the world entry path for whatever mode name it is handed, so setting it <code>false</code> on a match mode is protective rather than inert. Independent of <code>listed</code> - see <a href="/docs/world-server#visibility">World server</a></td>
+<td><code>true</code> for worlds, <strong><code>false</code> for matches</strong></td>
+<td>Whether <code>world.find_or_create</code> / <code>match.find_or_create</code> may place a player into an existing instance of this mode. Match modes default closed so a mode written before <code>match.find_or_create</code> existed is not exposed on upgrade. Independent of <code>listed</code> - see <a href="/docs/world-server#visibility">World server</a></td>
 </tr>
 </tbody>
 </table>
@@ -874,7 +874,7 @@ module:</p>
     }
 }}
 </code></pre>
-<h2 id="world-capacity" tabindex="-1">World capacity</h2>
+<h2 id="instance-capacity" tabindex="-1">Instance capacity</h2>
 <p>Bounds on persistent world creation, enforced as a DoS backstop:</p>
 <pre><code class="language-erlang">{world_max_per_player, 5},   %% default 5
 {world_max, 1000}            %% default 1000
@@ -882,6 +882,14 @@ module:</p>
 <p>A player at the per-player cap gets <code>429 world.player_limit_reached</code>; once the
 global cap is reached further creates get <code>503 world.capacity_reached</code>. The
 global cap is checked first.</p>
+<p>Matches have a node-wide cap of their own:</p>
+<pre><code class="language-erlang">{match_max, 1000}            %% default 1000
+</code></pre>
+<p>It bounds <code>match.find_or_create</code>, and answers <code>match_capacity_reached</code>. The
+matchmaker used to bound match creation implicitly - forming one took
+<code>match_size</code> queued tickets - and that bound disappears once a single player can
+create a match. There is no per-player match cap: matches carry no owner, unlike
+worlds.</p>
 <h2 id="join-rate" tabindex="-1">Join rate</h2>
 <p>Joins are bounded per player, not per IP:</p>
 <pre><code class="language-erlang">{rate_limits, #{
