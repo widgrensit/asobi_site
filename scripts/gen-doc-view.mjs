@@ -147,13 +147,68 @@ if (html.includes('@@BLOCK')) {
   process.exit(1);
 }
 
+// Resolve one guide cross-link. Guides sit next to each other in asobi/guides
+// and link by bare filename; a few reach up to the repo root. Neither form
+// resolves once the page is served from asobi.dev, so both are rewritten.
+//   site  -> the page exists on asobi.dev
+//   absolute (true) -> for markdown, which is read out of band
+//   hexdocs -> guide with no site page, so nothing 404s
+//   github -> repo-root files like ../README.md, which only exist in the repo
+function resolveLink(target, absolute) {
+  const [path, anchor = ''] = target.split(/(?=#)/);
+  const root = path.match(/^\.\.\/(.+?)(?:\.md)?$/);
+  if (root) {
+    return `https://github.com/widgrensit/asobi/blob/main/${root[1]}.md${anchor}`;
+  }
+  const guide = path.match(/^([a-z0-9-]+)\.md$/);
+  if (!guide) {
+    return null;
+  }
+  const route = SITE_ROUTES[guide[1]];
+  if (route) {
+    return absolute ? `https://asobi.dev${route}${anchor}` : `${route}${anchor}`;
+  }
+  return `https://hexdocs.pm/asobi/${guide[1]}.html${anchor}`;
+}
+
 // Rewrite .md cross-links AFTER splicing, so links inside callouts and tab
 // groups are covered too.
-html = html.replace(/href="([a-z0-9-]+)\.md(#[^"]*)?"/g, (_, base, anchor = '') => {
-  const route = SITE_ROUTES[base];
-  const href = route ? route + anchor : `https://hexdocs.pm/asobi/${base}.html${anchor}`;
-  return `href="${href}"`;
+html = html.replace(/href="([^"]+)"/g, (whole, target) => {
+  const href = resolveLink(target, false);
+  return href ? `href="${href}"` : whole;
 });
+
+// --- markdown -> markdown -------------------------------------------------
+
+// The same guide, kept as Markdown for /docs/<page>.md. It is the guide source
+// rather than a conversion of the HTML above: the HTML is derived from this, so
+// converting back would only lose fidelity against a file we already hold.
+//
+// Three transforms, all for readers who arrive at the .md URL directly rather
+// than through hexdocs:
+//   - cross-links become absolute site URLs (the same SITE_ROUTES map as the
+//     HTML path, applied to markdown link syntax, which the href= rewrite above
+//     does not touch)
+//   - the <!-- tabs --> markers go, leaving the labelled stacked code they
+//     already degrade to on hexdocs
+//   - the {: .info} admonition attribute goes, leaving a plain blockquote
+const markdown = src
+  .replace(/\]\(([^)]+)\)/g, (whole, target) => {
+    const href = resolveLink(target, true);
+    return href ? `](${href})` : whole;
+  })
+  .replace(/^[ \t]*<!--[ \t]*\/?tabs[ \t]*-->[ \t]*\r?\n/gm, '')
+  .replace(/[ \t]*\{:[ \t]*\.[a-z]+[ \t]*\}[ \t]*$/gm, '')
+  .replace(/\n{3,}/g, '\n\n')
+  .trim();
+
+// Nothing may point at a repo-relative page that is not a guide: those resolve
+// on GitHub but 404 for anyone reading the .md over HTTP.
+const stray = markdown.match(/\]\((?!https?:|#)[^)]+\)/g);
+if (stray) {
+  console.error('ERROR: unresolved relative link in markdown:', mdPath, stray.slice(0, 5));
+  process.exit(1);
+}
 
 // --- emit the erlang view -------------------------------------------------
 
@@ -163,11 +218,14 @@ const bin = s => '~"' + s.replace(/\\/g, '\\\\').replace(/"/g, '\\"') + '"';
 // The HTML blob uses the triple-quoted verbatim sigil. erlfmt cannot stably
 // re-wrap a huge single-line ~"" binary (it oscillates), but it leaves
 // triple-quoted content untouched, so the generated module stays fmt-stable.
-// The content must not contain a line that is exactly `"""`; HTML never does,
-// but guard rather than emit a module that won't parse.
-function rawBlob(s) {
+// The content must not contain a line that is exactly `"""`. HTML never does,
+// but MARKDOWN EASILY CAN - a Python docstring or a Rust doc example inside a
+// fenced block is enough - and the markdown blob below goes through the same
+// sigil. Guard both rather than emit a module that will not parse.
+function rawBlob(s, what) {
   if (/^\s*"""\s*$/m.test(s)) {
-    console.error('ERROR: HTML contains a line that is exactly triple-quote:', mdPath);
+    console.error(`ERROR: ${what} contains a line that is exactly triple-quote:`, mdPath);
+    console.error('Fix: indent that line inside its fenced block, or reword it.');
     process.exit(1);
   }
   return '~"""\n' + s.replace(/\n$/, '') + '\n"""';
@@ -178,7 +236,7 @@ process.stdout.write(`%% GENERATED from asobi guides/${mdPath.split('/').pop()} 
 -module(${moduleName}).
 -include("asobi_site_view.hrl").
 
--export([mount/1, render/1]).
+-export([mount/1, render/1, markdown/0]).
 
 -spec mount(map()) -> {map(), map()}.
 mount(Bindings) ->
@@ -192,6 +250,13 @@ render(Bindings) ->
             ${bin(' / ' + breadcrumb)}
         ]},
         {h1, [], [${bin(h1)}]},
-        {raw, ${rawBlob(html)}}
+        {raw, ${rawBlob(html, 'HTML')}}
     ]}.
+
+%% The guide source, served at this page's .md URL. asobi_site_markdown cannot
+%% walk the {raw, ...} blob above, and does not need to: this is what that HTML
+%% was rendered from.
+-spec markdown() -> binary().
+markdown() ->
+    ${rawBlob(markdown, 'markdown')}.
 `);

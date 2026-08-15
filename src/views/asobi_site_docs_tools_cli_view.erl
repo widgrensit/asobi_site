@@ -150,7 +150,7 @@ asobi health               # verify the engine
                 ]}
             ]},
 
-            {h2, [], [~"Auth &amp; config"]},
+            {h2, [], [~"Auth & config"]},
             {p, [], [
                 ~"Two paths. ",
                 {strong, [], [~"Managed:"]},

@@ -21,7 +21,7 @@ render(Bindings) ->
                 {a, [{href, ~"/docs"}, az_navigate], [~"Docs"]},
                 ~" / Changelog"
             ]},
-            {h1, [], [~"Changelog &amp; releases"]},
+            {h1, [], [~"Changelog & releases"]},
             {p, [{class, ~"docs-lede"}], [
                 ~"Asobi releases continuously - every change that lands on ",
                 {code, [], [~"main"]},

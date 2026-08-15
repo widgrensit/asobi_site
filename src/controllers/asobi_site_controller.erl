@@ -1,6 +1,17 @@
 -module(asobi_site_controller).
 
--export([page/2, moved/2, heartbeat/1, blog_rss/1]).
+-export([
+    page/2,
+    markdown/2,
+    moved/2,
+    heartbeat/1,
+    blog_rss/1,
+    llms_txt/1,
+    robots_txt/1,
+    sitemap_xml/1
+]).
+
+-define(SITE, ~"https://asobi.dev").
 
 -spec page(cowboy_req:req(), map()) -> {status, 200, map(), iodata()}.
 page(Req, Spec) ->
@@ -20,6 +31,30 @@ page(Req, Spec) ->
     Document = asobi_site_layout:render(#{title => page_title(Bindings), inner_content => Content}),
     Headers = #{~"content-type" => ~"text/html; charset=utf-8"},
     {status, 200, Headers, asobi_site_html:document(Document)}.
+
+%% The .md twin of a page (llmstxt.org v2). Two sources, and which one applies
+%% is a property of the view, not a decision made here:
+%%
+%%   - A generated docs view exports markdown/0 holding the asobi guide it was
+%%     built from. Its render/1 body is one opaque {raw, Html} node, so the
+%%     tree walker cannot read it - and does not need to, because that HTML was
+%%     rendered from exactly this markdown.
+%%   - Every other view is a tuple tree all the way down, which
+%%     asobi_site_markdown walks directly.
+%%
+%% ensure_loaded before function_exported for the same reason render_view/2
+%% does it: under the release's embedded code loading, function_exported/3
+%% answers false for a module that has not been loaded yet.
+-spec markdown(cowboy_req:req(), map()) -> {status, integer(), map(), iodata()}.
+markdown(_Req, #{view := View}) ->
+    _ = code:ensure_loaded(View),
+    Body =
+        case erlang:function_exported(View, markdown, 0) of
+            true -> [View:markdown(), ~"\n"];
+            false -> asobi_site_markdown:render(asobi_site_html:render_view(View, #{id => ~"page"}))
+        end,
+    Headers = #{~"content-type" => ~"text/markdown; charset=utf-8"},
+    {status, 200, Headers, Body}.
 
 slug(Req) ->
     maps:get(~"slug", maps:get(bindings, Req, #{}), ~"").
@@ -133,6 +168,104 @@ month_name(9) -> "Sep";
 month_name(10) -> "Oct";
 month_name(11) -> "Nov";
 month_name(12) -> "Dec".
+
+%% /llms.txt - https://llmstxt.org. A curated index for coding agents, not a
+%% crawler hint: Google documents that Search ignores this file entirely.
+%% Content lives in asobi_site_llms; this only formats it.
+-spec llms_txt(cowboy_req:req()) -> {status, integer(), map(), iodata()}.
+llms_txt(_Req) ->
+    Headers = #{~"content-type" => ~"text/plain; charset=utf-8"},
+    {status, 200, Headers, render_llms()}.
+
+render_llms() ->
+    [
+        ~"# asobi\n\n",
+        [[~"> ", Line, ~"\n"] || Line <- asobi_site_llms:summary()],
+        ~"\nNotes for agents:\n\n",
+        [[~"- ", Note, ~"\n"] || Note <- asobi_site_llms:notes()],
+        [render_llms_section(S) || S <- asobi_site_llms:sections()]
+    ].
+
+render_llms_section({Heading, Entries}) ->
+    [
+        ~"\n## ",
+        Heading,
+        ~"\n\n",
+        %% Link the Markdown variant, not the HTML page: an index is only
+        %% worth as much as the thing it points at is worth parsing.
+        [
+            [~"- [", Title, ~"](", ?SITE, Path, ~".md): ", Description, ~"\n"]
+         || {Path, Title, Description} <- Entries
+        ]
+    ].
+
+%% /robots.txt. Deliberately permissive: the only job it does here is point
+%% crawlers at the sitemap, which is the one file search engines document
+%% consuming. Declaring an AI-training policy is a separate decision.
+-spec robots_txt(cowboy_req:req()) -> {status, integer(), map(), iodata()}.
+robots_txt(_Req) ->
+    Headers = #{~"content-type" => ~"text/plain; charset=utf-8"},
+    Body = [
+        ~"User-agent: *\n",
+        ~"Allow: /\n\n",
+        ~"Sitemap: ",
+        ?SITE,
+        ~"/sitemap.xml\n"
+    ],
+    {status, 200, Headers, Body}.
+
+%% /sitemap.xml. Derived from the router rather than a second hand-kept list,
+%% so a page cannot be added to the site and silently miss the sitemap.
+-spec sitemap_xml(cowboy_req:req()) -> {status, integer(), map(), iodata()}.
+sitemap_xml(_Req) ->
+    Headers = #{~"content-type" => ~"application/xml; charset=utf-8"},
+    {status, 200, Headers, render_sitemap()}.
+
+render_sitemap() ->
+    [
+        ~"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
+        ~"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
+        [sitemap_url(P, undefined) || P <- sitemap_paths()],
+        [
+            sitemap_url(<<"/blog/", Slug/binary>>, Date)
+         || #{slug := Slug, date := Date} <- asobi_site_blog_posts:all()
+        ],
+        ~"</urlset>\n"
+    ].
+
+sitemap_url(Path, Date) ->
+    LastMod =
+        case Date of
+            undefined -> [];
+            _ -> [~"<lastmod>", Date, ~"</lastmod>"]
+        end,
+    [~"<url><loc>", ?SITE, xml_escape(Path), ~"</loc>", LastMod, ~"</url>\n"].
+
+sitemap_paths() ->
+    [#{routes := Routes}] = asobi_site_router:routes(prod),
+    Paths = [element(1, R) || R <- Routes],
+    lists:sort([
+        P
+     || P <- Paths, is_binary(P), not lists:member(P, non_pages()), not is_markdown(P)
+    ]).
+
+%% The .md twin is an alternate representation of a page, not a second page.
+%% Listing both would ask every crawler to index the same content twice.
+is_markdown(Path) -> binary:longest_common_suffix([Path, ~".md"]) =:= 3.
+
+%% Routed, but not a page a crawler should index: a health probe, a feed, the
+%% dynamic blog template (expanded per post above), a 301, and the machine
+%% files themselves.
+non_pages() ->
+    [
+        ~"/heartbeat",
+        ~"/blog/rss.xml",
+        ~"/blog/:slug",
+        ~"/docs/erlang/getting-started",
+        ~"/llms.txt",
+        ~"/robots.txt",
+        ~"/sitemap.xml"
+    ].
 
 xml_escape(Bin) when is_binary(Bin) ->
     binary:replace(
