@@ -4,9 +4,14 @@ on:
   push:
     branches: [main]
     paths-ignore: ['**.md', 'docs/**', 'LICENSE']
+  # No paths-ignore here, deliberately. main-protection requires 8 `ci / *`
+  # checks and has no bypass actors, so a workflow that never starts leaves
+  # them "Expected" forever and the PR can never merge - not even with
+  # --admin, which has nothing to bypass. That made every docs-only PR
+  # permanently unmergeable (#158). The push filter below still keeps docs
+  # commits off main's CI, which is where the saving actually mattered.
   pull_request:
     branches: [main]
-    paths-ignore: ['**.md', 'docs/**', 'LICENSE']
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
