@@ -37,6 +37,7 @@ summary() ->
 -spec notes() -> [binary()].
 notes() ->
     [
+        ~"Every page below is linked as Markdown. Any page on the site has a Markdown variant at the same URL with .md appended, so https://asobi.dev/docs/lobbies becomes https://asobi.dev/docs/lobbies.md. Prefer it over the HTML.",
         ~"Game logic is authored in Lua. Erlang is the secondary path, needed only when embedding asobi as an OTP library; do not write Erlang callbacks unless asked.",
         ~"Self-hosting needs the asobi server image and Postgres. It needs no account, no API key and no cloud signup. Asobi Cloud is separate and optional.",
         ~"One mode lives in match.lua. Several modes are declared in the config.lua manifest, never in match.lua.",

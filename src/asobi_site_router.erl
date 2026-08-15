@@ -9,7 +9,10 @@ routes(_Environment) ->
         #{
             prefix => ~"",
             security => false,
-            routes => [
+            %% page/3 and docs/2 each yield the HTML route AND its .md twin
+            %% (llmstxt.org v2: a clean Markdown variant at the same URL with
+            %% .md appended), so a page cannot exist without one.
+            routes => lists:flatten([
                 page(~"/", asobi_site_home_view, home),
                 page(~"/cloud", asobi_site_cloud_view, cloud),
                 page(~"/unreal", asobi_site_unreal_view, sdks),
@@ -25,7 +28,7 @@ routes(_Environment) ->
                 page(~"/brand", asobi_site_brand_view, none),
                 page(~"/blog", asobi_site_blog_view, blog),
                 {~"/blog/rss.xml", fun asobi_site_controller:blog_rss/1, #{methods => [get]}},
-                page(~"/blog/:slug", asobi_site_blog_post_view, blog),
+                dynamic(~"/blog/:slug", asobi_site_blog_post_view, blog),
                 docs(~"/docs", asobi_site_docs_view),
                 docs(~"/docs/quickstart", asobi_site_docs_quickstart_view),
                 docs(~"/docs/samples", asobi_site_docs_samples_view),
@@ -119,11 +122,16 @@ routes(_Environment) ->
                 {~"/robots.txt", fun asobi_site_controller:robots_txt/1, #{methods => [get]}},
                 {~"/sitemap.xml", fun asobi_site_controller:sitemap_xml/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
-            ]
+            ])
         }
     ].
 
 page(Path, View, Active) ->
+    [dynamic(Path, View, Active), markdown(Path, View)].
+
+%% A route whose path carries a binding cannot take a ".md" suffix: cowboy
+%% binds whole segments, so /blog/:slug already swallows "my-post.md".
+dynamic(Path, View, Active) ->
     {Path, fun(Req) -> asobi_site_controller:page(Req, #{view => View, active => Active}) end, #{
         methods => [get]
     }}.
@@ -134,13 +142,26 @@ moved(Path, Location) ->
     }}.
 
 docs(Path, DocView) ->
-    {Path,
-        fun(Req) ->
-            asobi_site_controller:page(Req, #{
-                view => asobi_site_docs_page,
-                active => docs,
-                doc_view => DocView,
-                active_path => Path
-            })
-        end,
-        #{methods => [get]}}.
+    [
+        {Path,
+            fun(Req) ->
+                asobi_site_controller:page(Req, #{
+                    view => asobi_site_docs_page,
+                    active => docs,
+                    doc_view => DocView,
+                    active_path => Path
+                })
+            end,
+            #{methods => [get]}},
+        markdown(Path, DocView)
+    ].
+
+%% "/docs" -> "/docs.md". The view is the page's own view, never the docs
+%% chrome wrapper: sidebar and breadcrumbs are not content.
+markdown(Path, View) ->
+    {md_path(Path), fun(Req) -> asobi_site_controller:markdown(Req, #{view => View}) end, #{
+        methods => [get]
+    }}.
+
+md_path(~"/") -> ~"/index.md";
+md_path(Path) -> <<Path/binary, ".md">>.

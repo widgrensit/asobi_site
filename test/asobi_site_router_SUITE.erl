@@ -23,12 +23,9 @@ all() ->
 
 %%====================================================================
 
-routes() ->
-    [#{routes := Routes}] = asobi_site_router:routes(prod),
-    Routes.
+routes() -> asobi_site_pages:routes().
 
-paths() ->
-    [element(1, R) || R <- routes()].
+paths() -> asobi_site_pages:paths().
 
 no_ws_route(_Config) ->
     Paths = paths(),
@@ -45,14 +42,6 @@ has_core_routes(_Config) ->
 llms_entries() ->
     [E || {_Heading, Entries} <- asobi_site_llms:sections(), E <- Entries].
 
-%% Arity 2, not 1: an exported /1 in a CT suite that is absent from all/0 is
-%% an "unreachable test" to elp lint.
-body(Path, ContentType) ->
-    {_P, Fun, _Opts} = lists:keyfind(Path, 1, routes()),
-    {status, 200, Headers, Body} = Fun(#{}),
-    ?assertEqual(ContentType, maps:get(~"content-type", Headers)),
-    iolist_to_binary(Body).
-
 %% The failure mode this exists to prevent: a page is added, nobody touches
 %% llms.txt, and the index quietly becomes a lie. That is worse than having
 %% no index, because an agent reads it as a complete map and stops looking.
@@ -61,10 +50,14 @@ body(Path, ContentType) ->
 llms_txt_indexes_every_route(_Config) ->
     Indexed = [P || {P, _T, _D} <- llms_entries()],
     Known = Indexed ++ asobi_site_llms:exclusions(),
-    Routed = [P || P <- paths(), is_binary(P)],
+    Routed = [P || P <- paths(), is_binary(P), not asobi_site_pages:is_md(P)],
     ?assertEqual([], [P || P <- Routed, not lists:member(P, Known)]),
     ?assertEqual([], [P || P <- Indexed, not lists:member(P, Routed)]),
-    ?assertEqual([], [P || P <- asobi_site_llms:exclusions(), not lists:member(P, Routed)]).
+    ?assertEqual([], [P || P <- asobi_site_llms:exclusions(), not lists:member(P, Routed)]),
+    %% llms.txt links the .md variant of every entry, so each must resolve.
+    ?assertEqual(
+        [], [P || P <- Indexed, not lists:member(<<P/binary, ".md">>, paths())]
+    ).
 
 %% Titles are what an agent scans to decide whether to fetch, so duplicates
 %% are unroutable - Anthropic's own file ships four "Overview" entries.
@@ -82,23 +75,23 @@ llms_txt_entries_are_well_formed(_Config) ->
 %% page of markup, so assert on the content type and on the body being
 %% markdown rather than markup.
 llms_txt_is_plain_text(_Config) ->
-    Text = body(~"/llms.txt", ~"text/plain; charset=utf-8"),
+    Text = asobi_site_pages:body(~"/llms.txt", ~"text/plain; charset=utf-8"),
     ?assertMatch(<<"# asobi\n\n> ", _/binary>>, Text),
     ?assertEqual(nomatch, binary:match(Text, ~"<")),
     %% Links must be absolute: fetched out of band, a relative path is
     %% unresolvable, which is the commonest defect in the peer corpus.
     ?assertEqual(nomatch, binary:match(Text, ~"](/")),
-    ?assertNotEqual(nomatch, binary:match(Text, ~"](https://asobi.dev/docs/quickstart)")).
+    ?assertNotEqual(nomatch, binary:match(Text, ~"](https://asobi.dev/docs/quickstart.md)")).
 
 robots_txt_points_at_the_sitemap(_Config) ->
-    Text = body(~"/robots.txt", ~"text/plain; charset=utf-8"),
+    Text = asobi_site_pages:body(~"/robots.txt", ~"text/plain; charset=utf-8"),
     ?assertNotEqual(nomatch, binary:match(Text, ~"Sitemap: https://asobi.dev/sitemap.xml")).
 
 %% The sitemap is derived from the router, so this asserts the derivation
 %% rather than a list: every routed page appears exactly once with an
 %% absolute URL, every blog post is expanded, and no non-page leaks in.
 sitemap_covers_every_page(_Config) ->
-    Xml = body(~"/sitemap.xml", ~"application/xml; charset=utf-8"),
+    Xml = asobi_site_pages:body(~"/sitemap.xml", ~"application/xml; charset=utf-8"),
     {match, Matches} = re:run(Xml, ~"<loc>(.*?)</loc>", [global, {capture, all_but_first, binary}]),
     Locs = [L || [L] <- Matches],
     [?assertMatch(<<"https://asobi.dev/", _/binary>>, L) || L <- Locs],

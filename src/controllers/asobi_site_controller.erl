@@ -1,6 +1,15 @@
 -module(asobi_site_controller).
 
--export([page/2, moved/2, heartbeat/1, blog_rss/1, llms_txt/1, robots_txt/1, sitemap_xml/1]).
+-export([
+    page/2,
+    markdown/2,
+    moved/2,
+    heartbeat/1,
+    blog_rss/1,
+    llms_txt/1,
+    robots_txt/1,
+    sitemap_xml/1
+]).
 
 -define(SITE, ~"https://asobi.dev").
 
@@ -22,6 +31,30 @@ page(Req, Spec) ->
     Document = asobi_site_layout:render(#{title => page_title(Bindings), inner_content => Content}),
     Headers = #{~"content-type" => ~"text/html; charset=utf-8"},
     {status, 200, Headers, asobi_site_html:document(Document)}.
+
+%% The .md twin of a page (llmstxt.org v2). Two sources, and which one applies
+%% is a property of the view, not a decision made here:
+%%
+%%   - A generated docs view exports markdown/0 holding the asobi guide it was
+%%     built from. Its render/1 body is one opaque {raw, Html} node, so the
+%%     tree walker cannot read it - and does not need to, because that HTML was
+%%     rendered from exactly this markdown.
+%%   - Every other view is a tuple tree all the way down, which
+%%     asobi_site_markdown walks directly.
+%%
+%% ensure_loaded before function_exported for the same reason render_view/2
+%% does it: under the release's embedded code loading, function_exported/3
+%% answers false for a module that has not been loaded yet.
+-spec markdown(cowboy_req:req(), map()) -> {status, integer(), map(), iodata()}.
+markdown(_Req, #{view := View}) ->
+    _ = code:ensure_loaded(View),
+    Body =
+        case erlang:function_exported(View, markdown, 0) of
+            true -> [View:markdown(), ~"\n"];
+            false -> asobi_site_markdown:render(asobi_site_html:render_view(View, #{id => ~"page"}))
+        end,
+    Headers = #{~"content-type" => ~"text/markdown; charset=utf-8"},
+    {status, 200, Headers, Body}.
 
 slug(Req) ->
     maps:get(~"slug", maps:get(bindings, Req, #{}), ~"").
@@ -158,8 +191,10 @@ render_llms_section({Heading, Entries}) ->
         ~"\n## ",
         Heading,
         ~"\n\n",
+        %% Link the Markdown variant, not the HTML page: an index is only
+        %% worth as much as the thing it points at is worth parsing.
         [
-            [~"- [", Title, ~"](", ?SITE, Path, ~"): ", Description, ~"\n"]
+            [~"- [", Title, ~"](", ?SITE, Path, ~".md): ", Description, ~"\n"]
          || {Path, Title, Description} <- Entries
         ]
     ].
@@ -209,7 +244,14 @@ sitemap_url(Path, Date) ->
 sitemap_paths() ->
     [#{routes := Routes}] = asobi_site_router:routes(prod),
     Paths = [element(1, R) || R <- Routes],
-    lists:sort([P || P <- Paths, is_binary(P), not lists:member(P, non_pages())]).
+    lists:sort([
+        P
+     || P <- Paths, is_binary(P), not lists:member(P, non_pages()), not is_markdown(P)
+    ]).
+
+%% The .md twin is an alternate representation of a page, not a second page.
+%% Listing both would ask every crawler to index the same content twice.
+is_markdown(Path) -> binary:longest_common_suffix([Path, ~".md"]) =:= 3.
 
 %% Routed, but not a page a crawler should index: a health probe, a feed, the
 %% dynamic blog template (expanded per post above), a 301, and the machine
