@@ -18,11 +18,16 @@ router (fun-routes) -> `asobi_site_controller:page/2` -> `asobi_site_page:render
 
 - `src/asobi_site_router.erl` - every route. `page/3` and `docs/2` build fun-routes.
 - `src/controllers/asobi_site_controller.erl` - `page/2` builds bindings and
-  renders page+layout; also `heartbeat/1` and `blog_rss/1`.
+  renders page+layout; also `markdown/2`, `heartbeat/1`, `blog_rss/1`,
+  `llms_txt/1`, `robots_txt/1` and `sitemap_xml/1`.
 - `src/views/asobi_site_page.erl` - wraps each page with the nav + the view.
 - `src/views/asobi_site_layout.erl` - the `<html>` shell (head, fonts, analytics,
   footer, `app.js`).
 - `src/asobi_site_html.erl` - the tuple->HTML renderer (see below).
+- `src/asobi_site_markdown.erl` - its sibling: walks the SAME tuple tree and
+  emits Markdown, for the `.md` twin every page serves. Not a converter; there
+  is no HTML parsing anywhere.
+- `src/asobi_site_llms.erl` - the curated `/llms.txt` index as data.
 - `include/asobi_site_view.hrl` - the `?html/?get/?each/?stateless/?stateful`
   macros every view uses.
 
@@ -51,7 +56,16 @@ Macros (`include/asobi_site_view.hrl`), kept for parity with the old Arizona vie
    `mount/1` if it needs to load data).
 2. Add a route in `asobi_site_router.erl`:
    `page(~"/path", asobi_site_<name>_view, <active>)` (or `docs/2` for docs pages).
-3. `test/asobi_site_router_SUITE.erl` renders every route to a binary - keep it green.
+   Both helpers also emit the `/path.md` twin automatically - do not add one.
+3. **Index it in `src/asobi_site_llms.erl`**, either as a `{Path, Title,
+   Description}` entry under a section or in `exclusions/0` with the reason. CI
+   fails otherwise, by design: a `/llms.txt` that silently stops listing new
+   pages is worse than none, because an agent reads it as a complete map and
+   stops looking.
+4. `test/asobi_site_router_SUITE.erl` renders every route to a binary, and
+   `asobi_site_markdown_SUITE` checks the Markdown twin - keep both green. If
+   the new page uses an HTML tag no page used before, `no_unknown_tags` will
+   fail; teach `asobi_site_markdown` how to render it.
 
 ## Blog
 - `src/views/asobi_site_blog_posts.erl` - posts are Erlang data. `all/0`
@@ -75,6 +89,10 @@ Macros (`include/asobi_site_view.hrl`), kept for parity with the old Arizona vie
   listed in the `.app`. Keep `{modules, []}` in `asobi_site.app.src` and let
   rebar3 auto-populate it from `src/` at build time; a module missing from the
   `.app` raises `undef` at runtime, not a compile error.
+- **elp's parser cannot read a backslash escape inside a `~""` sigil**
+  (`~"\\"`, `~"\n{3,}"`). It reports the whole function as a syntax error and
+  silently drops that module from lint coverage. Use `$\\` character literals
+  or a plain `"..."` string there instead.
 - **A local `rebar3 compile` cannot catch a missing Dockerfile `COPY`.** When the
   deploy is the problem, build and run the real release image
   (`docker build` + `docker run`, then curl the pages), not just `rebar3 compile`.
@@ -99,8 +117,15 @@ docker run -d -p 8090:8080 asobi_site && curl -s localhost:8090/   # smoke test
   on `Taure/erlang-ci`. Never push to `main`.
 
 ## Deploy (summary; full detail in DEPLOY.md)
-Clever Cloud **source-builds the multi-stage `Dockerfile` from the repo** on each
-deploy. GitHub Actions also publishes the same image to GHCR
-(`docker-publish.yml`) as an artifact mirror - but **that is not the Clever deploy
-path**. **There is no auto-deploy**: merging to `main` does not update prod. Trigger
-a Clever redeploy (or wire the GHCR `Packages` webhook), or prod silently goes stale.
+Hetzner k3s, same cluster as asobi_saas. Manifests in `deploy/k8s/`. Pushing to
+`main` runs `docker-publish.yml`, which pushes the image to GHCR - and that IS
+the deploy artifact, but publishing it does not roll it. **There is no
+auto-deploy**: merging to `main` does not update prod. Roll it yourself, or prod
+silently goes stale:
+
+```
+kubectl --kubeconfig ~/.kube/asobi.yaml -n asobi rollout restart deploy/asobi-site
+```
+
+The site moved off Clever Cloud on 2026-07-23 and the Clever application is
+deleted; ignore any older instruction to trigger a Clever redeploy.
