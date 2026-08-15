@@ -115,6 +115,9 @@ routes(_Environment) ->
                 page(~"/cloud-terms", asobi_site_cloud_terms_view, none),
                 page(~"/refunds", asobi_site_refunds_view, none),
                 {~"/heartbeat", fun asobi_site_controller:heartbeat/1, #{methods => [get]}},
+                {~"/llms.txt", fun asobi_site_controller:llms_txt/1, #{methods => [get]}},
+                {~"/robots.txt", fun asobi_site_controller:robots_txt/1, #{methods => [get]}},
+                {~"/sitemap.xml", fun asobi_site_controller:sitemap_xml/1, #{methods => [get]}},
                 {"/assets/[...]", "static/assets"}
             ]
         }

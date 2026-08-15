@@ -1,6 +1,8 @@
 -module(asobi_site_controller).
 
--export([page/2, moved/2, heartbeat/1, blog_rss/1]).
+-export([page/2, moved/2, heartbeat/1, blog_rss/1, llms_txt/1, robots_txt/1, sitemap_xml/1]).
+
+-define(SITE, ~"https://asobi.dev").
 
 -spec page(cowboy_req:req(), map()) -> {status, 200, map(), iodata()}.
 page(Req, Spec) ->
@@ -133,6 +135,95 @@ month_name(9) -> "Sep";
 month_name(10) -> "Oct";
 month_name(11) -> "Nov";
 month_name(12) -> "Dec".
+
+%% /llms.txt - https://llmstxt.org. A curated index for coding agents, not a
+%% crawler hint: Google documents that Search ignores this file entirely.
+%% Content lives in asobi_site_llms; this only formats it.
+-spec llms_txt(cowboy_req:req()) -> {status, integer(), map(), iodata()}.
+llms_txt(_Req) ->
+    Headers = #{~"content-type" => ~"text/plain; charset=utf-8"},
+    {status, 200, Headers, render_llms()}.
+
+render_llms() ->
+    [
+        ~"# asobi\n\n",
+        [[~"> ", Line, ~"\n"] || Line <- asobi_site_llms:summary()],
+        ~"\nNotes for agents:\n\n",
+        [[~"- ", Note, ~"\n"] || Note <- asobi_site_llms:notes()],
+        [render_llms_section(S) || S <- asobi_site_llms:sections()]
+    ].
+
+render_llms_section({Heading, Entries}) ->
+    [
+        ~"\n## ",
+        Heading,
+        ~"\n\n",
+        [
+            [~"- [", Title, ~"](", ?SITE, Path, ~"): ", Description, ~"\n"]
+         || {Path, Title, Description} <- Entries
+        ]
+    ].
+
+%% /robots.txt. Deliberately permissive: the only job it does here is point
+%% crawlers at the sitemap, which is the one file search engines document
+%% consuming. Declaring an AI-training policy is a separate decision.
+-spec robots_txt(cowboy_req:req()) -> {status, integer(), map(), iodata()}.
+robots_txt(_Req) ->
+    Headers = #{~"content-type" => ~"text/plain; charset=utf-8"},
+    Body = [
+        ~"User-agent: *\n",
+        ~"Allow: /\n\n",
+        ~"Sitemap: ",
+        ?SITE,
+        ~"/sitemap.xml\n"
+    ],
+    {status, 200, Headers, Body}.
+
+%% /sitemap.xml. Derived from the router rather than a second hand-kept list,
+%% so a page cannot be added to the site and silently miss the sitemap.
+-spec sitemap_xml(cowboy_req:req()) -> {status, integer(), map(), iodata()}.
+sitemap_xml(_Req) ->
+    Headers = #{~"content-type" => ~"application/xml; charset=utf-8"},
+    {status, 200, Headers, render_sitemap()}.
+
+render_sitemap() ->
+    [
+        ~"<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n",
+        ~"<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n",
+        [sitemap_url(P, undefined) || P <- sitemap_paths()],
+        [
+            sitemap_url(<<"/blog/", Slug/binary>>, Date)
+         || #{slug := Slug, date := Date} <- asobi_site_blog_posts:all()
+        ],
+        ~"</urlset>\n"
+    ].
+
+sitemap_url(Path, Date) ->
+    LastMod =
+        case Date of
+            undefined -> [];
+            _ -> [~"<lastmod>", Date, ~"</lastmod>"]
+        end,
+    [~"<url><loc>", ?SITE, xml_escape(Path), ~"</loc>", LastMod, ~"</url>\n"].
+
+sitemap_paths() ->
+    [#{routes := Routes}] = asobi_site_router:routes(prod),
+    Paths = [element(1, R) || R <- Routes],
+    lists:sort([P || P <- Paths, is_binary(P), not lists:member(P, non_pages())]).
+
+%% Routed, but not a page a crawler should index: a health probe, a feed, the
+%% dynamic blog template (expanded per post above), a 301, and the machine
+%% files themselves.
+non_pages() ->
+    [
+        ~"/heartbeat",
+        ~"/blog/rss.xml",
+        ~"/blog/:slug",
+        ~"/docs/erlang/getting-started",
+        ~"/llms.txt",
+        ~"/robots.txt",
+        ~"/sitemap.xml"
+    ].
 
 xml_escape(Bin) when is_binary(Bin) ->
     binary:replace(

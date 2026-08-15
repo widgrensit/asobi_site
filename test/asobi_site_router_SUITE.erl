@@ -13,7 +13,12 @@ all() ->
         has_core_routes,
         renders_all_routes,
         blog_post_runs_mount,
-        erlang_getting_started_redirects
+        erlang_getting_started_redirects,
+        llms_txt_indexes_every_route,
+        llms_txt_entries_are_well_formed,
+        llms_txt_is_plain_text,
+        robots_txt_points_at_the_sitemap,
+        sitemap_covers_every_page
     ].
 
 %%====================================================================
@@ -32,7 +37,82 @@ no_ws_route(_Config) ->
 
 has_core_routes(_Config) ->
     Paths = paths(),
-    [?assert(lists:member(P, Paths)) || P <- [~"/", ~"/heartbeat", ~"/docs"]].
+    [
+        ?assert(lists:member(P, Paths))
+     || P <- [~"/", ~"/heartbeat", ~"/docs", ~"/llms.txt", ~"/robots.txt", ~"/sitemap.xml"]
+    ].
+
+llms_entries() ->
+    [E || {_Heading, Entries} <- asobi_site_llms:sections(), E <- Entries].
+
+%% Arity 2, not 1: an exported /1 in a CT suite that is absent from all/0 is
+%% an "unreachable test" to elp lint.
+body(Path, ContentType) ->
+    {_P, Fun, _Opts} = lists:keyfind(Path, 1, routes()),
+    {status, 200, Headers, Body} = Fun(#{}),
+    ?assertEqual(ContentType, maps:get(~"content-type", Headers)),
+    iolist_to_binary(Body).
+
+%% The failure mode this exists to prevent: a page is added, nobody touches
+%% llms.txt, and the index quietly becomes a lie. That is worse than having
+%% no index, because an agent reads it as a complete map and stops looking.
+%% Every routed path must be indexed or explicitly excluded, and nothing may
+%% be indexed that is no longer routed.
+llms_txt_indexes_every_route(_Config) ->
+    Indexed = [P || {P, _T, _D} <- llms_entries()],
+    Known = Indexed ++ asobi_site_llms:exclusions(),
+    Routed = [P || P <- paths(), is_binary(P)],
+    ?assertEqual([], [P || P <- Routed, not lists:member(P, Known)]),
+    ?assertEqual([], [P || P <- Indexed, not lists:member(P, Routed)]),
+    ?assertEqual([], [P || P <- asobi_site_llms:exclusions(), not lists:member(P, Routed)]).
+
+%% Titles are what an agent scans to decide whether to fetch, so duplicates
+%% are unroutable - Anthropic's own file ships four "Overview" entries.
+%% A missing description is a link that costs a fetch to evaluate.
+llms_txt_entries_are_well_formed(_Config) ->
+    Entries = llms_entries(),
+    Titles = [T || {_P, T, _D} <- Entries],
+    ?assertEqual(lists:usort(Titles), lists:sort(Titles)),
+    ?assertEqual([], [P || {P, _T, D} <- Entries, D =:= ~""]),
+    ?assertEqual([], [P || {P, T, _D} <- Entries, T =:= ~""]),
+    [?assertMatch(<<"/", _/binary>>, P) || {P, _T, _D} <- Entries].
+
+%% Three sites in the peer corpus answer /llms.txt with HTTP 200 and an HTML
+%% body. A soft 404 passes every status-only audit while feeding an agent a
+%% page of markup, so assert on the content type and on the body being
+%% markdown rather than markup.
+llms_txt_is_plain_text(_Config) ->
+    Text = body(~"/llms.txt", ~"text/plain; charset=utf-8"),
+    ?assertMatch(<<"# asobi\n\n> ", _/binary>>, Text),
+    ?assertEqual(nomatch, binary:match(Text, ~"<")),
+    %% Links must be absolute: fetched out of band, a relative path is
+    %% unresolvable, which is the commonest defect in the peer corpus.
+    ?assertEqual(nomatch, binary:match(Text, ~"](/")),
+    ?assertNotEqual(nomatch, binary:match(Text, ~"](https://asobi.dev/docs/quickstart)")).
+
+robots_txt_points_at_the_sitemap(_Config) ->
+    Text = body(~"/robots.txt", ~"text/plain; charset=utf-8"),
+    ?assertNotEqual(nomatch, binary:match(Text, ~"Sitemap: https://asobi.dev/sitemap.xml")).
+
+%% The sitemap is derived from the router, so this asserts the derivation
+%% rather than a list: every routed page appears exactly once with an
+%% absolute URL, every blog post is expanded, and no non-page leaks in.
+sitemap_covers_every_page(_Config) ->
+    Xml = body(~"/sitemap.xml", ~"application/xml; charset=utf-8"),
+    {match, Matches} = re:run(Xml, ~"<loc>(.*?)</loc>", [global, {capture, all_but_first, binary}]),
+    Locs = [L || [L] <- Matches],
+    [?assertMatch(<<"https://asobi.dev/", _/binary>>, L) || L <- Locs],
+    ?assertEqual(lists:usort(Locs), lists:sort(Locs)),
+    [
+        ?assert(lists:member(<<"https://asobi.dev", P/binary>>, Locs))
+     || P <- [~"/", ~"/docs", ~"/docs/quickstart", ~"/cloud", ~"/privacy"]
+    ],
+    [
+        ?assertNot(lists:member(<<"https://asobi.dev", P/binary>>, Locs))
+     || P <- [~"/heartbeat", ~"/blog/:slug", ~"/sitemap.xml", ~"/docs/erlang/getting-started"]
+    ],
+    Slug = maps:get(slug, hd(asobi_site_blog_posts:all())),
+    ?assert(lists:member(<<"https://asobi.dev/blog/", Slug/binary>>, Locs)).
 
 %% Every routed controller must return valid iodata - the missing-binding
 %% crash that took the site down on /blog/:slug renders fine here.
