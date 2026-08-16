@@ -360,8 +360,9 @@ because a guest has none.</p>
 </code></pre>
 <p>It is the only erasure path that needs no operator credential at all - the
 player's own token is the authority. A cloud tenant reaches the ops erasure
-routes as well, through a console token minted for an <code>owner</code> or <code>admin</code>; what
-stays out of reach there is <code>guest_reap_after</code>, which is an operator key.</p>
+routes as well, through a console token minted for an <code>owner</code> or <code>admin</code>, and
+sets <code>guest_reap_after</code> from the environment's <strong>Guests</strong> picker on the
+dashboard.</p>
 <p><strong>A device secret is now a destruction credential, not just an impersonation
 one.</strong> Anyone holding it can resume the account and erase it, with no password
 to stop them, because there is no password. That is a deliberate trade - the
@@ -957,8 +958,9 @@ curl -X POST http://localhost:8084/api/v1/players/me/erase \
 
 It is the only erasure path that needs no operator credential at all - the
 player's own token is the authority. A cloud tenant reaches the ops erasure
-routes as well, through a console token minted for an `owner` or `admin`; what
-stays out of reach there is `guest_reap_after`, which is an operator key.
+routes as well, through a console token minted for an `owner` or `admin`, and
+sets `guest_reap_after` from the environment's **Guests** picker on the
+dashboard.
 
 **A device secret is now a destruction credential, not just an impersonation
 one.** Anyone holding it can resume the account and erase it, with no password
