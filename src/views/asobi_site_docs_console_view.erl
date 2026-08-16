@@ -36,9 +36,10 @@ managed environment has a second credential - see
 needs <code>ops_token_secret</code> and <code>env_id</code>, neither set by default.)</p>
 <p>The two look coupled because enabling the console with neither credential
 configured turns the console back off, below.</p>
-<p>This plane is reads plus account lifecycle - erasing and exporting one player.
-If you came here for moderation actions, skip to
-<a href="#what-it-cannot-do">What it cannot do</a> first.</p>
+<p>This plane is reads plus account lifecycle - erasing and exporting one player,
+and erasing the unclaimed-guest cohort. If you came here for moderation
+actions, skip to <a href="#what-it-cannot-do">What it cannot do</a> first; if you came to
+delete somebody, <a href="#erasing-from-the-console">Erasing from the console</a>.</p>
 <h2 id="turning-it-on" tabindex="-1">Turning it on</h2>
 <p>Two settings. The console flag, and a credential for it to check.</p>
 <p>In the image, both come from the environment:</p>
@@ -146,12 +147,15 @@ and per boot. Restarting a node signs everyone out of it, and that is the
 correct coupling rather than a gap - it is also the only revocation a session
 has apart from logging out.</p>
 <h2 id="what-the-console-shows" tabindex="-1">What the console shows</h2>
-<p>Nine screens, all of them reads:</p>
+<p>Nine screens. Every one of them reads; two of them also erase, for a session
+holding <code>erasure</code>:</p>
 <ul>
 <li><strong>Overview</strong> - online players, node version, queue depth, installed
 extensions, and the runtime panel from <code>/api/v1/ops/stats</code>, polled every two
 seconds.</li>
-<li><strong>Players</strong> - the player list, searchable across username and display name.</li>
+<li><strong>Players</strong> - the player list, searchable across username and display name,
+narrowable to unclaimed guests, and the place the guest purge is run from.
+One player is erased from their own detail page.</li>
 <li><strong>Matches</strong> - the recorded match history, with the game-authored result on
 the detail page. Core writes one row per match when it finishes, so every row
 reads <code>finished</code> whatever the status filter offers.</li>
@@ -173,20 +177,47 @@ a process is actually behind an <code>active</code> row.</li>
 plane.</li>
 <li>The players screen shows the ops projection only: <code>id</code>, <code>username</code>,
 <code>display_name</code>, <code>avatar_url</code>, <code>metadata</code>, <code>inserted_at</code>, <code>updated_at</code>. No
-linked providers, no guest status, no device verifiers.</li>
+linked providers, no guest status, no device verifiers. The list can be
+<em>narrowed</em> to unclaimed guests with <code>?guest=true</code>, but no row says which it
+is; the filter is a set, not a column.</li>
 <li>The matches screen is the <strong>finished-match record</strong>. Live matches are visible
 only through the player-facing <code>GET /api/v1/matches/live</code>.</li>
 </ul>
-<h2 id="what-it-cannot-do" tabindex="-1">What it cannot do</h2>
-<p>Core's ops routes are reads apart from two account-lifecycle routes:</p>
+<h2 id="erasing-from-the-console" tabindex="-1">Erasing from the console</h2>
+<p>Core's ops routes are reads apart from three account-lifecycle routes:</p>
 <pre><code>GET  /api/v1/ops/players/:id/export     Everything held about one player
 POST /api/v1/ops/players/:id/erase      Delete one player. Irreversible.
+POST /api/v1/ops/players/guests/purge   Delete abandoned guests. Irreversible.
 </code></pre>
-<p>Both are covered in
+<p>All three are covered in
 <a href="/docs/protocols/rest#erasing-and-exporting-a-player">Erasing and exporting a player</a>.
 They exist because an operator must be able to answer a deletion or access
 request without a database shell, and because an Apache-2 self-hoster
 otherwise inherits an obligation the library gives them no way to discharge.</p>
+<p>The two erasures have screens. Both are collapsed until asked for, both sit
+below everything else on their screen, and <strong>neither renders at all unless the
+session holds <code>erasure</code></strong> - which a console session does not by default. Where
+the controls would be, a session without the class gets a note saying so and
+naming <code>console_erasure</code>, because a button that is simply absent is
+indistinguishable from a console that cannot do it.</p>
+<ul>
+<li><strong>One player</strong>, from their detail page: confirm by typing the username. The
+route checks that echo against the row, so the field is the guard and not a
+formality, and the console returns to the list rather than re-reading a
+record that is gone.</li>
+<li><strong>The unclaimed-guest cohort</strong>, from the bottom of the players screen: choose
+a window, count the cohort, then erase exactly the number that was counted.
+No window is preselected, because <code>inactive_for_seconds</code> has no server-side
+default and an unattended purge must never be one click away. The count is
+discarded whenever the window changes, whenever a batch completes, and
+whenever the server disagrees with it - each of those means the cohort moved.</li>
+</ul>
+<p>A purge returns a batch, not a completion. The console offers the next batch
+<strong>only when the last one deleted something</strong>, never on <code>remaining</code> being above
+zero: a player who could not be erased is still unclaimed and still matches, so
+they are re-selected every call and a loop watching <code>remaining</code> would never
+finish. A batch that deleted nothing and failed some says so and stops.</p>
+<h2 id="what-it-cannot-do" tabindex="-1">What it cannot do</h2>
 <p>Everything else is still absent: no ban, no grant, no refund, no broadcast, no
 ticket cancel and no match end. If you arrived expecting Nakama Console,
 PlayFab Game Manager or the Hathora console, that expectation gap is real and
@@ -361,9 +392,10 @@ needs `ops_token_secret` and `env_id`, neither set by default.)
 The two look coupled because enabling the console with neither credential
 configured turns the console back off, below.
 
-This plane is reads plus account lifecycle - erasing and exporting one player.
-If you came here for moderation actions, skip to
-[What it cannot do](#what-it-cannot-do) first.
+This plane is reads plus account lifecycle - erasing and exporting one player,
+and erasing the unclaimed-guest cohort. If you came here for moderation
+actions, skip to [What it cannot do](#what-it-cannot-do) first; if you came to
+delete somebody, [Erasing from the console](#erasing-from-the-console).
 
 ## Turning it on
 
@@ -479,12 +511,15 @@ has apart from logging out.
 
 ## What the console shows
 
-Nine screens, all of them reads:
+Nine screens. Every one of them reads; two of them also erase, for a session
+holding `erasure`:
 
 - **Overview** - online players, node version, queue depth, installed
   extensions, and the runtime panel from `/api/v1/ops/stats`, polled every two
   seconds.
-- **Players** - the player list, searchable across username and display name.
+- **Players** - the player list, searchable across username and display name,
+  narrowable to unclaimed guests, and the place the guest purge is run from.
+  One player is erased from their own detail page.
 - **Matches** - the recorded match history, with the game-authored result on
   the detail page. Core writes one row per match when it finishes, so every row
   reads `finished` whatever the status filter offers.
@@ -506,24 +541,53 @@ What a reader arriving from another console will look for and not find:
   plane.
 - The players screen shows the ops projection only: `id`, `username`,
   `display_name`, `avatar_url`, `metadata`, `inserted_at`, `updated_at`. No
-  linked providers, no guest status, no device verifiers.
+  linked providers, no guest status, no device verifiers. The list can be
+  *narrowed* to unclaimed guests with `?guest=true`, but no row says which it
+  is; the filter is a set, not a column.
 - The matches screen is the **finished-match record**. Live matches are visible
   only through the player-facing `GET /api/v1/matches/live`.
 
-## What it cannot do
+## Erasing from the console
 
-Core's ops routes are reads apart from two account-lifecycle routes:
+Core's ops routes are reads apart from three account-lifecycle routes:
 
 ```
 GET  /api/v1/ops/players/:id/export     Everything held about one player
 POST /api/v1/ops/players/:id/erase      Delete one player. Irreversible.
+POST /api/v1/ops/players/guests/purge   Delete abandoned guests. Irreversible.
 ```
 
-Both are covered in
+All three are covered in
 [Erasing and exporting a player](https://asobi.dev/docs/protocols/rest#erasing-and-exporting-a-player).
 They exist because an operator must be able to answer a deletion or access
 request without a database shell, and because an Apache-2 self-hoster
 otherwise inherits an obligation the library gives them no way to discharge.
+
+The two erasures have screens. Both are collapsed until asked for, both sit
+below everything else on their screen, and **neither renders at all unless the
+session holds `erasure`** - which a console session does not by default. Where
+the controls would be, a session without the class gets a note saying so and
+naming `console_erasure`, because a button that is simply absent is
+indistinguishable from a console that cannot do it.
+
+- **One player**, from their detail page: confirm by typing the username. The
+  route checks that echo against the row, so the field is the guard and not a
+  formality, and the console returns to the list rather than re-reading a
+  record that is gone.
+- **The unclaimed-guest cohort**, from the bottom of the players screen: choose
+  a window, count the cohort, then erase exactly the number that was counted.
+  No window is preselected, because `inactive_for_seconds` has no server-side
+  default and an unattended purge must never be one click away. The count is
+  discarded whenever the window changes, whenever a batch completes, and
+  whenever the server disagrees with it - each of those means the cohort moved.
+
+A purge returns a batch, not a completion. The console offers the next batch
+**only when the last one deleted something**, never on `remaining` being above
+zero: a player who could not be erased is still unclaimed and still matches, so
+they are re-selected every call and a loop watching `remaining` would never
+finish. A batch that deleted nothing and failed some says so and stops.
+
+## What it cannot do
 
 Everything else is still absent: no ban, no grant, no refund, no broadcast, no
 ticket cancel and no match end. If you arrived expecting Nakama Console,
