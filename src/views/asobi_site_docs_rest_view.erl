@@ -339,6 +339,8 @@ GET /api/v1/ops/notifications                Paginated sent notifications
 
 GET  /api/v1/ops/players/:id/export          Everything held about one player
 POST /api/v1/ops/players/:id/erase           Delete one player. Irreversible.
+POST /api/v1/ops/players/guests/purge        Delete abandoned guests in bulk.
+                                             Irreversible.
 
 GET|POST|PUT|DELETE
     /api/v1/ops/ext/:extension/:action       Dispatch to an installed extension
@@ -346,8 +348,9 @@ GET|POST|PUT|DELETE
 <p>The game-operations plane, for a console rather than a game client. The lists
 differ from the ones above in three ways: they report a total, they accept a
 sort, and they page by offset.</p>
-<p>Everything here is a read except two account-lifecycle routes - see
-<a href="#erasing-and-exporting-a-player">Erasing and exporting a player</a> - and
+<p>Everything here is a read except three account-lifecycle routes - see
+<a href="#erasing-and-exporting-a-player">Erasing and exporting a player</a> and
+<a href="#purging-abandoned-guests">Purging abandoned guests</a> - and
 <code>/api/v1/ops/ext/:extension/:action</code>, whose behaviour comes from an installed
 extension.</p>
 <p>These routes do <strong>not</strong> accept player tokens. They are their own auth plane -
@@ -533,7 +536,9 @@ subsequent <code>401</code> as &quot;it worked&quot;, not as &quot;sign in again
 </tbody>
 </table>
 <p><code>ops/players</code> sorts on <code>id</code>, <code>username</code>, <code>display_name</code>, <code>inserted_at</code>,
-<code>updated_at</code>, and searches username and display name. <code>ops/matches</code> sorts on
+<code>updated_at</code>, searches username and display name, and filters on <code>guest</code>
+(<code>true</code> narrows to unclaimed guests, <code>false</code> to everyone else - the same set
+<a href="#purging-abandoned-guests">the purge</a> deletes from). <code>ops/matches</code> sorts on
 <code>id</code>, <code>mode</code>, <code>status</code>, <code>started_at</code>, <code>finished_at</code>, <code>inserted_at</code>, filters on
 <code>mode</code> and <code>status</code>, and searches mode. Both return the same fields as their
 public counterparts - no roster, no credentials.</p>
@@ -812,10 +817,97 @@ remote shell can call the same function, and it is the same code path:</p>
 2&gt; asobi_player_export:run(~&quot;019f...&quot;).
 {ok,#{player =&gt; #{...}, wallets =&gt; [...], ...}}
 </code></pre>
-<p>There is no player-facing self-delete. Whether players may erase themselves is
-a support-load and abuse decision belonging to the game - it turns an account
-takeover into an account destruction - so asobi gives the operator the
-primitive and the game decides whether to expose it.</p>
+<p>The player-facing counterpart is
+<a href="#erasing-your-own-account"><code>POST /api/v1/players/me/erase</code></a>, which runs the
+same deletion on the caller's own account. Whether a game puts a button on it
+is the game's decision - it turns an account takeover into an account
+destruction - so asobi ships both the operator primitive and the self-service
+route and leaves the product call to the game.</p>
+<h3 id="purging-abandoned-guests" tabindex="-1">Purging abandoned guests</h3>
+<pre><code>POST /api/v1/ops/players/guests/purge
+</code></pre>
+<p>The bulk form of the erasure above, for the deployment whose <code>players</code> table
+has filled up with devices that signed in once and never came back. Class
+<code>erasure</code>, the same as the single delete: a credential trusted to erase one
+player is trusted to erase a cohort.</p>
+<p>It selects <strong>unclaimed guests</strong> - no password, at least one <code>guest</code> identity,
+no identity of any other provider - whose guest identity has not been touched
+since the cutoff. A player who claimed their guest account or linked an OAuth
+provider fails that predicate and is unreachable here.</p>
+<p>Two things have to be named before anything is deleted. <code>inactive_for_seconds</code>
+has no default, so an empty POST selects nothing and answers
+<code>400 ops.invalid_cutoff</code>. And <code>confirm_count</code> is required on any call that is
+not a dry run, so a request that names a cutoff but no count answers
+<code>400 ops.confirmation_required</code>. The single erase is guarded by echoing a
+username nobody can know without looking at the row; a cohort echoes its size
+instead, which nobody can know without running the preview. An unattended
+request is never sufficient, and the larger blast radius does not get the
+weaker guard.</p>
+<p>Preview first - it counts and deletes nothing, and it is where the
+<code>confirm_count</code> for the real call comes from:</p>
+<pre><code class="language-bash">curl -X POST \
+  -H &quot;Authorization: Bearer $ASOBI_OPS_SECRET&quot; \
+  -H 'Content-Type: application/json' \
+  -d '{&quot;inactive_for_seconds&quot;: 2592000, &quot;dry_run&quot;: true}' \
+  https://game.example.com/api/v1/ops/players/guests/purge
+</code></pre>
+<pre><code class="language-json">{&quot;data&quot;: {&quot;matched&quot;: 14032, &quot;deleted&quot;: 0, &quot;skipped&quot;: 0, &quot;failed&quot;: 0, &quot;remaining&quot;: 14032, &quot;dry_run&quot;: true}}
+</code></pre>
+<p>Then delete, echoing that count back. One call erases at most <code>limit</code> players
+(default 500, ceiling 5000) so a request is never held open across an unbounded
+table:</p>
+<pre><code class="language-bash">curl -X POST \
+  -H &quot;Authorization: Bearer $ASOBI_OPS_SECRET&quot; \
+  -H 'Content-Type: application/json' \
+  -d '{&quot;inactive_for_seconds&quot;: 2592000, &quot;confirm_count&quot;: 14032, &quot;limit&quot;: 500}' \
+  https://game.example.com/api/v1/ops/players/guests/purge
+</code></pre>
+<pre><code class="language-json">{&quot;data&quot;: {&quot;matched&quot;: 14032, &quot;deleted&quot;: 500, &quot;skipped&quot;: 0, &quot;failed&quot;: 0, &quot;remaining&quot;: 13532, &quot;dry_run&quot;: false}}
+</code></pre>
+<p><strong>Loop while <code>deleted</code> is above zero, not until <code>remaining</code> reaches it.</strong> A
+player who cannot be erased is still unclaimed, still matches the predicate,
+and is selected again by the next call, so they never leave <code>remaining</code> and a
+loop waiting for zero would not terminate. A call that deleted nothing and
+reports <code>failed</code> above zero is that cohort; the reason is in the server log and
+in the audit row.</p>
+<p><code>confirm_count</code> refuses the call with <code>409 ops.purge_count_mismatch</code> unless the
+server counts exactly that many right now. A live game minting guests will move
+under it between the preview and the delete, which is the point: re-preview and
+re-confirm rather than deleting a set nobody has looked at.</p>
+<p>To clear <strong>every</strong> guest, including the one that signed in a second ago, pass
+<code>inactive_for_seconds: 0</code>. On a game whose onboarding is guest-first that is
+the entire player base, which is why it has to be typed rather than defaulted
+to - and why the count has to be echoed too.</p>
+<p>Each player is erased in its own transaction, through the same delete sequence
+and the same severed tables as the single erase, and the unclaimed check is
+re-run inside that transaction. The two non-deleted outcomes are reported
+separately because they ask for opposite responses:</p>
+<ul>
+<li><code>skipped</code> - a guest who called <code>/auth/guest/upgrade</code> between the select and
+their own delete. Nothing went wrong, the answer changed, and they have left
+the set.</li>
+<li><code>failed</code> - the erasure did not commit, most often because an extension left
+orphaned rows behind. Something is wrong, they are still in the set, and the
+next call will select them again.</li>
+</ul>
+<p>One audit row covers the batch, carrying every erased id and, for each player
+that was not erased, the reason it actually had.</p>
+<p>This is the on-demand half of guest retention. The automatic half is
+<code>guest_reap_after</code>, a background sweep that never runs unless the server sets
+it - see <a href="/docs/configuration">Configuration</a>. A deployment that sets neither
+keeps its guests forever.</p>
+<p>The same predicate narrows the player list, so an operator can look at the
+cohort before deleting it:</p>
+<pre><code class="language-bash">curl -H &quot;Authorization: Bearer $ASOBI_OPS_SECRET&quot; \
+  &quot;https://game.example.com/api/v1/ops/players?guest=true&amp;limit=20&quot;
+</code></pre>
+<p><code>?guest=false</code> is everyone else. The rows themselves still carry no guest
+column - the filter is a set, not a field.</p>
+<p>From a remote shell it is the same code path, with no HTTP involved:</p>
+<pre><code class="language-erlang">1&gt; Cutoff = asobi_guest_purge:cutoff(2592000).
+2&gt; asobi_guest_purge:count(Cutoff).
+{ok,14032}
+</code></pre>
 <h3 id="console-session" tabindex="-1">Console session</h3>
 <p>A browser has a second transport for the same credential. These three routes
 are outside <code>/api/v1</code> and are not themselves behind the ops credential - the
@@ -1358,6 +1450,8 @@ GET /api/v1/ops/notifications                Paginated sent notifications
 
 GET  /api/v1/ops/players/:id/export          Everything held about one player
 POST /api/v1/ops/players/:id/erase           Delete one player. Irreversible.
+POST /api/v1/ops/players/guests/purge        Delete abandoned guests in bulk.
+                                             Irreversible.
 
 GET|POST|PUT|DELETE
     /api/v1/ops/ext/:extension/:action       Dispatch to an installed extension
@@ -1367,8 +1461,9 @@ The game-operations plane, for a console rather than a game client. The lists
 differ from the ones above in three ways: they report a total, they accept a
 sort, and they page by offset.
 
-Everything here is a read except two account-lifecycle routes - see
-[Erasing and exporting a player](#erasing-and-exporting-a-player) - and
+Everything here is a read except three account-lifecycle routes - see
+[Erasing and exporting a player](#erasing-and-exporting-a-player) and
+[Purging abandoned guests](#purging-abandoned-guests) - and
 `/api/v1/ops/ext/:extension/:action`, whose behaviour comes from an installed
 extension.
 
@@ -1510,7 +1605,9 @@ subsequent `401` as "it worked", not as "sign in again".
 | `500`  | `player.erase_failed` | The transaction rolled back. Nothing was deleted | and matches
 
 `ops/players` sorts on `id`, `username`, `display_name`, `inserted_at`,
-`updated_at`, and searches username and display name. `ops/matches` sorts on
+`updated_at`, searches username and display name, and filters on `guest`
+(`true` narrows to unclaimed guests, `false` to everyone else - the same set
+[the purge](#purging-abandoned-guests) deletes from). `ops/matches` sorts on
 `id`, `mode`, `status`, `started_at`, `finished_at`, `inserted_at`, filters on
 `mode` and `status`, and searches mode. Both return the same fields as their
 public counterparts - no roster, no credentials.
@@ -1878,10 +1975,125 @@ remote shell can call the same function, and it is the same code path:
 {ok,#{player => #{...}, wallets => [...], ...}}
 ```
 
-There is no player-facing self-delete. Whether players may erase themselves is
-a support-load and abuse decision belonging to the game - it turns an account
-takeover into an account destruction - so asobi gives the operator the
-primitive and the game decides whether to expose it.
+The player-facing counterpart is
+[`POST /api/v1/players/me/erase`](#erasing-your-own-account), which runs the
+same deletion on the caller's own account. Whether a game puts a button on it
+is the game's decision - it turns an account takeover into an account
+destruction - so asobi ships both the operator primitive and the self-service
+route and leaves the product call to the game.
+
+### Purging abandoned guests
+
+```
+POST /api/v1/ops/players/guests/purge
+```
+
+The bulk form of the erasure above, for the deployment whose `players` table
+has filled up with devices that signed in once and never came back. Class
+`erasure`, the same as the single delete: a credential trusted to erase one
+player is trusted to erase a cohort.
+
+It selects **unclaimed guests** - no password, at least one `guest` identity,
+no identity of any other provider - whose guest identity has not been touched
+since the cutoff. A player who claimed their guest account or linked an OAuth
+provider fails that predicate and is unreachable here.
+
+Two things have to be named before anything is deleted. `inactive_for_seconds`
+has no default, so an empty POST selects nothing and answers
+`400 ops.invalid_cutoff`. And `confirm_count` is required on any call that is
+not a dry run, so a request that names a cutoff but no count answers
+`400 ops.confirmation_required`. The single erase is guarded by echoing a
+username nobody can know without looking at the row; a cohort echoes its size
+instead, which nobody can know without running the preview. An unattended
+request is never sufficient, and the larger blast radius does not get the
+weaker guard.
+
+Preview first - it counts and deletes nothing, and it is where the
+`confirm_count` for the real call comes from:
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $ASOBI_OPS_SECRET" \
+  -H 'Content-Type: application/json' \
+  -d '{"inactive_for_seconds": 2592000, "dry_run": true}' \
+  https://game.example.com/api/v1/ops/players/guests/purge
+```
+
+```json
+{"data": {"matched": 14032, "deleted": 0, "skipped": 0, "failed": 0, "remaining": 14032, "dry_run": true}}
+```
+
+Then delete, echoing that count back. One call erases at most `limit` players
+(default 500, ceiling 5000) so a request is never held open across an unbounded
+table:
+
+```bash
+curl -X POST \
+  -H "Authorization: Bearer $ASOBI_OPS_SECRET" \
+  -H 'Content-Type: application/json' \
+  -d '{"inactive_for_seconds": 2592000, "confirm_count": 14032, "limit": 500}' \
+  https://game.example.com/api/v1/ops/players/guests/purge
+```
+
+```json
+{"data": {"matched": 14032, "deleted": 500, "skipped": 0, "failed": 0, "remaining": 13532, "dry_run": false}}
+```
+
+**Loop while `deleted` is above zero, not until `remaining` reaches it.** A
+player who cannot be erased is still unclaimed, still matches the predicate,
+and is selected again by the next call, so they never leave `remaining` and a
+loop waiting for zero would not terminate. A call that deleted nothing and
+reports `failed` above zero is that cohort; the reason is in the server log and
+in the audit row.
+
+`confirm_count` refuses the call with `409 ops.purge_count_mismatch` unless the
+server counts exactly that many right now. A live game minting guests will move
+under it between the preview and the delete, which is the point: re-preview and
+re-confirm rather than deleting a set nobody has looked at.
+
+To clear **every** guest, including the one that signed in a second ago, pass
+`inactive_for_seconds: 0`. On a game whose onboarding is guest-first that is
+the entire player base, which is why it has to be typed rather than defaulted
+to - and why the count has to be echoed too.
+
+Each player is erased in its own transaction, through the same delete sequence
+and the same severed tables as the single erase, and the unclaimed check is
+re-run inside that transaction. The two non-deleted outcomes are reported
+separately because they ask for opposite responses:
+
+* `skipped` - a guest who called `/auth/guest/upgrade` between the select and
+  their own delete. Nothing went wrong, the answer changed, and they have left
+  the set.
+* `failed` - the erasure did not commit, most often because an extension left
+  orphaned rows behind. Something is wrong, they are still in the set, and the
+  next call will select them again.
+
+One audit row covers the batch, carrying every erased id and, for each player
+that was not erased, the reason it actually had.
+
+This is the on-demand half of guest retention. The automatic half is
+`guest_reap_after`, a background sweep that never runs unless the server sets
+it - see [Configuration](https://asobi.dev/docs/configuration). A deployment that sets neither
+keeps its guests forever.
+
+The same predicate narrows the player list, so an operator can look at the
+cohort before deleting it:
+
+```bash
+curl -H "Authorization: Bearer $ASOBI_OPS_SECRET" \
+  "https://game.example.com/api/v1/ops/players?guest=true&limit=20"
+```
+
+`?guest=false` is everyone else. The rows themselves still carry no guest
+column - the filter is a set, not a field.
+
+From a remote shell it is the same code path, with no HTTP involved:
+
+```erlang
+1> Cutoff = asobi_guest_purge:cutoff(2592000).
+2> asobi_guest_purge:count(Cutoff).
+{ok,14032}
+```
 
 ### Console session
 

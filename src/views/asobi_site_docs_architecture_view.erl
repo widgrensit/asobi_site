@@ -329,11 +329,12 @@ configured, so a stock node serves neither. <a href="https://hexdocs.pm/asobi/co
 the detail.</p>
 <p>Every ops route carries a capability class - <code>read</code>, <code>player_data</code>, <code>config</code>
 or <code>erasure</code> (<code>src/ops/asobi_ops_caps.erl</code>) - and the class is the only thing
-that authorises the call. Core's routes are reads apart from two:
-<code>GET /api/v1/ops/players/:id/export</code> (<code>player_data</code>) and
-<code>POST /api/v1/ops/players/:id/erase</code> (<code>erasure</code>). The third mutating route is
-<code>/api/v1/ops/ext/:extension/:action</code>, whose behaviour comes from an installed
-extension.</p>
+that authorises the call. Core's routes are reads apart from three:
+<code>GET /api/v1/ops/players/:id/export</code> (<code>player_data</code>),
+<code>POST /api/v1/ops/players/:id/erase</code> (<code>erasure</code>) and
+<code>POST /api/v1/ops/players/guests/purge</code> (<code>erasure</code>, the bulk form of the same
+action). The fourth mutating route is <code>/api/v1/ops/ext/:extension/:action</code>,
+whose behaviour comes from an installed extension.</p>
 <p><code>erasure</code> is its own class because it is the only irreversible one, and a
 console session is granted every class but that one by default
 (<code>src/console/asobi_console_session.erl</code>).</p>
@@ -770,11 +771,12 @@ the detail.
 
 Every ops route carries a capability class - `read`, `player_data`, `config`
 or `erasure` (`src/ops/asobi_ops_caps.erl`) - and the class is the only thing
-that authorises the call. Core's routes are reads apart from two:
-`GET /api/v1/ops/players/:id/export` (`player_data`) and
-`POST /api/v1/ops/players/:id/erase` (`erasure`). The third mutating route is
-`/api/v1/ops/ext/:extension/:action`, whose behaviour comes from an installed
-extension.
+that authorises the call. Core's routes are reads apart from three:
+`GET /api/v1/ops/players/:id/export` (`player_data`),
+`POST /api/v1/ops/players/:id/erase` (`erasure`) and
+`POST /api/v1/ops/players/guests/purge` (`erasure`, the bulk form of the same
+action). The fourth mutating route is `/api/v1/ops/ext/:extension/:action`,
+whose behaviour comes from an installed extension.
 
 `erasure` is its own class because it is the only irreversible one, and a
 console session is granted every class but that one by default
