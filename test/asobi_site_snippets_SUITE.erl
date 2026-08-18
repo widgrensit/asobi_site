@@ -1,4 +1,4 @@
-%% @doc Guards the single-source-of-truth snippet module.
+%% Guards the single-source-of-truth snippet module.
 %%
 %% - Every {Flow, SDK} pair must resolve to a non-empty binary.
 %% - Every flow must mention the protocol keywords that prove the
@@ -9,7 +9,11 @@
 %% `required_keywords/1' so drift is caught here instead of on the
 %% homepage.
 -module(asobi_site_snippets_SUITE).
--compile([export_all, nowarn_export_all]).
+%% Explicit rather than export_all: export_all makes every helper look like a
+%% test case to elp, which then reports the helpers as unreachable tests and
+%% needs a module-level warning suppression to quieten. Listing what CT has to
+%% reach says the same thing without either.
+-export([all/0, coverage/1, non_empty/1, required_keywords/1, label_coverage/1]).
 
 -include_lib("common_test/include/ct.hrl").
 -include_lib("stdlib/include/assert.hrl").

@@ -234,7 +234,6 @@ function rawBlob(s, what) {
 process.stdout.write(`%% GENERATED from asobi guides/${mdPath.split('/').pop()} - do not edit by hand.
 %% Regenerate with scripts/gen-docs.sh
 -module(${moduleName}).
--include("asobi_site_view.hrl").
 
 -export([mount/1, render/1, markdown/0]).
 

@@ -1,7 +1,6 @@
 %% GENERATED from asobi guides/configuration.md - do not edit by hand.
 %% Regenerate with scripts/gen-docs.sh
 -module(asobi_site_docs_configuration_view).
--include("asobi_site_view.hrl").
 
 -export([mount/1, render/1, markdown/0]).
 
@@ -584,7 +583,7 @@ does not work.</li>
 </ul>
 <h2 id="binary-worldtick" tabindex="-1">Binary <code>world.tick</code></h2>
 <p>Off by default. Turning it on lets a client ask for <code>world.tick</code> as a binary
-frame at <code>session.connect</code>, roughly a fifth of the bytes and several times
+frame at <code>session.connect</code>, about a quarter of the bytes and several times
 cheaper to decode - the numbers and the encoding are in
 <a href="/docs/protocols/websocket#binary-worldtick">the protocol guide</a>.</p>
 <pre><code class="language-erlang">{binary_wire, true}
@@ -1645,7 +1644,7 @@ does not work.
 ## Binary `world.tick`
 
 Off by default. Turning it on lets a client ask for `world.tick` as a binary
-frame at `session.connect`, roughly a fifth of the bytes and several times
+frame at `session.connect`, about a quarter of the bytes and several times
 cheaper to decode - the numbers and the encoding are in
 [the protocol guide](https://asobi.dev/docs/protocols/websocket#binary-worldtick).
 

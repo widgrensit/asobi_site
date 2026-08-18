@@ -1,7 +1,6 @@
 %% GENERATED from asobi guides/security-known-limitations.md - do not edit by hand.
 %% Regenerate with scripts/gen-docs.sh
 -module(asobi_site_docs_security_known_limits_view).
--include("asobi_site_view.hrl").
 
 -export([mount/1, render/1, markdown/0]).
 
