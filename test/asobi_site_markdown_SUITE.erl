@@ -73,7 +73,7 @@ no_unknown_tags(_Config) ->
 
 generated_views_serve_their_guide(_Config) ->
     Generated = generated(),
-    ?assertEqual(31, length(Generated)),
+    ?assertEqual(32, length(Generated)),
     [
         begin
             Md = V:markdown(),

@@ -59,6 +59,7 @@ routes(_Environment) ->
                 docs(~"/docs/authentication", asobi_site_docs_auth_view),
                 docs(~"/docs/protocols/websocket", asobi_site_docs_websocket_view),
                 docs(~"/docs/protocols/rest", asobi_site_docs_rest_view),
+                docs(~"/docs/protocols/datagram", asobi_site_docs_datagram_view),
                 docs(~"/docs/matchmaking", asobi_site_docs_matchmaking_view),
                 docs(~"/docs/lobbies", asobi_site_docs_lobbies_view),
                 docs(~"/docs/world-server", asobi_site_docs_world_server_view),

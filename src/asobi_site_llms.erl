@@ -296,6 +296,11 @@ sections() ->
                 ~"One socket at /ws, the JSON envelope, and every frame the server sends or accepts."
             },
             {
+                ~"/docs/protocols/datagram",
+                ~"Datagram plane",
+                ~"Optional UDP for entity positions, self-hosting only: what it carries, the two-container setup, and what happens when a player's network blocks it."
+            },
+            {
                 ~"/docs/configuration",
                 ~"Configuration",
                 ~"Both surfaces: environment variables for the image, and sys.config for the Hex package."

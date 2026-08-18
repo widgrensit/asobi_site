@@ -167,9 +167,15 @@ sharded across them by your own routing. If your design needs one world larger
 than a single node can hold, adding nodes does not help. See
 <a href="/docs/clustering#the-scaling-unit-is-a-world-not-a-node">Clustering</a>.</p>
 <h3 id="competitive-real-time-fps-fighting-racing" tabindex="-1">Competitive real-time (FPS, fighting, racing)</h3>
-<p>Not the target. WebSocket over TCP has a 5-25ms RTT floor and these genres want
-UDP under 3ms. Run a UDP transport for game state alongside asobi and use asobi
-for everything else: auth, matchmaking, economy, social, leaderboards.</p>
+<p>Not the target, and the reason is head-of-line blocking rather than the median.
+The RTT table above measures 1.4ms to 5.8ms p50 depending on load, which is fine
+for most genres. What these ones cannot absorb is the retransmission tail when a
+packet is lost: TCP will not deliver frame N+1 until it has redelivered frame N,
+so a lossy path inflates the tail well past the p99 figures above, and no
+server-side tuning changes that. The numbers here are measured on a clean local
+path and say nothing about behaviour at 1% loss.</p>
+<p>Run the simulation over your own UDP netcode and use asobi for everything around
+it: auth, matchmaking, economy, social, leaderboards.</p>
 <h2 id="bottlenecks-and-tuning" tabindex="-1">Bottlenecks and tuning</h2>
 <h3 id="authentication-under-load" tabindex="-1">Authentication under load</h3>
 <p>pbkdf2 saturates CPU during login storms. Mitigations:</p>
@@ -356,9 +362,16 @@ than a single node can hold, adding nodes does not help. See
 
 ### Competitive real-time (FPS, fighting, racing)
 
-Not the target. WebSocket over TCP has a 5-25ms RTT floor and these genres want
-UDP under 3ms. Run a UDP transport for game state alongside asobi and use asobi
-for everything else: auth, matchmaking, economy, social, leaderboards.
+Not the target, and the reason is head-of-line blocking rather than the median.
+The RTT table above measures 1.4ms to 5.8ms p50 depending on load, which is fine
+for most genres. What these ones cannot absorb is the retransmission tail when a
+packet is lost: TCP will not deliver frame N+1 until it has redelivered frame N,
+so a lossy path inflates the tail well past the p99 figures above, and no
+server-side tuning changes that. The numbers here are measured on a clean local
+path and say nothing about behaviour at 1% loss.
+
+Run the simulation over your own UDP netcode and use asobi for everything around
+it: auth, matchmaking, economy, social, leaderboards.
 
 ## Bottlenecks and tuning
 
