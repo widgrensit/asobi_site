@@ -30,6 +30,7 @@ asobi|authentication|asobi_site_docs_auth_view|docs-auth|Authentication — Asob
 asobi|security-threat-model|asobi_site_docs_security_threat_model_view|docs-sec-threat|Threat model — Asobi docs|Security / Threat model|threat
 asobi|websocket-protocol|asobi_site_docs_websocket_view|docs-ws|WebSocket protocol — Asobi docs|Protocols / WebSocket|ws
 asobi|rest-api|asobi_site_docs_rest_view|docs-rest|REST API — Asobi docs|Protocols / REST|rest
+asobi|datagram-plane|asobi_site_docs_datagram_view|docs-datagram|Datagram plane — Asobi docs|Protocols / Datagram plane|dgram
 asobi|matchmaking|asobi_site_docs_matchmaking_view|docs-matchmaking|Matchmaking — Asobi docs|Matchmaking|mm
 asobi|lobbies|asobi_site_docs_lobbies_view|docs-lobbies|Lobbies — Asobi docs|Lobbies|lobbies
 asobi|economy|asobi_site_docs_economy_view|docs-economy|Economy & IAP — Asobi docs|Economy|econ

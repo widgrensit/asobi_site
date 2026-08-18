@@ -92,11 +92,27 @@ token is the <code>access_token</code> from any auth route.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.connect&quot;, &quot;payload&quot;: {&quot;token&quot;: &quot;&lt;access_token&gt;&quot;}}
 </code></pre>
 <p>Response:</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;session.connected&quot;, &quot;payload&quot;: {&quot;player_id&quot;: &quot;...&quot;}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.connected&quot;, &quot;payload&quot;: {&quot;player_id&quot;: &quot;...&quot;, &quot;wire&quot;: &quot;json&quot;}}
 </code></pre>
 <p>A bad or expired token answers <code>error</code> with reason <code>invalid_token</code> and code
 <code>unauthenticated</code>, and the socket stays open so the client can retry with a
 refreshed token.</p>
+<h4 id="choosing-a-wire" tabindex="-1">Choosing a wire</h4>
+<p><code>session.connect</code> may ask for the binary <code>world.tick</code> encoding:</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;session.connect&quot;, &quot;payload&quot;: {&quot;token&quot;: &quot;...&quot;, &quot;wire&quot;: &quot;binary&quot;}}
+</code></pre>
+<p>The reply always states the wire you actually got, which is not always the one
+you asked for: a server with <code>asobi.binary_wire</code> off answers <code>&quot;json&quot;</code>. Read it
+rather than assuming, and never infer the answer from the opcode of the first
+frame that happens to arrive.</p>
+<p>Asking for binary changes <code>world.tick</code> and nothing else. <code>world.ack</code>,
+<code>world.terrain</code>, <code>match.*</code>, <code>module.*</code> and every <code>error</code> stay JSON text on both
+wires, so a binary client is one that handles both frame types, not one that
+stops handling text. A frame the server cannot encode as binary (an entity field
+holding a list or a nested map, for instance) also arrives as text.</p>
+<p>The uplink is text-only on both wires. A binary frame sent to the server answers
+<code>error</code> with reason <code>binary_uplink_unsupported</code>.</p>
+<p>See <a href="#binary-worldtick">Binary <code>world.tick</code></a> for the encoding.</p>
 <h3 id="sessionheartbeat" tabindex="-1"><code>session.heartbeat</code></h3>
 <p>Keep-alive ping. Send periodically to prevent timeout.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;payload&quot;: {}}
@@ -560,7 +576,7 @@ player_count, grid_size, max_players, …).</p>
 <p>Per-zone delta broadcast. The first <code>world.tick</code> after <code>world.joined</code> is
 the <strong>initial snapshot</strong> for every entity in the zone - register your
 handler before sending the join message or you miss it.</p>
-<pre><code class="language-json">{&quot;type&quot;: &quot;world.tick&quot;, &quot;payload&quot;: {&quot;tick&quot;: 42, &quot;updates&quot;: [{&quot;op&quot;: &quot;a&quot;, &quot;id&quot;: &quot;01HX...&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480, &quot;type&quot;: &quot;player&quot;}]}}
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.tick&quot;, &quot;payload&quot;: {&quot;zone&quot;: [3, 5], &quot;frame_seq&quot;: 118, &quot;kf&quot;: false, &quot;tick&quot;: 42, &quot;updates&quot;: [{&quot;op&quot;: &quot;a&quot;, &quot;id&quot;: &quot;01HX...&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480, &quot;type&quot;: &quot;player&quot;}]}}
 </code></pre>
 <p><code>updates</code> is a list of entity deltas. <code>op</code> values:</p>
 <table>
@@ -589,6 +605,130 @@ handler before sending the join message or you miss it.</p>
 </tr>
 </tbody>
 </table>
+<h4 id="apply-per-zone-and-check-the-sequence" tabindex="-1">Apply per zone, and check the sequence</h4>
+<table>
+<thead>
+<tr>
+<th>Field</th>
+<th>Meaning</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>zone</code></td>
+<td>The zone these updates belong to, as <code>[x, y]</code>.</td>
+</tr>
+<tr>
+<td><code>frame_seq</code></td>
+<td>Contiguous per zone, advancing only on a frame actually sent.</td>
+</tr>
+<tr>
+<td><code>kf</code></td>
+<td><code>true</code> on a keyframe: a complete baseline for that zone, all <code>op: &quot;a&quot;</code>.</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Keep one entity table per zone, keyed by <code>zone</code>, never one flat table.</strong> You
+are subscribed to an interest ring of several zones at once, each an independent
+process, and messages are ordered per sender only. Crossing a boundary emits an
+<code>op: &quot;r&quot;</code> from the zone you left and an <code>op: &quot;a&quot;</code> from the zone you entered, from
+two different senders, so they can reach you in either order. Applied into one
+flat table, the removal can land last and delete an entity you will never hear
+about again. Per-zone tables make that unreachable.</p>
+<p><strong><code>frame_seq</code> is how you detect loss.</strong> It has no gaps by construction, so a
+frame whose sequence is more than one past the last you applied for that zone
+means you missed something; a frame at or below it is stale and should be
+dropped. <code>tick</code> cannot do this job - it skips on <code>broadcast_interval</code> and is
+suppressed on a quiet tick, so a gap in it is ambiguous.</p>
+<p>Two frames are applied <strong>ungated</strong>, without the sequence check:</p>
+<ul>
+<li><code>kf: true</code>, which resets your high-water mark to the value it carries. That is
+what makes a zone restart recoverable.</li>
+<li>A frame with no <code>frame_seq</code> at all, which is the removal list you get for the
+zone you are leaving. Gating it would leave you holding ghosts forever.</li>
+</ul>
+<p>On a gap, send <a href="#worldresync"><code>world.resync</code></a> for that zone and you get a fresh
+keyframe.</p>
+<h3 id="binary-worldtick" tabindex="-1">Binary <code>world.tick</code></h3>
+<p>A client that negotiated <code>&quot;wire&quot;: &quot;binary&quot;</code> at
+<a href="#choosing-a-wire"><code>session.connect</code></a> receives <code>world.tick</code> as a <strong>WebSocket
+binary frame</strong> carrying the same information in about a fifth of the bytes, and
+materially cheaper to decode: measured against native JSON, 2.4x faster in
+Godot's GDScript and 33x faster than the pure-Lua parser Defold and LOVE ship.
+Every other message type still arrives as JSON text.</p>
+<p>All multi-byte integers and floats are <strong>little-endian</strong>. That is not the usual
+choice for a wire format, and it is deliberate: Godot's
+<code>PackedByteArray.decode_*</code> reads little-endian and has no big-endian counterpart,
+so network byte order would force a hand-rolled byte loop in interpreted
+GDScript - and those native calls are exactly why the codec beats JSON there
+rather than losing to it. Every other target reads either order for the same
+price, so the runtime with no room to spare picks.</p>
+<pre><code>frame    Kind:8, ZX:32/signed, ZY:32/signed, FrameSeq:64, Kf:8, Tick:64,
+         DictLen:8, Dict, RecCount:16, Records
+
+dict     for each name: Len:8, Name/binary            (at most 32 names)
+record   Op:8, Slot:16, [IdLen:8, Id/binary]?, FieldCount:8, Fields
+field    Type:3, Idx:5, Value                         (one header byte)
+</code></pre>
+<p><code>Kind</code> is <code>1</code> for a frame holding a position in the zone's sequence and <code>2</code> for
+one that does not - the binary equivalent of the text wire omitting <code>frame_seq</code>.
+A <code>2</code> frame is the leave-removal list, and it is applied ungated.</p>
+<p><code>Op</code> is <code>0</code> add, <code>1</code> update, <code>2</code> remove. <code>Type</code> selects the value encoding:</p>
+<table>
+<thead>
+<tr>
+<th><code>Type</code></th>
+<th>Value</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>0</td>
+<td><code>float32</code></td>
+</tr>
+<tr>
+<td>1</td>
+<td><code>int32</code>, signed</td>
+</tr>
+<tr>
+<td>2</td>
+<td><code>true</code>, no bytes follow</td>
+</tr>
+<tr>
+<td>3</td>
+<td><code>false</code>, no bytes follow</td>
+</tr>
+<tr>
+<td>4</td>
+<td><code>Len:16, UTF-8 bytes</code></td>
+</tr>
+<tr>
+<td>5</td>
+<td><code>null</code>, no bytes follow</td>
+</tr>
+</tbody>
+</table>
+<p><code>Idx</code> indexes the frame's own dictionary, so forty records all carrying
+<code>x, y, vx, vy</code> pay for four names rather than a hundred and sixty. The frame is
+self-describing: nothing is negotiated up front and nothing survives a
+reconnect.</p>
+<p><strong>Entities are 2-byte slots, and the slot is scoped to the zone.</strong> A record
+carries the full entity id on an <strong>add only</strong>, which is where the binding is
+established; update and remove carry the slot and generation alone.</p>
+<p><code>Gen</code> advances every time a slot is rebound to a different entity. On this wire it
+is redundant, because the stream is ordered and reliable and <code>frame_seq</code> already
+bounds the reuse hazard, and it is carried anyway so that a client also running
+the datagram plane can keep one slot table for both carriers rather than two that
+can disagree. If you are only on the WebSocket you can ignore it. Keep a slot-to-id table per
+zone - slot 5 in one zone has nothing to do with slot 5 in another - and let an
+add REPLACE any binding already there, because a freed slot is eventually
+reused. There is no mapping message and none is needed: a keyframe is all-adds,
+so <code>world.resync</code> re-establishes every binding for you.</p>
+<p>The binary wire is also what the <a href="https://hexdocs.pm/asobi/datagram-plane.html">datagram plane</a> builds on:
+its <code>pose</code> frames carry slots, and the bindings come from the <code>add</code> records here.</p>
+<p>A committed fixture corpus lives in <code>priv/wire_fixtures/</code> - one <code>.bin</code> per case
+plus a <code>manifest.json</code> saying what each decodes to. Test your decoder against
+it; the server's own CI asserts those bytes are still what it produces.</p>
 <h3 id="client-side-prediction" tabindex="-1">Client-side prediction</h3>
 <p>asobi is server-authoritative, and server-side rollback, replay and lag
 compensation are out of scope (TCP transport - see
@@ -627,6 +767,21 @@ connection alone, and sent only to clients that stamped a <code>seq</code> on th
 use it to reconcile prediction (above).</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.ack&quot;, &quot;payload&quot;: {&quot;tick&quot;: 42, &quot;seq&quot;: 412}}
 </code></pre>
+<h3 id="worldresync" tabindex="-1"><code>world.resync</code></h3>
+<p>Ask one zone to re-send its baseline, after a <code>frame_seq</code> gap tells you a frame
+went missing.</p>
+<pre><code class="language-json">{&quot;type&quot;: &quot;world.resync&quot;, &quot;payload&quot;: {&quot;zone&quot;: [3, 5]}}
+</code></pre>
+<p>There is no reply of its own. The answer is a <code>world.tick</code> with <code>kf: true</code> for
+that zone, holding every entity as an <code>op: &quot;a&quot;</code> - so on the binary wire it also
+re-establishes every slot binding.</p>
+<p>A request naming a zone you are not subscribed to is dropped in silence rather
+than answered. There is nothing to repair, and answering would turn resync into
+a way to read any zone in the world.</p>
+<p>Rate limited on two buckets, per player first and then fleet-wide: <strong>2 per 10s
+per player</strong> and <strong>20 per second across the server</strong>. A client that needs more
+than that is not recovering from loss, it is looping. Tune under
+<code>asobi.rate_limits</code>, groups <code>resync</code> and <code>resync_global</code>.</p>
 <h3 id="worldterrain-server-push" tabindex="-1"><code>world.terrain</code> (server push)</h3>
 <p>Sent on zone subscription when the world has a terrain provider. The
 chunk data is base64-encoded compressed binary; see
@@ -1174,12 +1329,36 @@ token is the `access_token` from any auth route.
 Response:
 
 ```json
-{"type": "session.connected", "payload": {"player_id": "..."}}
+{"type": "session.connected", "payload": {"player_id": "...", "wire": "json"}}
 ```
 
 A bad or expired token answers `error` with reason `invalid_token` and code
 `unauthenticated`, and the socket stays open so the client can retry with a
 refreshed token.
+
+#### Choosing a wire
+
+`session.connect` may ask for the binary `world.tick` encoding:
+
+```json
+{"type": "session.connect", "payload": {"token": "...", "wire": "binary"}}
+```
+
+The reply always states the wire you actually got, which is not always the one
+you asked for: a server with `asobi.binary_wire` off answers `"json"`. Read it
+rather than assuming, and never infer the answer from the opcode of the first
+frame that happens to arrive.
+
+Asking for binary changes `world.tick` and nothing else. `world.ack`,
+`world.terrain`, `match.*`, `module.*` and every `error` stay JSON text on both
+wires, so a binary client is one that handles both frame types, not one that
+stops handling text. A frame the server cannot encode as binary (an entity field
+holding a list or a nested map, for instance) also arrives as text.
+
+The uplink is text-only on both wires. A binary frame sent to the server answers
+`error` with reason `binary_uplink_unsupported`.
+
+See [Binary `world.tick`](#binary-worldtick) for the encoding.
 
 ### `session.heartbeat`
 
@@ -1780,7 +1959,7 @@ the **initial snapshot** for every entity in the zone - register your
 handler before sending the join message or you miss it.
 
 ```json
-{"type": "world.tick", "payload": {"tick": 42, "updates": [{"op": "a", "id": "01HX...", "x": 600, "y": 480, "type": "player"}]}}
+{"type": "world.tick", "payload": {"zone": [3, 5], "frame_seq": 118, "kf": false, "tick": 42, "updates": [{"op": "a", "id": "01HX...", "x": 600, "y": 480, "type": "player"}]}}
 ```
 
 `updates` is a list of entity deltas. `op` values:
@@ -1790,6 +1969,105 @@ handler before sending the join message or you miss it.
 | `"a"` | Added, full state | id + every field on the entity |
 | `"u"` | Updated, diff | id + only changed fields |
 | `"r"` | Removed | id only |
+
+#### Apply per zone, and check the sequence
+
+| Field | Meaning |
+|-------|---------|
+| `zone` | The zone these updates belong to, as `[x, y]`. |
+| `frame_seq` | Contiguous per zone, advancing only on a frame actually sent. |
+| `kf` | `true` on a keyframe: a complete baseline for that zone, all `op: "a"`. |
+
+**Keep one entity table per zone, keyed by `zone`, never one flat table.** You
+are subscribed to an interest ring of several zones at once, each an independent
+process, and messages are ordered per sender only. Crossing a boundary emits an
+`op: "r"` from the zone you left and an `op: "a"` from the zone you entered, from
+two different senders, so they can reach you in either order. Applied into one
+flat table, the removal can land last and delete an entity you will never hear
+about again. Per-zone tables make that unreachable.
+
+**`frame_seq` is how you detect loss.** It has no gaps by construction, so a
+frame whose sequence is more than one past the last you applied for that zone
+means you missed something; a frame at or below it is stale and should be
+dropped. `tick` cannot do this job - it skips on `broadcast_interval` and is
+suppressed on a quiet tick, so a gap in it is ambiguous.
+
+Two frames are applied **ungated**, without the sequence check:
+
+- `kf: true`, which resets your high-water mark to the value it carries. That is
+  what makes a zone restart recoverable.
+- A frame with no `frame_seq` at all, which is the removal list you get for the
+  zone you are leaving. Gating it would leave you holding ghosts forever.
+
+On a gap, send [`world.resync`](#worldresync) for that zone and you get a fresh
+keyframe.
+
+### Binary `world.tick`
+
+A client that negotiated `"wire": "binary"` at
+[`session.connect`](#choosing-a-wire) receives `world.tick` as a **WebSocket
+binary frame** carrying the same information in about a fifth of the bytes, and
+materially cheaper to decode: measured against native JSON, 2.4x faster in
+Godot's GDScript and 33x faster than the pure-Lua parser Defold and LOVE ship.
+Every other message type still arrives as JSON text.
+
+All multi-byte integers and floats are **little-endian**. That is not the usual
+choice for a wire format, and it is deliberate: Godot's
+`PackedByteArray.decode_*` reads little-endian and has no big-endian counterpart,
+so network byte order would force a hand-rolled byte loop in interpreted
+GDScript - and those native calls are exactly why the codec beats JSON there
+rather than losing to it. Every other target reads either order for the same
+price, so the runtime with no room to spare picks.
+
+```
+frame    Kind:8, ZX:32/signed, ZY:32/signed, FrameSeq:64, Kf:8, Tick:64,
+         DictLen:8, Dict, RecCount:16, Records
+
+dict     for each name: Len:8, Name/binary            (at most 32 names)
+record   Op:8, Slot:16, [IdLen:8, Id/binary]?, FieldCount:8, Fields
+field    Type:3, Idx:5, Value                         (one header byte)
+```
+
+`Kind` is `1` for a frame holding a position in the zone's sequence and `2` for
+one that does not - the binary equivalent of the text wire omitting `frame_seq`.
+A `2` frame is the leave-removal list, and it is applied ungated.
+
+`Op` is `0` add, `1` update, `2` remove. `Type` selects the value encoding:
+
+| `Type` | Value |
+|--------|-------|
+| 0 | `float32` |
+| 1 | `int32`, signed |
+| 2 | `true`, no bytes follow |
+| 3 | `false`, no bytes follow |
+| 4 | `Len:16, UTF-8 bytes` |
+| 5 | `null`, no bytes follow |
+
+`Idx` indexes the frame's own dictionary, so forty records all carrying
+`x, y, vx, vy` pay for four names rather than a hundred and sixty. The frame is
+self-describing: nothing is negotiated up front and nothing survives a
+reconnect.
+
+**Entities are 2-byte slots, and the slot is scoped to the zone.** A record
+carries the full entity id on an **add only**, which is where the binding is
+established; update and remove carry the slot and generation alone.
+
+`Gen` advances every time a slot is rebound to a different entity. On this wire it
+is redundant, because the stream is ordered and reliable and `frame_seq` already
+bounds the reuse hazard, and it is carried anyway so that a client also running
+the datagram plane can keep one slot table for both carriers rather than two that
+can disagree. If you are only on the WebSocket you can ignore it. Keep a slot-to-id table per
+zone - slot 5 in one zone has nothing to do with slot 5 in another - and let an
+add REPLACE any binding already there, because a freed slot is eventually
+reused. There is no mapping message and none is needed: a keyframe is all-adds,
+so `world.resync` re-establishes every binding for you.
+
+The binary wire is also what the [datagram plane](https://hexdocs.pm/asobi/datagram-plane.html) builds on:
+its `pose` frames carry slots, and the bindings come from the `add` records here.
+
+A committed fixture corpus lives in `priv/wire_fixtures/` - one `.bin` per case
+plus a `manifest.json` saying what each decodes to. Test your decoder against
+it; the server's own CI asserts those bytes are still what it produces.
 
 ### Client-side prediction
 
@@ -1837,6 +2115,28 @@ use it to reconcile prediction (above).
 ```json
 {"type": "world.ack", "payload": {"tick": 42, "seq": 412}}
 ```
+
+### `world.resync`
+
+Ask one zone to re-send its baseline, after a `frame_seq` gap tells you a frame
+went missing.
+
+```json
+{"type": "world.resync", "payload": {"zone": [3, 5]}}
+```
+
+There is no reply of its own. The answer is a `world.tick` with `kf: true` for
+that zone, holding every entity as an `op: "a"` - so on the binary wire it also
+re-establishes every slot binding.
+
+A request naming a zone you are not subscribed to is dropped in silence rather
+than answered. There is nothing to repair, and answering would turn resync into
+a way to read any zone in the world.
+
+Rate limited on two buckets, per player first and then fleet-wide: **2 per 10s
+per player** and **20 per second across the server**. A client that needs more
+than that is not recovering from loss, it is looping. Tune under
+`asobi.rate_limits`, groups `resync` and `resync_global`.
 
 ### `world.terrain` (server push)
 

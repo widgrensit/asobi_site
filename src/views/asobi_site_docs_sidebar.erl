@@ -62,6 +62,7 @@ render(Bindings) ->
             {~"/docs/erlang/api", ~"Erlang API (advanced)"},
             {~"/docs/protocols/websocket", ~"WebSocket protocol"},
             {~"/docs/protocols/rest", ~"REST API"},
+            {~"/docs/protocols/datagram", ~"Datagram plane"},
             {~"/docs/configuration", ~"Configuration"},
             {~"/docs/errors", ~"Errors & status codes"}
         ]},

@@ -494,6 +494,110 @@ an attestation check. Unset, it is a no-op.</p>
 <code>details.reason</code> (<code>client_gate_unavailable</code> when the gate itself failed). It
 runs after the rate limiter, so a flood is shed by the cheap in-memory check
 before it reaches an external verification service.</p>
+<h2 id="the-datagram-gateway-role" tabindex="-1">The datagram gateway role</h2>
+<p>One image, two roles. <code>role</code> defaults to <code>engine</code> and gives you exactly what you
+have today; <code>dgram_gw</code> starts the datagram gateway <strong>and nothing else</strong>.</p>
+<pre><code class="language-erlang">{role, dgram_gw},
+{dgram, #{port =&gt; 7777, shards =&gt; 4}}
+</code></pre>
+<p>Run them as two containers from the same image. That separation is the point
+rather than a deployment convenience: the gateway binds a UDP port and parses
+packets from anyone on the internet, and it must not share a process tree with
+the Lua sandbox or your database credentials. In the <code>dgram_gw</code> role no zone, no
+world, no match, no Lua VM and no database pool is ever started.</p>
+<p><code>shards</code> is the number of <code>SO_REUSEPORT</code> receiver sockets and defaults to the
+scheduler count capped at 8. <strong>It is fixed at boot.</strong> Adding or removing a socket
+reshuffles the kernel's hash and breaks every flow already running through the
+gateway, so there is no reload path and changing it is a restart with a
+reconnect for every player on the plane.</p>
+<h3 id="the-engine-side" tabindex="-1">The engine side</h3>
+<p>The engine dials the gateway; the gateway never dials the engine. So the engine
+needs to know where it is, and both ends need the same secret:</p>
+<pre><code class="language-erlang">%% On the engine
+{dgram_gateway, #{host =&gt; {127, 0, 0, 1}, port =&gt; 7778}},
+{dgram_link_secret, &lt;&lt;&quot;...&quot;&gt;&gt;},
+{dgram_endpoint, ~&quot;udp.example.com:7777&quot;},
+
+%% On the gateway
+{role, dgram_gw},
+{dgram, #{port =&gt; 7777, link_port =&gt; 7778, shards =&gt; 4}},
+{dgram_link_secret, &lt;&lt;&quot;...&quot;&gt;&gt;}
+</code></pre>
+<p><code>dgram_gateway</code> is the opt-in. Without it the engine dials nothing, mints nothing
+and answers <code>datagram_unavailable</code> to any client that asks - which is a normal
+answer, not an error.</p>
+<p><code>dgram_endpoint</code> is what a client is told to send to, handed over in the mint
+response. Putting it there rather than having the client resolve it is what makes
+the plane independent of DNS and of SNI, and why a non-standard port costs the
+client nothing.</p>
+<p><strong>The link is loopback-only and is not encrypted.</strong> It carries mint secrets, so
+it binds <code>127.0.0.1</code> and refuses to be told otherwise. Two containers sharing a
+network namespace is the shape it is built for; separate hosts need a tunnel, and
+that is an operator decision rather than something to default.</p>
+<p>Deliberately <strong>not</strong> distributed Erlang, which would have been the obvious answer
+and is the wrong one: dist is all-or-nothing, so a node that can reach another can
+call any function in it. Handing that to the process parsing packets from the
+internet gives back most of what the two-role split is for.</p>
+<h3 id="describing-your-transform-fields" tabindex="-1">Describing your transform fields</h3>
+<p>Nothing is sent on the plane until you say what a position <em>is</em>. There is no
+default and that is deliberate: guessing <code>x</code> and <code>y</code> at some scale would silently
+pick a precision for a world that might be a thousand times larger.</p>
+<pre><code class="language-erlang">{dgram_pose, #{
+    period_ticks =&gt; 20,
+    fields =&gt; [
+        #{name =&gt; ~&quot;x&quot;,  scale =&gt; 100},
+        #{name =&gt; ~&quot;y&quot;,  scale =&gt; 100},
+        #{name =&gt; ~&quot;vx&quot;, scale =&gt; 100},
+        #{name =&gt; ~&quot;vy&quot;, scale =&gt; 100}
+    ]
+}}
+</code></pre>
+<p>The list is the canonical order, so a client decodes a fixed layout and the wire
+carries no field names at all. <strong>At most eight fields</strong> - the per-record bitmask
+is one byte - and a ninth disables the plane rather than dropping a field
+silently.</p>
+<p><code>scale</code> converts to the <code>int16</code> the wire carries: <code>100</code> gives two decimal places
+and a range of about +/-327 world units. A bigger world needs a smaller scale and
+coarser steps, which is a trade only your game can make. <strong>A value outside the
+range saturates and is counted</strong> on <code>asobi.dgram.pose_saturated</code>, never wrapped -
+wrapping would teleport an entity across the world, which looks like a game bug,
+where saturation looks like what it is.</p>
+<p><code>period_ticks</code> is the axial refresh. An entity that stops moving stops being
+mentioned, so a client that missed its last update would keep it wrong forever;
+each tick additionally re-sends every entity whose slot falls in that tick's
+slice, so at 20 ticks nothing is stale for more than a second. It costs no acks,
+no per-client state and no extra encode.</p>
+<p>Only these fields travel on the plane. Everything else about an entity -
+including its creation and removal - rides <code>world.tick</code> on the WebSocket, where
+it is ordered and cannot be lost.</p>
+<h3 id="clients-ask-for-it-over-the-websocket" tabindex="-1">Clients ask for it over the WebSocket</h3>
+<p>A client mints with <code>rpc.call</code> on the method <code>asobi.datagram.open</code>, which is a
+frame every SDK already implements, so the datagram plane adds <strong>zero</strong> frame
+types to the JSON wire. The reply carries <code>conn_id</code>, <code>kup</code>, <code>epoch</code>, <code>endpoint</code>
+and <code>expires_in</code>.</p>
+<p>The plane is optional in every state: the WebSocket carries everything
+throughout, and a client that never reaches the gateway is degraded rather than
+broken. <strong><a href="https://hexdocs.pm/asobi/datagram-plane.html">The datagram plane</a> is the whole story end to end</strong></p>
+<ul>
+<li>what it carries, the compose file, the client side, and what happens when it
+does not work.</li>
+</ul>
+<h2 id="binary-worldtick" tabindex="-1">Binary <code>world.tick</code></h2>
+<p>Off by default. Turning it on lets a client ask for <code>world.tick</code> as a binary
+frame at <code>session.connect</code>, roughly a fifth of the bytes and several times
+cheaper to decode - the numbers and the encoding are in
+<a href="/docs/protocols/websocket#binary-worldtick">the protocol guide</a>.</p>
+<pre><code class="language-erlang">{binary_wire, true}
+</code></pre>
+<p>A zone reads this once when it starts, so an already-running world keeps the
+setting it started with.</p>
+<p>What it costs while on: a zone can have subscribers on both wires, so it builds
+two buffers per broadcast instead of one. That is two encodes per zone per tick
+rather than one per subscriber, and it is paid whether or not anyone has
+negotiated binary. Measured at roughly 50 us per zone per broadcast tick against
+a 50 ms budget.</p>
+<p>Clients that never ask see exactly what they saw before, so turning it on is
+safe for a live deployment. Leave it off if no client in your game asks for it.</p>
 <h2 id="websocket-origin-allowlist" tabindex="-1">WebSocket origin allowlist</h2>
 <p>By default the <code>/ws</code> upgrade accepts any <code>Origin</code>: web builds are served from
 arbitrary studio and hosting domains, so a strict default would break them.</p>
@@ -651,7 +755,7 @@ operator half.</p>
 <tr>
 <td><code>guest_reap_after</code></td>
 <td>unset</td>
-<td>Seconds of inactivity since the device last resumed; unset disables the reaper, so guests are permanent. On cloud this is the <strong>Guests</strong> picker on the environment row, not a key you write</td>
+<td>Seconds of inactivity since the device last resumed; unset disables the reaper, so guests are permanent. Also reads <code>ASOBI_GUEST_REAP_AFTER</code>. On cloud this is the <strong>Guests</strong> picker on the environment row, not a key you write</td>
 </tr>
 </tbody>
 </table>
@@ -840,6 +944,11 @@ five - <code>console_session_ttl</code>, <code>console_secure_cookie</code>, <co
 <code>console_erasure</code> and <code>console_bundle_app</code> - have no environment variable and
 need a <code>sys.config</code>. A variable overrides <code>sys.config</code> only when it is set, so
 the two coexist.</p>
+<p><code>guest_reap_after</code> reads <code>ASOBI_GUEST_REAP_AFTER</code>, in seconds, on the same
+terms. Anything that is not a positive integer leaves it unset, which means
+guests are kept for ever: a node that cannot parse its own retention setting
+must not fall back to deleting accounts on a schedule nobody chose. <code>0</code> is the
+explicit &quot;off&quot;.</p>
 <p><code>console_bundle_app</code> is only for a host whose extensions ship their own operator
 screens; see <a href="https://hexdocs.pm/asobi/console-extensions.html">Extending the operator console</a>. It has no
 environment variable on purpose: it names an application in the release, so it
@@ -1422,6 +1531,140 @@ A rejected request gets `403 client_gate_denied`, with the gate's own reason in
 runs after the rate limiter, so a flood is shed by the cheap in-memory check
 before it reaches an external verification service.
 
+## The datagram gateway role
+
+One image, two roles. `role` defaults to `engine` and gives you exactly what you
+have today; `dgram_gw` starts the datagram gateway **and nothing else**.
+
+```erlang
+{role, dgram_gw},
+{dgram, #{port => 7777, shards => 4}}
+```
+
+Run them as two containers from the same image. That separation is the point
+rather than a deployment convenience: the gateway binds a UDP port and parses
+packets from anyone on the internet, and it must not share a process tree with
+the Lua sandbox or your database credentials. In the `dgram_gw` role no zone, no
+world, no match, no Lua VM and no database pool is ever started.
+
+`shards` is the number of `SO_REUSEPORT` receiver sockets and defaults to the
+scheduler count capped at 8. **It is fixed at boot.** Adding or removing a socket
+reshuffles the kernel's hash and breaks every flow already running through the
+gateway, so there is no reload path and changing it is a restart with a
+reconnect for every player on the plane.
+
+### The engine side
+
+The engine dials the gateway; the gateway never dials the engine. So the engine
+needs to know where it is, and both ends need the same secret:
+
+```erlang
+%% On the engine
+{dgram_gateway, #{host => {127, 0, 0, 1}, port => 7778}},
+{dgram_link_secret, <<"...">>},
+{dgram_endpoint, ~"udp.example.com:7777"},
+
+%% On the gateway
+{role, dgram_gw},
+{dgram, #{port => 7777, link_port => 7778, shards => 4}},
+{dgram_link_secret, <<"...">>}
+```
+
+`dgram_gateway` is the opt-in. Without it the engine dials nothing, mints nothing
+and answers `datagram_unavailable` to any client that asks - which is a normal
+answer, not an error.
+
+`dgram_endpoint` is what a client is told to send to, handed over in the mint
+response. Putting it there rather than having the client resolve it is what makes
+the plane independent of DNS and of SNI, and why a non-standard port costs the
+client nothing.
+
+**The link is loopback-only and is not encrypted.** It carries mint secrets, so
+it binds `127.0.0.1` and refuses to be told otherwise. Two containers sharing a
+network namespace is the shape it is built for; separate hosts need a tunnel, and
+that is an operator decision rather than something to default.
+
+Deliberately **not** distributed Erlang, which would have been the obvious answer
+and is the wrong one: dist is all-or-nothing, so a node that can reach another can
+call any function in it. Handing that to the process parsing packets from the
+internet gives back most of what the two-role split is for.
+
+### Describing your transform fields
+
+Nothing is sent on the plane until you say what a position *is*. There is no
+default and that is deliberate: guessing `x` and `y` at some scale would silently
+pick a precision for a world that might be a thousand times larger.
+
+```erlang
+{dgram_pose, #{
+    period_ticks => 20,
+    fields => [
+        #{name => ~"x",  scale => 100},
+        #{name => ~"y",  scale => 100},
+        #{name => ~"vx", scale => 100},
+        #{name => ~"vy", scale => 100}
+    ]
+}}
+```
+
+The list is the canonical order, so a client decodes a fixed layout and the wire
+carries no field names at all. **At most eight fields** - the per-record bitmask
+is one byte - and a ninth disables the plane rather than dropping a field
+silently.
+
+`scale` converts to the `int16` the wire carries: `100` gives two decimal places
+and a range of about +/-327 world units. A bigger world needs a smaller scale and
+coarser steps, which is a trade only your game can make. **A value outside the
+range saturates and is counted** on `asobi.dgram.pose_saturated`, never wrapped -
+wrapping would teleport an entity across the world, which looks like a game bug,
+where saturation looks like what it is.
+
+`period_ticks` is the axial refresh. An entity that stops moving stops being
+mentioned, so a client that missed its last update would keep it wrong forever;
+each tick additionally re-sends every entity whose slot falls in that tick's
+slice, so at 20 ticks nothing is stale for more than a second. It costs no acks,
+no per-client state and no extra encode.
+
+Only these fields travel on the plane. Everything else about an entity -
+including its creation and removal - rides `world.tick` on the WebSocket, where
+it is ordered and cannot be lost.
+
+### Clients ask for it over the WebSocket
+
+A client mints with `rpc.call` on the method `asobi.datagram.open`, which is a
+frame every SDK already implements, so the datagram plane adds **zero** frame
+types to the JSON wire. The reply carries `conn_id`, `kup`, `epoch`, `endpoint`
+and `expires_in`.
+
+The plane is optional in every state: the WebSocket carries everything
+throughout, and a client that never reaches the gateway is degraded rather than
+broken. **[The datagram plane](https://hexdocs.pm/asobi/datagram-plane.html) is the whole story end to end**
+- what it carries, the compose file, the client side, and what happens when it
+does not work.
+
+## Binary `world.tick`
+
+Off by default. Turning it on lets a client ask for `world.tick` as a binary
+frame at `session.connect`, roughly a fifth of the bytes and several times
+cheaper to decode - the numbers and the encoding are in
+[the protocol guide](https://asobi.dev/docs/protocols/websocket#binary-worldtick).
+
+```erlang
+{binary_wire, true}
+```
+
+A zone reads this once when it starts, so an already-running world keeps the
+setting it started with.
+
+What it costs while on: a zone can have subscribers on both wires, so it builds
+two buffers per broadcast instead of one. That is two encodes per zone per tick
+rather than one per subscriber, and it is paid whether or not anyone has
+negotiated binary. Measured at roughly 50 us per zone per broadcast tick against
+a 50 ms budget.
+
+Clients that never ask see exactly what they saw before, so turning it on is
+safe for a live deployment. Leave it off if no client in your game asks for it.
+
 ## WebSocket origin allowlist
 
 By default the `/ws` upgrade accepts any `Origin`: web builds are served from
@@ -1607,7 +1850,7 @@ operator half.
 | `guest_verifier_pepper` | none | Key-id -> pepper map, or a single binary. Each pepper must be at least 32 bytes; a shorter one is treated as absent. Presence is the operator's on switch |
 | `guest_verifier_key_id` | `~"v1"` | Which pepper key id to use when minting new verifiers |
 | `guest_unlinked_cap` | `100000` | Soft ceiling on unclaimed guests, or `infinity`. Anything else falls back to the default and logs `invalid_guest_unlinked_cap` |
-| `guest_reap_after` | unset | Seconds of inactivity since the device last resumed; unset disables the reaper, so guests are permanent. On cloud this is the **Guests** picker on the environment row, not a key you write |
+| `guest_reap_after` | unset | Seconds of inactivity since the device last resumed; unset disables the reaper, so guests are permanent. Also reads `ASOBI_GUEST_REAP_AFTER`. On cloud this is the **Guests** picker on the environment row, not a key you write |
 
 The cap is a soft ceiling, not an exact one: the count comes from a short-TTL
 cache rather than a `COUNT` per create, so it can overshoot by roughly (TTL x
@@ -1752,6 +1995,12 @@ five - `console_session_ttl`, `console_secure_cookie`, `console_api_base`,
 `console_erasure` and `console_bundle_app` - have no environment variable and
 need a `sys.config`. A variable overrides `sys.config` only when it is set, so
 the two coexist.
+
+`guest_reap_after` reads `ASOBI_GUEST_REAP_AFTER`, in seconds, on the same
+terms. Anything that is not a positive integer leaves it unset, which means
+guests are kept for ever: a node that cannot parse its own retention setting
+must not fall back to deleting accounts on a schedule nobody chose. `0` is the
+explicit "off".
 
 `console_bundle_app` is only for a host whose extensions ship their own operator
 screens; see [Extending the operator console](https://hexdocs.pm/asobi/console-extensions.html). It has no
