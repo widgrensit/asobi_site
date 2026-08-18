@@ -1,4 +1,4 @@
-%% @doc Single source of truth for per-SDK code snippets.
+%% Single source of truth for per-SDK code snippets.
 %%
 %% This module prevents the doc drift that hit the SDK repos in
 %% April 2026. All per-SDK code shown on the site comes from here,

@@ -1,4 +1,4 @@
-%% @doc Reusable pure-CSS tab switcher for code snippets.
+%% Reusable pure-CSS tab switcher for code snippets.
 %%
 %% Use via `?stateless/3' from any view:
 %%
@@ -31,7 +31,7 @@ render(Bindings) ->
     Tabs = ?get(tabs),
     %% Tag each tab with its 1-based index so labels line up with inputs
     %% and panels for the :nth-of-type CSS rules.
-    Indexed = lists:zip(lists:seq(1, length(Tabs)), Tabs),
+    Indexed = lists:enumerate(Tabs),
     ?html(
         {'div', [{class, ~"tabbed-code"}], [
             ?each(
@@ -69,7 +69,7 @@ render(Bindings) ->
 input_id(Id, N) ->
     iolist_to_binary([Id, $-, integer_to_binary(N)]).
 
-%% @doc Shortcut for the common two-tab Lua/Erlang layout used across
+%% Shortcut for the common two-tab Lua/Erlang layout used across
 %% the `/docs/*' pages. Returns a stateless descriptor that views can
 %% drop directly into their `?html/1' tree.
 -spec lua_erlang(Id :: binary(), LuaBody :: binary(), ErlBody :: binary()) ->

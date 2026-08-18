@@ -1,7 +1,6 @@
 %% GENERATED from asobi guides/websocket-protocol.md - do not edit by hand.
 %% Regenerate with scripts/gen-docs.sh
 -module(asobi_site_docs_websocket_view).
--include("asobi_site_view.hrl").
 
 -export([mount/1, render/1, markdown/0]).
 
@@ -652,7 +651,7 @@ keyframe.</p>
 <h3 id="binary-worldtick" tabindex="-1">Binary <code>world.tick</code></h3>
 <p>A client that negotiated <code>&quot;wire&quot;: &quot;binary&quot;</code> at
 <a href="#choosing-a-wire"><code>session.connect</code></a> receives <code>world.tick</code> as a <strong>WebSocket
-binary frame</strong> carrying the same information in about a fifth of the bytes, and
+binary frame</strong> carrying the same information in about a quarter of the bytes, and
 materially cheaper to decode: measured against native JSON, 2.4x faster in
 Godot's GDScript and 33x faster than the pure-Lua parser Defold and LOVE ship.
 Every other message type still arrives as JSON text.</p>
@@ -2006,7 +2005,7 @@ keyframe.
 
 A client that negotiated `"wire": "binary"` at
 [`session.connect`](#choosing-a-wire) receives `world.tick` as a **WebSocket
-binary frame** carrying the same information in about a fifth of the bytes, and
+binary frame** carrying the same information in about a quarter of the bytes, and
 materially cheaper to decode: measured against native JSON, 2.4x faster in
 Godot's GDScript and 33x faster than the pure-Lua parser Defold and LOVE ship.
 Every other message type still arrives as JSON text.

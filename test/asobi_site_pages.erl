@@ -5,6 +5,8 @@
 %% that arity have to live somewhere that is not a suite.
 -module(asobi_site_pages).
 
+-include_lib("eunit/include/eunit.hrl").
+
 -export([
     routes/0,
     paths/0,
@@ -36,7 +38,11 @@ route(Path) ->
 body(Path, ContentType) ->
     {_P, Fun, _Opts} = route(Path),
     {status, 200, Headers, Body} = Fun(#{}),
-    ContentType = maps:get(~"content-type", Headers),
+    %% An assertion rather than a binding: ContentType is already bound, so this
+    %% fails the test if the route serves something else. Written as a match
+    %% against the bound name it reads like an assignment, which is how it got
+    %% flagged - the intent is clearer stated.
+    ?assertEqual(ContentType, maps:get(~"content-type", Headers)),
     iolist_to_binary(Body).
 
 -spec is_md(binary() | string()) -> boolean().

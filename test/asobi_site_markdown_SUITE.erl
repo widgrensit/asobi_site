@@ -8,7 +8,21 @@
 %%
 %% Route and view helpers live in asobi_site_pages, not here.
 -module(asobi_site_markdown_SUITE).
--compile([export_all, nowarn_export_all]).
+%% Explicit rather than export_all: export_all makes every helper look like a
+%% test case to elp, which then reports the helpers as unreachable tests and
+%% needs a module-level warning suppression to quieten. Listing what CT has to
+%% reach says the same thing without either.
+-export([
+    all/0,
+    every_page_has_a_markdown_twin/1,
+    renders_every_markdown_route/1,
+    no_unknown_tags/1,
+    generated_views_serve_their_guide/1,
+    links_are_absolute/1,
+    no_markup_survives/1,
+    code_blocks_are_fenced/1,
+    formats_a_representative_tree/1
+]).
 
 -include_lib("common_test/include/ct.hrl").
 -include_lib("stdlib/include/assert.hrl").
