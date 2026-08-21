@@ -140,7 +140,7 @@ grey one out.</p>
 end of round one, once the objective spawns, whenever the game says so. A
 closed match answers <code>match.locked</code>; a full one answers <code>match.full</code>. To turn
 away one specific player rather than everybody, return <code>nil</code> from
-<a href="/docs/lua/api#refusing-a-join"><code>join</code></a> instead.</p>
+<a href="/docs/lua/api#join-player_id-state-or-join-player_id-state-ctx"><code>join</code></a> instead.</p>
 <h3 id="the-60-second-timeout" tabindex="-1">The 60-second timeout</h3>
 <p>A match that does not reach <code>min_players</code> within 60 seconds stops itself. That
 value is fixed (<code>?WAITING_TIMEOUT</code> in <code>asobi_match_server</code>) and is not exposed
@@ -171,7 +171,7 @@ gated on world membership.</p>
 <p>Nothing creates the hub at boot. The first <code>world.find_or_create</code> instantiates
 it and it stays up from then on; after a restart the first player recreates it.</p>
 <p>Worlds are subject to <code>world_max_per_player</code> (5) and <code>world_max</code> (1000) - see
-<a href="/docs/configuration#world-capacity">World capacity</a>.</p>
+<a href="/docs/configuration#instance-capacity">World capacity</a>.</p>
 <h3 id="private-lobbies" tabindex="-1">Private lobbies</h3>
 <p>A code-gated private lobby can be a match as well as a world: <code>match.find_or_create</code>
 forwards the join context, so a <code>join</code> callback can refuse on a bad code. Share a code out of band and check it on the way in. The join context
@@ -189,7 +189,7 @@ end
 only - it never gates joining, so the join callback above is still the whole
 gate. <code>listed</code> and <code>quick_play</code> are properties of the mode, not of one
 instance, so every world of that mode is equally hidden. See
-<a href="/docs/protocols/websocket#join-context">Join context</a>.</p>
+<a href="/docs/protocols/websocket#match-join">Join context</a>.</p>
 <h3 id="telling-the-room-someone-arrived" tabindex="-1">Telling the room someone arrived</h3>
 <p>Core does not push a join notification to the players already waiting. That is
 deliberate: what a lobby shows differs per game - a bare count, a full roster,
@@ -362,7 +362,7 @@ To close a match to backfill, call
 end of round one, once the objective spawns, whenever the game says so. A
 closed match answers `match.locked`; a full one answers `match.full`. To turn
 away one specific player rather than everybody, return `nil` from
-[`join`](https://asobi.dev/docs/lua/api#refusing-a-join) instead.
+[`join`](https://asobi.dev/docs/lua/api#join-player_id-state-or-join-player_id-state-ctx) instead.
 
 ### The 60-second timeout
 
@@ -404,7 +404,7 @@ Nothing creates the hub at boot. The first `world.find_or_create` instantiates
 it and it stays up from then on; after a restart the first player recreates it.
 
 Worlds are subject to `world_max_per_player` (5) and `world_max` (1000) - see
-[World capacity](https://asobi.dev/docs/configuration#world-capacity).
+[World capacity](https://asobi.dev/docs/configuration#instance-capacity).
 
 ### Private lobbies
 
@@ -427,7 +427,7 @@ Hide it from the browser with `listed = false` in the script. That is discovery
 only - it never gates joining, so the join callback above is still the whole
 gate. `listed` and `quick_play` are properties of the mode, not of one
 instance, so every world of that mode is equally hidden. See
-[Join context](https://asobi.dev/docs/protocols/websocket#join-context).
+[Join context](https://asobi.dev/docs/protocols/websocket#match-join).
 
 ### Telling the room someone arrived
 

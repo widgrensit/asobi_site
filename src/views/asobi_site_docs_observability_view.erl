@@ -34,7 +34,7 @@ which is a different question with a different tool. See
 <a href="https://hexdocs.pm/asobi/console.html">Operator console</a> for the first one.</p>
 <h2 id="what-you-get" tabindex="-1">What you get</h2>
 <ul>
-<li><strong>40 telemetry events</strong>, listed below. Stable names; the measurement and
+<li><strong>53 telemetry events</strong>, listed below. Stable names; the measurement and
 metadata keys are documented per-event in <code>m:asobi_telemetry</code>.</li>
 <li><strong>Structured JSON logs</strong> on stdout, one object per line, via
 <code>nova_jsonlogger</code>. No configuration needed - a container log shipper reads
@@ -131,7 +131,7 @@ shipper at the container's logs.</p>
 <code>console_disabled_without_secret</code> both mean a deployment came up wrong, and
 both are the kind of thing that is otherwise noticed a day later.</p>
 <h2 id="the-events" tabindex="-1">The events</h2>
-<p>Fifty-two, grouped by what they are about. Measurement and metadata keys
+<p>Fifty-three, grouped by what they are about. Measurement and metadata keys
 are in <code>m:asobi_telemetry</code>, which is also the list <code>asobi_telemetry:events/0</code>
 returns - attach to that rather than restating the names.</p>
 <h3 id="sessions-and-the-socket" tabindex="-1">Sessions and the socket</h3>
@@ -146,9 +146,10 @@ asobi.dgram.input_undelivered    asobi.dgram.input_unknown
 asobi.dgram.input_undecodable    asobi.dgram.canary_missed
 asobi.dgram.link_up              asobi.dgram.link_closed
 asobi.dgram.link_error           asobi.dgram.pose_saturated
+asobi.wire.binary_refused
 </code></pre>
 <p>The <code>asobi.dgram.*</code> events fire only on a node in the
-<a href="/docs/configuration#the-datagram-gateway-role"><code>dgram_gw</code> role</a>.</p>
+<a href="/docs/configuration#the-datagram-gateway"><code>dgram_gw</code> role</a>.</p>
 <p><code>asobi.dgram.dropped</code> is the one to build a dashboard on, and <code>gate</code> is why it is
 one event rather than seven. Nothing is ever sent back to a rejected datagram, so
 this counter is the only evidence a rejection happened at all.</p>
@@ -198,6 +199,21 @@ that is <code>asobi.dgram.recv_failed</code> plus client-side telemetry.</p>
 configured scale. Any sustained rate means the <code>scale</code> in
 <a href="/docs/configuration#describing-your-transform-fields"><code>dgram_pose</code></a> is wrong for
 this game's world size, and the fix is configuration rather than code.</p>
+<p><code>asobi.wire.binary_refused</code> fires on the <strong>engine</strong>, not the gateway, and counts
+<code>world.tick</code> frames the binary encoder could not produce, which are sent as text
+instead. One is not a fault - a client that negotiated binary still handles text,
+and the frame after it is a keyframe that rebinds every slot. A <strong>sustained</strong> rate
+is: it means the zone is refusing, repairing and refusing again, and a zone whose
+rebind keyframe also refuses drops off the binary wire and the datagram plane for
+its life (look for <code>binary wire disabled for this zone</code>).</p>
+<p><code>reason</code> says which: <code>dict_too_large</code> for a frame past the 32 field names the
+dictionary can index - count the fields on your widest entity, the log line names
+it - <code>unencodable_field</code> for a list or a nested map where the wire carries
+scalars, <code>bad_field_name</code> and <code>bad_entity_id</code> for a name or id that is not text or
+is past 255 bytes, <code>ambiguous_field_name</code> for two names that collide once atoms
+are rendered as text, <code>value_too_large</code> for a string past 65535 bytes, and
+<code>no_slot</code> for a slot map that has drifted from the baseline. The matching log line
+is throttled to one per zone per minute and carries the count it suppressed.</p>
 <p><code>asobi.dgram.link_error</code> with <code>reason = bad_auth</code> is worth an alert. The engine
 link is loopback-only, so a failed authentication is either a misconfigured
 <code>dgram_link_secret</code> or something local that should not be talking to it.</p>
@@ -217,7 +233,7 @@ getting something for free.</p>
 worth alerting on: a spike in either is either an attack or a client
 misconfiguration, and both are invisible in game metrics.</p>
 <p><code>asobi.ws.legacy_input_unwrap</code> counts input frames sent in the deprecated
-sole-<code>data</code> shape (see <a href="/docs/protocols/websocket#worldinput">WebSocket protocol</a>).
+sole-<code>data</code> shape (see <a href="/docs/protocols/websocket#world-input">WebSocket protocol</a>).
 It is not an error, and not worth an alert: it exists so the carve-out can be
 retired once the counter reaches zero for a release, instead of guessing which
 clients still depend on it.</p>
@@ -325,7 +341,7 @@ which is a different question with a different tool. See
 
 ## What you get
 
-- **40 telemetry events**, listed below. Stable names; the measurement and
+- **53 telemetry events**, listed below. Stable names; the measurement and
   metadata keys are documented per-event in `m:asobi_telemetry`.
 - **Structured JSON logs** on stdout, one object per line, via
   `nova_jsonlogger`. No configuration needed - a container log shipper reads
@@ -421,7 +437,7 @@ both are the kind of thing that is otherwise noticed a day later.
 
 ## The events
 
-Fifty-two, grouped by what they are about. Measurement and metadata keys
+Fifty-three, grouped by what they are about. Measurement and metadata keys
 are in `m:asobi_telemetry`, which is also the list `asobi_telemetry:events/0`
 returns - attach to that rather than restating the names.
 
@@ -439,10 +455,11 @@ asobi.dgram.input_undelivered    asobi.dgram.input_unknown
 asobi.dgram.input_undecodable    asobi.dgram.canary_missed
 asobi.dgram.link_up              asobi.dgram.link_closed
 asobi.dgram.link_error           asobi.dgram.pose_saturated
+asobi.wire.binary_refused
 ```
 
 The `asobi.dgram.*` events fire only on a node in the
-[`dgram_gw` role](https://asobi.dev/docs/configuration#the-datagram-gateway-role).
+[`dgram_gw` role](https://asobi.dev/docs/configuration#the-datagram-gateway).
 
 `asobi.dgram.dropped` is the one to build a dashboard on, and `gate` is why it is
 one event rather than seven. Nothing is ever sent back to a rejected datagram, so
@@ -471,6 +488,23 @@ configured scale. Any sustained rate means the `scale` in
 [`dgram_pose`](https://asobi.dev/docs/configuration#describing-your-transform-fields) is wrong for
 this game's world size, and the fix is configuration rather than code.
 
+`asobi.wire.binary_refused` fires on the **engine**, not the gateway, and counts
+`world.tick` frames the binary encoder could not produce, which are sent as text
+instead. One is not a fault - a client that negotiated binary still handles text,
+and the frame after it is a keyframe that rebinds every slot. A **sustained** rate
+is: it means the zone is refusing, repairing and refusing again, and a zone whose
+rebind keyframe also refuses drops off the binary wire and the datagram plane for
+its life (look for `binary wire disabled for this zone`).
+
+`reason` says which: `dict_too_large` for a frame past the 32 field names the
+dictionary can index - count the fields on your widest entity, the log line names
+it - `unencodable_field` for a list or a nested map where the wire carries
+scalars, `bad_field_name` and `bad_entity_id` for a name or id that is not text or
+is past 255 bytes, `ambiguous_field_name` for two names that collide once atoms
+are rendered as text, `value_too_large` for a string past 65535 bytes, and
+`no_slot` for a slot map that has drifted from the baseline. The matching log line
+is throttled to one per zone per minute and carries the count it suppressed.
+
 `asobi.dgram.link_error` with `reason = bad_auth` is worth an alert. The engine
 link is loopback-only, so a failed authentication is either a misconfigured
 `dgram_link_secret` or something local that should not be talking to it.
@@ -495,7 +529,7 @@ worth alerting on: a spike in either is either an attack or a client
 misconfiguration, and both are invisible in game metrics.
 
 `asobi.ws.legacy_input_unwrap` counts input frames sent in the deprecated
-sole-`data` shape (see [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#worldinput)).
+sole-`data` shape (see [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#world-input)).
 It is not an error, and not worth an alert: it exists so the carve-out can be
 retired once the counter reaches zero for a release, instead of guessing which
 clients still depend on it.

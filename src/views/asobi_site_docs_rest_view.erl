@@ -190,7 +190,7 @@ are cached for 500ms.</p>
 <p><code>POST /api/v1/worlds</code> returns <strong>201</strong> with the world info, <strong>429</strong>
 <code>world.player_limit_reached</code> when the player is at their per-player cap, and
 <strong>503</strong> <code>world.capacity_reached</code> when the global cap is reached. See
-<a href="/docs/configuration#world-capacity">World capacity</a>. The equivalent
+<a href="/docs/configuration#instance-capacity">World capacity</a>. The equivalent
 <code>world.create</code> failures over WebSocket carry no code of their own - see the
 <a href="/docs/protocols/websocket">WebSocket protocol</a>.</p>
 <p><code>GET /api/v1/worlds/:id</code> returns <strong>404</strong> for an unknown id.</p>
@@ -1249,7 +1249,7 @@ are cached for 500ms.
 `POST /api/v1/worlds` returns **201** with the world info, **429**
 `world.player_limit_reached` when the player is at their per-player cap, and
 **503** `world.capacity_reached` when the global cap is reached. See
-[World capacity](https://asobi.dev/docs/configuration#world-capacity). The equivalent
+[World capacity](https://asobi.dev/docs/configuration#instance-capacity). The equivalent
 `world.create` failures over WebSocket carry no code of their own - see the
 [WebSocket protocol](https://asobi.dev/docs/protocols/websocket).
 
