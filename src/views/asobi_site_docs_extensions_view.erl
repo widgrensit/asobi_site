@@ -230,8 +230,10 @@ yourself. Both are derived from the code - <code>asobi_error:status/1</code> and
 differently, and a code you declared in <code>codes/0</code> reaches the client as
 itself. It is the same dialect core's own controllers speak
 (<code>{asobi_error, Code, Details}</code>), so there is one shape to learn.</p>
-<p><code>Ctx</code> is <code>#{player_id, session, method}</code>. It may gain keys: match the ones you
-need with <code>:=</code> and never match it exhaustively.</p>
+<p><code>Ctx</code> is <code>#{player_id, session, method, transport, wire}</code> - <code>transport</code> is <code>ws</code>
+or <code>http</code>, <code>wire</code> is the wire that transport negotiated (<code>~&quot;json&quot;</code> or
+<code>~&quot;binary&quot;</code>, and <code>~&quot;json&quot;</code> over HTTP, which has no wire of its own). It may
+gain keys: match the ones you need with <code>:=</code> and never match it exhaustively.</p>
 <p>Everything else is a defect and answers <code>internal</code> with one logged line naming
 the method: a handler that raises, one that returns outside the contract, one
 declared at an arity other than 2, a result that cannot be JSON-encoded, and a
@@ -1218,8 +1220,10 @@ differently, and a code you declared in `codes/0` reaches the client as
 itself. It is the same dialect core's own controllers speak
 (`{asobi_error, Code, Details}`), so there is one shape to learn.
 
-`Ctx` is `#{player_id, session, method}`. It may gain keys: match the ones you
-need with `:=` and never match it exhaustively.
+`Ctx` is `#{player_id, session, method, transport, wire}` - `transport` is `ws`
+or `http`, `wire` is the wire that transport negotiated (`~"json"` or
+`~"binary"`, and `~"json"` over HTTP, which has no wire of its own). It may
+gain keys: match the ones you need with `:=` and never match it exhaustively.
 
 Everything else is a defect and answers `internal` with one logged line naming
 the method: a handler that raises, one that returns outside the contract, one

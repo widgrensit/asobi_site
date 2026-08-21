@@ -188,12 +188,22 @@ you write <code>sys.config</code> instead.</p>
 <tr>
 <td><code>ASOBI_NODE_HOST</code></td>
 <td><code>127.0.0.1</code></td>
-<td>Erlang node hostname, in <code>-name asobi@...</code>. Not a bind address</td>
+<td>Erlang node hostname, in <code>-name ${ASOBI_NODE_NAME}@...</code>. Not a bind address</td>
+</tr>
+<tr>
+<td><code>ASOBI_NODE_NAME</code></td>
+<td><code>asobi</code></td>
+<td>Erlang node base name. Change it only to run a second asobi node in the same network namespace - the datagram gateway is the one case. <strong>Every node in a cluster must use the same value</strong>: <code>asobi_cluster</code> builds its peers by reusing the current node's base name</td>
 </tr>
 <tr>
 <td><code>ERLANG_COOKIE</code></td>
 <td><code>asobi</code></td>
-<td>Erlang distribution cookie. The default is the literal string <code>asobi</code></td>
+<td>Erlang distribution cookie. The default is the literal string <code>asobi</code>, so it is public. Two nodes sharing a network namespace share an EPMD, so the engine and the datagram gateway must be given <strong>different</strong> cookies</td>
+</tr>
+<tr>
+<td><code>ASOBI_BINARY_WIRE</code></td>
+<td>off</td>
+<td><code>1</code> / <code>true</code> turns on the binary <code>world.tick</code> for clients that ask for it. Required by the <a href="https://hexdocs.pm/asobi/datagram-plane.html">datagram plane</a>, which cannot bind a slot without it</td>
 </tr>
 </tbody>
 </table>
@@ -493,17 +503,22 @@ an attestation check. Unset, it is a no-op.</p>
 <code>details.reason</code> (<code>client_gate_unavailable</code> when the gate itself failed). It
 runs after the rate limiter, so a flood is shed by the cheap in-memory check
 before it reaches an external verification service.</p>
-<h2 id="the-datagram-gateway-role" tabindex="-1">The datagram gateway role</h2>
-<p>One image, two roles. <code>role</code> defaults to <code>engine</code> and gives you exactly what you
-have today; <code>dgram_gw</code> starts the datagram gateway <strong>and nothing else</strong>.</p>
-<pre><code class="language-erlang">{role, dgram_gw},
-{dgram, #{port =&gt; 7777, shards =&gt; 4}}
+<h2 id="the-datagram-gateway" tabindex="-1">The datagram gateway</h2>
+<p>Its own release and its own image, <code>ghcr.io/widgrensit/asobi_dgram</code>. It contains
+the gateway application and its three dependencies - kernel, stdlib, telemetry,
+plus the rate limiter - and that is all: no nova, no kura, no shigoto, no Lua.</p>
+<pre><code class="language-erlang">{dgram, #{port =&gt; 7777, shards =&gt; 4}}
 </code></pre>
-<p>Run them as two containers from the same image. That separation is the point
-rather than a deployment convenience: the gateway binds a UDP port and parses
-packets from anyone on the internet, and it must not share a process tree with
-the Lua sandbox or your database credentials. In the <code>dgram_gw</code> role no zone, no
-world, no match, no Lua VM and no database pool is ever started.</p>
+<p>The separation is the point rather than a deployment convenience: the gateway
+binds a UDP port and parses packets from anyone on the internet, and it must not
+share a process tree with the Lua sandbox or your database credentials.</p>
+<p><strong><code>role</code> is the old way of asking for this and it no longer isolates anything on
+its own.</strong> Setting <code>{role, dgram_gw}</code> on the engine image still starts the
+gateway and only the gateway - but OTP starts an application's dependencies
+before its start callback runs, so kura and shigoto have already opened a pool
+with your credentials and run migrations by the time the role is read
+(asobi#513). The key still works, for the deployments that already use it. The
+image is what makes it a boundary.</p>
 <p><code>shards</code> is the number of <code>SO_REUSEPORT</code> receiver sockets and defaults to the
 scheduler count capped at 8. <strong>It is fixed at boot.</strong> Adding or removing a socket
 reshuffles the kernel's hash and breaks every flow already running through the
@@ -585,11 +600,32 @@ does not work.</li>
 <p>Off by default. Turning it on lets a client ask for <code>world.tick</code> as a binary
 frame at <code>session.connect</code>, about a quarter of the bytes and several times
 cheaper to decode - the numbers and the encoding are in
-<a href="/docs/protocols/websocket#binary-worldtick">the protocol guide</a>.</p>
+<a href="/docs/protocols/websocket#binary-world-tick">the protocol guide</a>.</p>
 <pre><code class="language-erlang">{binary_wire, true}
+</code></pre>
+<p>or, from a container:</p>
+<pre><code>ASOBI_BINARY_WIRE=1
 </code></pre>
 <p>A zone reads this once when it starts, so an already-running world keeps the
 setting it started with.</p>
+<p><strong>The <a href="https://hexdocs.pm/asobi/datagram-plane.html">datagram plane</a> requires it.</strong> A pose datagram carries
+a slot and nothing else, and the only frame that binds a slot to an entity is an
+<code>add</code> on this wire - which <code>session.connect</code> refuses to hand any client while
+this is off. asobi logs <code>dgram_pose_without_binary_wire</code> at boot and disables
+poses rather than sending datagrams every client would discard.</p>
+<p><strong>A frame carries at most 32 distinct field names</strong>, because the field header
+indexes the dictionary in five bits. Past that the frame is sent as text, which
+is correct but costs the entities in it their datagram fast path - see
+<a href="/docs/protocols/websocket#binary-world-tick">the protocol guide</a> for what to watch
+for.</p>
+<p>A zone that cannot encode its entities at all drops to the text wire and then
+retries on a doubling backoff, starting at a minute and stopping at an hour:</p>
+<pre><code class="language-erlang">{binary_wire_retry_ms, 60000}
+</code></pre>
+<p>Lower it if your game legitimately produces short-lived unencodable entities and
+you would rather it recovered sooner; the cost of a retry is one refused encode
+on one broadcast tick. <code>0</code> retries on every broadcast, which is what the tests
+use and not a setting a deployment needs.</p>
 <p>What it costs while on: a zone can have subscribers on both wires, so it builds
 two buffers per broadcast instead of one. That is two encodes per zone per tick
 rather than one per subscriber, and it is paid whether or not anyone has
@@ -1307,8 +1343,10 @@ you write `sys.config` instead.
 | `ASOBI_DB_PASSWORD` | `postgres` | Database password |
 | `ASOBI_DB_SOCKET_OPTS` | `inet` | Erlang term fragment spliced into kura's `socket_options` list. `inet`, `inet6`, `inet, {nodelay, true}`. Set `inet6` for IPv6-only Postgres networks |
 | `ASOBI_CORS_ORIGINS` | none | Allowed CORS origin. Effectively required for any browser client: unset renders an empty `Access-Control-Allow-Origin`, which no browser accepts |
-| `ASOBI_NODE_HOST` | `127.0.0.1` | Erlang node hostname, in `-name asobi@...`. Not a bind address |
-| `ERLANG_COOKIE` | `asobi` | Erlang distribution cookie. The default is the literal string `asobi` |
+| `ASOBI_NODE_HOST` | `127.0.0.1` | Erlang node hostname, in `-name ${ASOBI_NODE_NAME}@...`. Not a bind address |
+| `ASOBI_NODE_NAME` | `asobi` | Erlang node base name. Change it only to run a second asobi node in the same network namespace - the datagram gateway is the one case. **Every node in a cluster must use the same value**: `asobi_cluster` builds its peers by reusing the current node's base name |
+| `ERLANG_COOKIE` | `asobi` | Erlang distribution cookie. The default is the literal string `asobi`, so it is public. Two nodes sharing a network namespace share an EPMD, so the engine and the datagram gateway must be given **different** cookies |
+| `ASOBI_BINARY_WIRE` | off | `1` / `true` turns on the binary `world.tick` for clients that ask for it. Required by the [datagram plane](https://hexdocs.pm/asobi/datagram-plane.html), which cannot bind a slot without it |
 
 The database port is **not** a variable. It is fixed at `5432` in the image's
 `sys.config`, so a Postgres on another port means supplying your own.
@@ -1530,21 +1568,27 @@ A rejected request gets `403 client_gate_denied`, with the gate's own reason in
 runs after the rate limiter, so a flood is shed by the cheap in-memory check
 before it reaches an external verification service.
 
-## The datagram gateway role
+## The datagram gateway
 
-One image, two roles. `role` defaults to `engine` and gives you exactly what you
-have today; `dgram_gw` starts the datagram gateway **and nothing else**.
+Its own release and its own image, `ghcr.io/widgrensit/asobi_dgram`. It contains
+the gateway application and its three dependencies - kernel, stdlib, telemetry,
+plus the rate limiter - and that is all: no nova, no kura, no shigoto, no Lua.
 
 ```erlang
-{role, dgram_gw},
 {dgram, #{port => 7777, shards => 4}}
 ```
 
-Run them as two containers from the same image. That separation is the point
-rather than a deployment convenience: the gateway binds a UDP port and parses
-packets from anyone on the internet, and it must not share a process tree with
-the Lua sandbox or your database credentials. In the `dgram_gw` role no zone, no
-world, no match, no Lua VM and no database pool is ever started.
+The separation is the point rather than a deployment convenience: the gateway
+binds a UDP port and parses packets from anyone on the internet, and it must not
+share a process tree with the Lua sandbox or your database credentials.
+
+**`role` is the old way of asking for this and it no longer isolates anything on
+its own.** Setting `{role, dgram_gw}` on the engine image still starts the
+gateway and only the gateway - but OTP starts an application's dependencies
+before its start callback runs, so kura and shigoto have already opened a pool
+with your credentials and run migrations by the time the role is read
+(asobi#513). The key still works, for the deployments that already use it. The
+image is what makes it a boundary.
 
 `shards` is the number of `SO_REUSEPORT` receiver sockets and defaults to the
 scheduler count capped at 8. **It is fixed at boot.** Adding or removing a socket
@@ -1646,14 +1690,44 @@ does not work.
 Off by default. Turning it on lets a client ask for `world.tick` as a binary
 frame at `session.connect`, about a quarter of the bytes and several times
 cheaper to decode - the numbers and the encoding are in
-[the protocol guide](https://asobi.dev/docs/protocols/websocket#binary-worldtick).
+[the protocol guide](https://asobi.dev/docs/protocols/websocket#binary-world-tick).
 
 ```erlang
 {binary_wire, true}
 ```
 
+or, from a container:
+
+```
+ASOBI_BINARY_WIRE=1
+```
+
 A zone reads this once when it starts, so an already-running world keeps the
 setting it started with.
+
+**The [datagram plane](https://hexdocs.pm/asobi/datagram-plane.html) requires it.** A pose datagram carries
+a slot and nothing else, and the only frame that binds a slot to an entity is an
+`add` on this wire - which `session.connect` refuses to hand any client while
+this is off. asobi logs `dgram_pose_without_binary_wire` at boot and disables
+poses rather than sending datagrams every client would discard.
+
+**A frame carries at most 32 distinct field names**, because the field header
+indexes the dictionary in five bits. Past that the frame is sent as text, which
+is correct but costs the entities in it their datagram fast path - see
+[the protocol guide](https://asobi.dev/docs/protocols/websocket#binary-world-tick) for what to watch
+for.
+
+A zone that cannot encode its entities at all drops to the text wire and then
+retries on a doubling backoff, starting at a minute and stopping at an hour:
+
+```erlang
+{binary_wire_retry_ms, 60000}
+```
+
+Lower it if your game legitimately produces short-lived unencodable entities and
+you would rather it recovered sooner; the cost of a retry is one refused encode
+on one broadcast tick. `0` retries on every broadcast, which is what the tests
+use and not a setting a deployment needs.
 
 What it costs while on: a zone can have subscribers on both wires, so it builds
 two buffers per broadcast instead of one. That is two encodes per zone per tick

@@ -145,7 +145,7 @@ clock and your callbacks, but the client learns the phase by reading the <code>p
 block on the listing and join reply - <code>status</code>, <code>phase</code>, <code>remaining_ms</code> and the
 pending <code>start_condition</code>. Broadcast anything richer yourself from
 <code>on_phase_started</code>.</p>
-<p>See <a href="/docs/protocols/websocket#worldphase_changed-server-push">WebSocket protocol</a>
+<p>See <a href="/docs/protocols/websocket#world-phase_changed-server-push">WebSocket protocol</a>
 for the frame envelope and <a href="https://hexdocs.pm/asobi/lobbies.html">Lobbies</a> for <code>game.broadcast</code>.</p>
 <h3 id="erlang-games" tabindex="-1">Erlang games</h3>
 <p>An Erlang match or world module implements the same three callbacks and has
@@ -357,7 +357,7 @@ block on the listing and join reply - `status`, `phase`, `remaining_ms` and the
 pending `start_condition`. Broadcast anything richer yourself from
 `on_phase_started`.
 
-See [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#worldphase_changed-server-push)
+See [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#world-phase_changed-server-push)
 for the frame envelope and [Lobbies](https://hexdocs.pm/asobi/lobbies.html) for `game.broadcast`.
 
 ### Erlang games

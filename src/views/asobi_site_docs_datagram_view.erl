@@ -63,12 +63,27 @@ which the next pose overwrites it. They cannot affect the server, any other
 player, the simulation, entity creation or removal, or any non-transform field.</p>
 <p>Everything with authority travels only on the TLS WebSocket, in every state.</p>
 <h2 id="server-setup" tabindex="-1">Server setup</h2>
-<p>Two containers from the same image. The gateway binds a UDP port and parses
-packets from anyone on the internet, so it must not share a process tree with
-your Lua sandbox or your database credentials: in the <code>dgram_gw</code> role no zone,
-world, match, Lua VM or database pool is ever started.</p>
+<p>Two containers, and two different images. The gateway binds a UDP port and
+parses packets from anyone on the internet, so it must not run your game -
+enforced by what is in the image rather than by a flag.
+<code>ghcr.io/widgrensit/asobi_dgram</code> is a release of the gateway application alone:
+no nova, no kura, no shigoto, no Lua, no HTTP listener, and no database driver to
+open a pool with.</p>
+<p>It used to be one image and a role, and that could not work: OTP starts an
+application's dependencies before its start callback, so the pool was already
+open by the time the role was read (asobi#513). Setting <code>ASOBI_ROLE=dgram_gw</code> on
+the engine image still runs the gateway and still has that flaw. Build your own
+with <code>docker build --target gateway</code>.</p>
 <pre><code class="language-bash">openssl rand -hex 32 &gt; dgram_secret.txt
 printf 'dgram_secret.txt\n' &gt;&gt; .gitignore
+</code></pre>
+<p>The two roles also need <strong>different Erlang cookies</strong>. They share a network
+namespace, so they share a loopback and an EPMD, and a shared cookie means the
+container parsing hostile UDP can <code>rpc:call</code> into the one holding your Lua
+sandbox and your database credentials. The image ships a public default, so
+setting both is not optional:</p>
+<pre><code class="language-bash">echo &quot;ERLANG_COOKIE=$(openssl rand -hex 24)&quot;    # engine, in your .env
+echo &quot;DGRAM_COOKIE=$(openssl rand -hex 24)&quot;     # gateway, in your .env
 </code></pre>
 <pre><code class="language-yaml">  asobi:
     image: ghcr.io/widgrensit/asobi:latest
@@ -76,33 +91,71 @@ printf 'dgram_secret.txt\n' &gt;&gt; .gitignore
     environment:
       # Where to dial the gateway. This is the engine's opt-in: without it
       # nothing is dialled and clients are told the plane is unavailable.
-      ASOBI_DGRAM_GATEWAY: &quot;dgram:7778&quot;
+      #
+      # Loopback, not a compose service name. The gateway binds its link port on
+      # 127.0.0.1 - it carries mint credentials with no transport security of its
+      # own - so a gateway on its own compose network is unreachable no matter
+      # what you point this at, and the plane degrades to WebSocket for everyone
+      # (asobi#511). The two roles share one network namespace instead.
+      ASOBI_DGRAM_GATEWAY: &quot;127.0.0.1:7778&quot;
       # What clients are told to send to - your public address, not the
       # container's. Delivered in the mint reply, which is why the plane needs
       # no DNS and no SNI and why a non-standard port costs nothing.
       ASOBI_DGRAM_ENDPOINT: &quot;udp.example.com:7777&quot;
       ASOBI_DGRAM_LINK_SECRET_FILE: /run/secrets/dgram
       ASOBI_DGRAM_POSE_FIELDS: &quot;x:100,y:100,vx:100,vy:100&quot;
+      # The plane's precondition: only the binary `world.tick` binds a slot, and
+      # no client is served it while this is off - so every pose would be
+      # discarded client-side. asobi logs an error at boot and disables poses if
+      # the manifest is configured without it.
+      ASOBI_BINARY_WIRE: &quot;1&quot;
+      ERLANG_COOKIE: ${ERLANG_COOKIE:?set ERLANG_COOKIE in .env}
+    ports:
+      # The gateway's UDP port, published here because it lives in this
+      # container's network namespace.
+      - &quot;7777:7777/udp&quot;
     volumes:
       - ./dgram_secret.txt:/run/secrets/dgram:ro
 
   dgram:
-    image: ghcr.io/widgrensit/asobi:latest
+    # Not the engine image with a role set - see above.
+    image: ghcr.io/widgrensit/asobi_dgram:latest
+    # The engine's network namespace. On Kubernetes this is a second container in
+    # the same pod, where it comes for free.
+    network_mode: &quot;service:asobi&quot;
+    depends_on:
+      - asobi
     environment:
-      ASOBI_ROLE: dgram_gw
+      # ASOBI_ROLE and the ports are baked into this image; set here only where
+      # you want something other than the defaults.
       ASOBI_DGRAM_PORT: 7777
       ASOBI_DGRAM_LINK_PORT: 7778
       ASOBI_DGRAM_LINK_SECRET_FILE: /run/secrets/dgram
       ASOBI_DGRAM_POSE_FIELDS: &quot;x:100,y:100,vx:100,vy:100&quot;
-    ports:
-      - &quot;7777:7777/udp&quot;
+      # A DIFFERENT cookie from the engine's. One namespace means one loopback,
+      # and a shared cookie makes distribution a path from the process parsing
+      # internet packets into the one running your game. The node name is already
+      # distinct in this image, which the shared EPMD requires.
+      ERLANG_COOKIE: ${DGRAM_COOKIE:?set DGRAM_COOKIE in .env}
     volumes:
       - ./dgram_secret.txt:/run/secrets/dgram:ro
     restart: unless-stopped
 </code></pre>
+<p><strong>The two roles share a network namespace.</strong> That is a <code>network_mode: &quot;service:asobi&quot;</code> sidecar in compose, and two containers in one pod on Kubernetes
+(where they already do). The gateway keeps its own environment, its own
+filesystem and its own process tree, which is where most of the split lives. What
+it does not keep is a private loopback - which is exactly what makes the link
+reachable, and also what puts both nodes on one EPMD. <strong>Give them different
+<code>ERLANG_COOKIE</code>s</strong>, as below: a shared cookie lets the container parsing hostile
+UDP <code>rpc:call</code> into the one running your Lua and holding your database
+credentials, and the image default is public.</p>
 <p>Open <strong>UDP</strong> 7777 on your firewall. Never publish the link port: it carries mint
-credentials, has no transport security of its own, and binds loopback for that
-reason.</p>
+credentials and has no transport security of its own, which is why it binds
+loopback and why the namespace is shared rather than the port exposed.</p>
+<p>The gateway image has no HTTP listener in it, so it does not compete for
+<code>ASOBI_PORT</code> and there is no half-booted API answering requests from a node with
+no auth subsystem behind it. Its logs are still one JSON object per line, from a
+formatter small enough to live in a release with no nova in it.</p>
 <p>The engine dials the gateway rather than the other way round, so the gateway
 needs no knowledge of where the engine is. The link is deliberately <strong>not</strong>
 distributed Erlang, which would have been the obvious answer: dist is
@@ -126,7 +179,7 @@ range <strong>saturates and is counted</strong>, never wraps: wrapping would tel
 entity across the world, which reads as a game bug, where saturation reads as
 what it is.</p>
 <p><code>ASOBI_DGRAM_POSE_PERIOD</code> (default 20) is the axial refresh in ticks.</p>
-<p>Full variable list in <a href="/docs/configuration#the-datagram-gateway-role">Configuration</a>.</p>
+<p>Full variable list in <a href="/docs/configuration#the-datagram-gateway">Configuration</a>.</p>
 <h2 id="client-setup" tabindex="-1">Client setup</h2>
 <p>Clients opt in per SDK. Nothing else about your game changes: entity callbacks
 fire exactly as before and <code>world.tick</code> keeps carrying everything else.</p>
@@ -220,6 +273,10 @@ on before you have tested every player's network.</p>
 <td>The mint answers <code>datagram_unavailable</code>. The client stays on the WebSocket.</td>
 </tr>
 <tr>
+<td>The client did not ask for the binary wire</td>
+<td>It mints, and its <strong>input</strong> still travels over UDP. It is not sent poses, because it has no slot table to resolve them against - positions keep coming on <code>world.tick</code>. See below.</td>
+</tr>
+<tr>
 <td>A firewall drops UDP</td>
 <td>Three probes over three seconds, then the client gives up to <code>off</code>.</td>
 </tr>
@@ -239,6 +296,33 @@ on before you have tested every player's network.</p>
 </table>
 <p><strong>The WebSocket carries everything in every state.</strong> There is no state in which
 correctness depends on this plane.</p>
+<h3 id="if-it-never-leaves-probing" tabindex="-1">If it never leaves probing</h3>
+<p>A blocked firewall and a reply that never arrives look identical from the client,
+and both end as three probes and a fall back to the WebSocket. Server-side
+telemetry cannot tell them apart either: nothing is dropped, so
+<code>asobi.dgram.dropped</code> stays at zero in both cases.</p>
+<p>Capture on the gateway and compare the ports:</p>
+<pre><code>tcpdump -ni any udp port 7777
+</code></pre>
+<p>Every reply must leave from the port the client sent to. A reply from any other
+source port is dropped by NAT on the way back, and filtered by SDKs that
+<code>connect()</code> their socket even when it does arrive. Gateways up to and including
+v0.92.3 sent from an ephemeral port and hit exactly this; upgrade rather than
+reconfigure.</p>
+<h3 id="poses-need-the-binary-wire-input-does-not" tabindex="-1">Poses need the binary wire; input does not</h3>
+<p>A pose record carries a slot and nothing else, and the only frame that binds a
+slot to an entity is an <code>add</code> on the <a href="/docs/protocols/websocket#binary-world-tick">binary
+<code>world.tick</code></a>. So a client that connected
+without <code>&quot;wire&quot;: &quot;binary&quot;</code> cannot resolve a pose, and the server does not send it
+any - it would be dropped client-side and the entity would look frozen with
+nothing in either log to say why.</p>
+<p>The plane's other half is unaffected: <code>world.input</code> travelling upstream over UDP
+resolves a player by <code>conn_id</code>, needs no slots, and works on either wire. So
+minting is allowed either way, and a client that wants only the latency win on
+its own input can have it.</p>
+<p>Every SDK that supports the plane asks for both, so this is not something you
+configure - it matters if you are writing a client by hand, or debugging why a
+plane that reports <code>on</code> never moves anything.</p>
 <p>The client keepalive is not optional and cannot be moved to the server: with a
 NAT anywhere in the path a quiet client loses its mapping and the downlink is
 blackholed with no signal at all, and only a client-originated packet recreates
@@ -249,6 +333,18 @@ asobi.dgram.canary_missed    consecutive &gt;= 2 means the receive loop is wedge
 asobi.dgram.dropped          gate=mac is the one to wake up for
 asobi.dgram.pose_saturated   your scale is wrong for your world size
 </code></pre>
+<p>Two log lines say the plane is not working, and both name the cause:</p>
+<ul>
+<li><code>dgram link unreachable, datagram plane is down</code> - the engine cannot reach the
+gateway. Almost always the topology: the link port binds loopback, so the two
+roles have to share a network namespace. Every client is answered
+<code>datagram_unavailable</code> until this clears.</li>
+<li><code>binary world.tick frame refused, falling back to text</code> - a zone's entities do
+not fit the binary wire, so the entities that frame introduced get no poses.
+The line carries the zone, the distinct field-name count (the cap is 32) and
+the widest entity, and it is throttled to one per zone per minute with the
+suppressed count attached.</li>
+</ul>
 <p>The gateway proves itself by sending itself a real datagram every five seconds
 and waiting for the reply, so a wedged receive loop fails readiness where a
 port-bound check would not. It does <strong>not</strong> prove every shard: the kernel chooses
@@ -265,10 +361,10 @@ there at all.</p>
 than left for a reader to discover.</p>
 <h2 id="further-reading" tabindex="-1">Further reading</h2>
 <ul>
-<li><a href="/docs/configuration#the-datagram-gateway-role">Configuration</a> - every variable.</li>
+<li><a href="/docs/configuration#the-datagram-gateway">Configuration</a> - every variable.</li>
 <li><a href="https://hexdocs.pm/asobi/self-hosting.html#adding-the-datagram-plane">Self-hosting</a> - the compose file in
 context.</li>
-<li><a href="/docs/protocols/websocket#binary-worldtick">WebSocket protocol</a> - the binary
+<li><a href="/docs/protocols/websocket#binary-world-tick">WebSocket protocol</a> - the binary
 <code>world.tick</code> encoding, which the plane depends on for its slot bindings.</li>
 <li>ADR 0012 and ADR 0013 in <code>docs/adr/</code> - the protocol design, why it was
 rejected, and why it was reopened.</li>
@@ -347,14 +443,33 @@ Everything with authority travels only on the TLS WebSocket, in every state.
 
 ## Server setup
 
-Two containers from the same image. The gateway binds a UDP port and parses
-packets from anyone on the internet, so it must not share a process tree with
-your Lua sandbox or your database credentials: in the `dgram_gw` role no zone,
-world, match, Lua VM or database pool is ever started.
+Two containers, and two different images. The gateway binds a UDP port and
+parses packets from anyone on the internet, so it must not run your game -
+enforced by what is in the image rather than by a flag.
+`ghcr.io/widgrensit/asobi_dgram` is a release of the gateway application alone:
+no nova, no kura, no shigoto, no Lua, no HTTP listener, and no database driver to
+open a pool with.
+
+It used to be one image and a role, and that could not work: OTP starts an
+application's dependencies before its start callback, so the pool was already
+open by the time the role was read (asobi#513). Setting `ASOBI_ROLE=dgram_gw` on
+the engine image still runs the gateway and still has that flaw. Build your own
+with `docker build --target gateway`.
 
 ```bash
 openssl rand -hex 32 > dgram_secret.txt
 printf 'dgram_secret.txt\n' >> .gitignore
+```
+
+The two roles also need **different Erlang cookies**. They share a network
+namespace, so they share a loopback and an EPMD, and a shared cookie means the
+container parsing hostile UDP can `rpc:call` into the one holding your Lua
+sandbox and your database credentials. The image ships a public default, so
+setting both is not optional:
+
+```bash
+echo "ERLANG_COOKIE=$(openssl rand -hex 24)"    # engine, in your .env
+echo "DGRAM_COOKIE=$(openssl rand -hex 24)"     # gateway, in your .env
 ```
 
 ```yaml
@@ -364,34 +479,75 @@ printf 'dgram_secret.txt\n' >> .gitignore
     environment:
       # Where to dial the gateway. This is the engine's opt-in: without it
       # nothing is dialled and clients are told the plane is unavailable.
-      ASOBI_DGRAM_GATEWAY: "dgram:7778"
+      #
+      # Loopback, not a compose service name. The gateway binds its link port on
+      # 127.0.0.1 - it carries mint credentials with no transport security of its
+      # own - so a gateway on its own compose network is unreachable no matter
+      # what you point this at, and the plane degrades to WebSocket for everyone
+      # (asobi#511). The two roles share one network namespace instead.
+      ASOBI_DGRAM_GATEWAY: "127.0.0.1:7778"
       # What clients are told to send to - your public address, not the
       # container's. Delivered in the mint reply, which is why the plane needs
       # no DNS and no SNI and why a non-standard port costs nothing.
       ASOBI_DGRAM_ENDPOINT: "udp.example.com:7777"
       ASOBI_DGRAM_LINK_SECRET_FILE: /run/secrets/dgram
       ASOBI_DGRAM_POSE_FIELDS: "x:100,y:100,vx:100,vy:100"
+      # The plane's precondition: only the binary `world.tick` binds a slot, and
+      # no client is served it while this is off - so every pose would be
+      # discarded client-side. asobi logs an error at boot and disables poses if
+      # the manifest is configured without it.
+      ASOBI_BINARY_WIRE: "1"
+      ERLANG_COOKIE: ${ERLANG_COOKIE:?set ERLANG_COOKIE in .env}
+    ports:
+      # The gateway's UDP port, published here because it lives in this
+      # container's network namespace.
+      - "7777:7777/udp"
     volumes:
       - ./dgram_secret.txt:/run/secrets/dgram:ro
 
   dgram:
-    image: ghcr.io/widgrensit/asobi:latest
+    # Not the engine image with a role set - see above.
+    image: ghcr.io/widgrensit/asobi_dgram:latest
+    # The engine's network namespace. On Kubernetes this is a second container in
+    # the same pod, where it comes for free.
+    network_mode: "service:asobi"
+    depends_on:
+      - asobi
     environment:
-      ASOBI_ROLE: dgram_gw
+      # ASOBI_ROLE and the ports are baked into this image; set here only where
+      # you want something other than the defaults.
       ASOBI_DGRAM_PORT: 7777
       ASOBI_DGRAM_LINK_PORT: 7778
       ASOBI_DGRAM_LINK_SECRET_FILE: /run/secrets/dgram
       ASOBI_DGRAM_POSE_FIELDS: "x:100,y:100,vx:100,vy:100"
-    ports:
-      - "7777:7777/udp"
+      # A DIFFERENT cookie from the engine's. One namespace means one loopback,
+      # and a shared cookie makes distribution a path from the process parsing
+      # internet packets into the one running your game. The node name is already
+      # distinct in this image, which the shared EPMD requires.
+      ERLANG_COOKIE: ${DGRAM_COOKIE:?set DGRAM_COOKIE in .env}
     volumes:
       - ./dgram_secret.txt:/run/secrets/dgram:ro
     restart: unless-stopped
 ```
 
+**The two roles share a network namespace.** That is a `network_mode:
+"service:asobi"` sidecar in compose, and two containers in one pod on Kubernetes
+(where they already do). The gateway keeps its own environment, its own
+filesystem and its own process tree, which is where most of the split lives. What
+it does not keep is a private loopback - which is exactly what makes the link
+reachable, and also what puts both nodes on one EPMD. **Give them different
+`ERLANG_COOKIE`s**, as below: a shared cookie lets the container parsing hostile
+UDP `rpc:call` into the one running your Lua and holding your database
+credentials, and the image default is public.
+
 Open **UDP** 7777 on your firewall. Never publish the link port: it carries mint
-credentials, has no transport security of its own, and binds loopback for that
-reason.
+credentials and has no transport security of its own, which is why it binds
+loopback and why the namespace is shared rather than the port exposed.
+
+The gateway image has no HTTP listener in it, so it does not compete for
+`ASOBI_PORT` and there is no half-booted API answering requests from a node with
+no auth subsystem behind it. Its logs are still one JSON object per line, from a
+formatter small enough to live in a release with no nova in it.
 
 The engine dials the gateway rather than the other way round, so the gateway
 needs no knowledge of where the engine is. The link is deliberately **not**
@@ -424,7 +580,7 @@ what it is.
 
 `ASOBI_DGRAM_POSE_PERIOD` (default 20) is the axial refresh in ticks.
 
-Full variable list in [Configuration](https://asobi.dev/docs/configuration#the-datagram-gateway-role).
+Full variable list in [Configuration](https://asobi.dev/docs/configuration#the-datagram-gateway).
 
 ## Client setup
 
@@ -487,6 +643,7 @@ on before you have tested every player's network.
 | Situation | What happens |
 |---|---|
 | Server has no gateway | The mint answers `datagram_unavailable`. The client stays on the WebSocket. |
+| The client did not ask for the binary wire | It mints, and its **input** still travels over UDP. It is not sent poses, because it has no slot table to resolve them against - positions keep coming on `world.tick`. See below. |
 | A firewall drops UDP | Three probes over three seconds, then the client gives up to `off`. |
 | The path goes quiet for 2s | `degraded`: positions come from `world.tick` again while the client re-probes in the background. |
 | The WebSocket reconnects | Back to `off`, and a fresh mint. A credential is bound to a session. |
@@ -494,6 +651,43 @@ on before you have tested every player's network.
 
 **The WebSocket carries everything in every state.** There is no state in which
 correctness depends on this plane.
+
+### If it never leaves probing
+
+A blocked firewall and a reply that never arrives look identical from the client,
+and both end as three probes and a fall back to the WebSocket. Server-side
+telemetry cannot tell them apart either: nothing is dropped, so
+`asobi.dgram.dropped` stays at zero in both cases.
+
+Capture on the gateway and compare the ports:
+
+```
+tcpdump -ni any udp port 7777
+```
+
+Every reply must leave from the port the client sent to. A reply from any other
+source port is dropped by NAT on the way back, and filtered by SDKs that
+`connect()` their socket even when it does arrive. Gateways up to and including
+v0.92.3 sent from an ephemeral port and hit exactly this; upgrade rather than
+reconfigure.
+
+### Poses need the binary wire; input does not
+
+A pose record carries a slot and nothing else, and the only frame that binds a
+slot to an entity is an `add` on the [binary
+`world.tick`](https://asobi.dev/docs/protocols/websocket#binary-world-tick). So a client that connected
+without `"wire": "binary"` cannot resolve a pose, and the server does not send it
+any - it would be dropped client-side and the entity would look frozen with
+nothing in either log to say why.
+
+The plane's other half is unaffected: `world.input` travelling upstream over UDP
+resolves a player by `conn_id`, needs no slots, and works on either wire. So
+minting is allowed either way, and a client that wants only the latency win on
+its own input can have it.
+
+Every SDK that supports the plane asks for both, so this is not something you
+configure - it matters if you are writing a client by hand, or debugging why a
+plane that reports `on` never moves anything.
 
 The client keepalive is not optional and cannot be moved to the server: with a
 NAT anywhere in the path a quiet client loses its mapping and the downlink is
@@ -508,6 +702,18 @@ asobi.dgram.canary_missed    consecutive >= 2 means the receive loop is wedged
 asobi.dgram.dropped          gate=mac is the one to wake up for
 asobi.dgram.pose_saturated   your scale is wrong for your world size
 ```
+
+Two log lines say the plane is not working, and both name the cause:
+
+- `dgram link unreachable, datagram plane is down` - the engine cannot reach the
+  gateway. Almost always the topology: the link port binds loopback, so the two
+  roles have to share a network namespace. Every client is answered
+  `datagram_unavailable` until this clears.
+- `binary world.tick frame refused, falling back to text` - a zone's entities do
+  not fit the binary wire, so the entities that frame introduced get no poses.
+  The line carries the zone, the distinct field-name count (the cap is 32) and
+  the widest entity, and it is throttled to one per zone per minute with the
+  suppressed count attached.
 
 The gateway proves itself by sending itself a real datagram every five seconds
 and waiting for the reply, so a wedged receive loop fails readiness where a
@@ -530,10 +736,10 @@ than left for a reader to discover.
 
 ## Further reading
 
-- [Configuration](https://asobi.dev/docs/configuration#the-datagram-gateway-role) - every variable.
+- [Configuration](https://asobi.dev/docs/configuration#the-datagram-gateway) - every variable.
 - [Self-hosting](https://hexdocs.pm/asobi/self-hosting.html#adding-the-datagram-plane) - the compose file in
   context.
-- [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#binary-worldtick) - the binary
+- [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#binary-world-tick) - the binary
   `world.tick` encoding, which the plane depends on for its slot bindings.
 - ADR 0012 and ADR 0013 in `docs/adr/` - the protocol design, why it was
   rejected, and why it was reopened.

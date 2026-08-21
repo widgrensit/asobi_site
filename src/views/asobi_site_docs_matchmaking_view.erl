@@ -241,7 +241,7 @@ and have them <code>world.join</code> it. Matches are created by the matchmaker 
 Erlang caller inside the release, and by nothing else - there is no
 <code>match.create</code> frame and no <code>POST /api/v1/matches</code>.</p>
 <p>Gate entry by implementing <code>join/3</code> in your game module and checking the join
-context - see <a href="/docs/protocols/websocket#join-context">WebSocket protocol</a>. To let
+context - see <a href="/docs/protocols/websocket#match-join">WebSocket protocol</a>. To let
 friends find your session in a browser instead, see
 <a href="/docs/world-server">World server</a>.</p>
 <h2 id="cancelling" tabindex="-1">Cancelling</h2>
@@ -554,7 +554,7 @@ Erlang caller inside the release, and by nothing else - there is no
 `match.create` frame and no `POST /api/v1/matches`.
 
 Gate entry by implementing `join/3` in your game module and checking the join
-context - see [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#join-context). To let
+context - see [WebSocket protocol](https://asobi.dev/docs/protocols/websocket#match-join). To let
 friends find your session in a browser instead, see
 [World server](https://asobi.dev/docs/world-server).
 

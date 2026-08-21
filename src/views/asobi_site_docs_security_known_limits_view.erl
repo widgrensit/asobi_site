@@ -49,11 +49,19 @@ Lua instead. Luerl runs scripts in a hardened state with OS, I/O and
 code-loading APIs stripped and a budget per callback: see <a href="/docs/security/lua-sandbox">Sandbox
 model</a>.</p>
 <h2 id="erlang-distribution-is-on-by-default" tabindex="-1">Erlang distribution is on by default</h2>
-<p><code>config/vm.args.src</code> sets <code>-name asobi@${ASOBI_NODE_HOST}</code> and
+<p><code>config/vm.args.src</code> sets <code>-name ${ASOBI_NODE_NAME}@${ASOBI_NODE_HOST}</code> and
 <code>-setcookie ${ERLANG_COOKIE}</code>. EPMD listens on <code>0.0.0.0:4369</code>, the distribution
 port range is unbounded, and the cookie is the only protection. The published
 image ships a fixed, publicly known <code>ERLANG_COOKIE=asobi</code>, so any deployment
 that exposes the distribution port must override it.</p>
+<p><strong>Running the <a href="https://hexdocs.pm/asobi/datagram-plane.html">datagram gateway</a> makes this sharper, and the
+localhost bind below does not answer it.</strong> The two roles share a network
+namespace, which is what makes the loopback link reachable - so they also share
+a loopback and an EPMD, and &quot;container-internal&quot; now spans both containers. The
+gateway is the process parsing packets from anyone on the internet. Give the two
+roles <strong>different</strong> <code>ERLANG_COOKIE</code>s, or a bug in that codec is <code>rpc:call</code> into
+the node holding your Lua sandbox and your database credentials. The compose in
+the self-hosting guide shows both.</p>
 <p>For a single node, uncomment the localhost bind in <code>vm.args.src</code>. For a
 cluster, constrain <code>inet_dist_listen_min/max</code> and turn on TLS for
 distribution. See <a href="/docs/security/threat-model#erlang-distribution">Threat model</a>.</p>
@@ -157,11 +165,20 @@ model](https://asobi.dev/docs/security/lua-sandbox).
 
 ## Erlang distribution is on by default
 
-`config/vm.args.src` sets `-name asobi@${ASOBI_NODE_HOST}` and
+`config/vm.args.src` sets `-name ${ASOBI_NODE_NAME}@${ASOBI_NODE_HOST}` and
 `-setcookie ${ERLANG_COOKIE}`. EPMD listens on `0.0.0.0:4369`, the distribution
 port range is unbounded, and the cookie is the only protection. The published
 image ships a fixed, publicly known `ERLANG_COOKIE=asobi`, so any deployment
 that exposes the distribution port must override it.
+
+**Running the [datagram gateway](https://hexdocs.pm/asobi/datagram-plane.html) makes this sharper, and the
+localhost bind below does not answer it.** The two roles share a network
+namespace, which is what makes the loopback link reachable - so they also share
+a loopback and an EPMD, and "container-internal" now spans both containers. The
+gateway is the process parsing packets from anyone on the internet. Give the two
+roles **different** `ERLANG_COOKIE`s, or a bug in that codec is `rpc:call` into
+the node holding your Lua sandbox and your database credentials. The compose in
+the self-hosting guide shows both.
 
 For a single node, uncomment the localhost bind in `vm.args.src`. For a
 cluster, constrain `inet_dist_listen_min/max` and turn on TLS for

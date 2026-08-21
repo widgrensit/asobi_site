@@ -107,11 +107,12 @@ frame that happens to arrive.</p>
 <p>Asking for binary changes <code>world.tick</code> and nothing else. <code>world.ack</code>,
 <code>world.terrain</code>, <code>match.*</code>, <code>module.*</code> and every <code>error</code> stay JSON text on both
 wires, so a binary client is one that handles both frame types, not one that
-stops handling text. A frame the server cannot encode as binary (an entity field
-holding a list or a nested map, for instance) also arrives as text.</p>
+stops handling text. A frame the server cannot encode as binary also arrives as
+text: an entity field holding a list or a nested map, or a frame needing more
+than the 32 field names the dictionary can index.</p>
 <p>The uplink is text-only on both wires. A binary frame sent to the server answers
 <code>error</code> with reason <code>binary_uplink_unsupported</code>.</p>
-<p>See <a href="#binary-worldtick">Binary <code>world.tick</code></a> for the encoding.</p>
+<p>See <a href="#binary-world-tick">Binary <code>world.tick</code></a> for the encoding.</p>
 <h3 id="sessionheartbeat" tabindex="-1"><code>session.heartbeat</code></h3>
 <p>Keep-alive ping. Send periodically to prevent timeout.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;session.heartbeat&quot;, &quot;payload&quot;: {}}
@@ -267,7 +268,7 @@ backfill call.</p>
 <p><code>join_refused</code> carries the game's own reason string in
 <code>error.details.refused_reason</code> when the script gave one. It is game
 vocabulary, never an asobi code - see
-<a href="/docs/lua/api#refusing-a-join">Refusing a join</a>.</p>
+<a href="/docs/lua/api#join-player_id-state-or-join-player_id-state-ctx">Refusing a join</a>.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;error&quot;, &quot;cid&quot;: &quot;j-1&quot;, &quot;payload&quot;: {&quot;reason&quot;: &quot;join_refused&quot;, &quot;error&quot;: {&quot;code&quot;: &quot;match.join_refused&quot;, &quot;message&quot;: &quot;The game refused this join. See `details.refused_reason`.&quot;, &quot;details&quot;: {&quot;refused_reason&quot;: &quot;wrong_code&quot;}}}}
 </code></pre>
 <h4 id="join-context" tabindex="-1">Join context</h4>
@@ -307,7 +308,7 @@ that ignores it stays open to anyone holding a <code>world_id</code>.</p>
 <p>Send game input to the match server.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;match.input&quot;, &quot;payload&quot;: {&quot;action&quot;: &quot;move&quot;, &quot;x&quot;: 10, &quot;y&quot;: 5}}
 </code></pre>
-<p>As with <a href="#worldinput"><code>world.input</code></a>, the <code>payload</code> IS the input map. Two
+<p>As with <a href="#world-input"><code>world.input</code></a>, the <code>payload</code> IS the input map. Two
 <strong>deprecated</strong> compatibility shapes survive here and will go at the next
 protocol break: a payload whose only key is <code>data</code> mapped to an object is
 unwrapped to that object, and one whose only key is <code>data</code> mapped to a JSON
@@ -341,7 +342,7 @@ arrives as <code>ws.request_failed</code> with the reason in <code>details</code
 several common failures. On this page that covers the world capacity pair
 (<code>world_capacity_reached</code>, <code>player_world_limit_reached</code>, which REST answers
 as <code>world.capacity_reached</code> and <code>world.player_limit_reached</code>) and every
-join-context rejection listed under <a href="#join-context">Join context</a>. Match a
+join-context rejection listed under <a href="#match-join">Join context</a>. Match a
 reason string on <code>details.reason</code> for those, not a code.</li>
 <li><code>error.message</code> is prose for a human reading a log. Do not parse it.</li>
 <li><code>error.details</code> is <strong>always</strong> an object, <code>{}</code> when there is nothing to add.</li>
@@ -553,7 +554,7 @@ with the rest of the payload intact.</p>
 reason <code>invalid_payload</code>. It is not silently treated as empty input.</p>
 <p>For client-side prediction, add an optional <code>seq</code> <em>alongside</em> <code>payload</code> (a
 sibling, so &quot;the payload IS the input map&quot; stays true). The server echoes the
-highest consumed <code>seq</code> back as a <a href="#worldack-server-push"><code>world.ack</code></a>; see
+highest consumed <code>seq</code> back as a <a href="#world-ack-server-push"><code>world.ack</code></a>; see
 <a href="#client-side-prediction">Client-side prediction</a>. A <code>seq</code> that is not a
 non-negative integer below 2^53 is ignored.</p>
 <pre><code class="language-json">{&quot;type&quot;: &quot;world.input&quot;, &quot;seq&quot;: 412, &quot;payload&quot;: {&quot;kind&quot;: &quot;move&quot;, &quot;x&quot;: 600, &quot;y&quot;: 480}}
@@ -646,11 +647,11 @@ what makes a zone restart recoverable.</li>
 <li>A frame with no <code>frame_seq</code> at all, which is the removal list you get for the
 zone you are leaving. Gating it would leave you holding ghosts forever.</li>
 </ul>
-<p>On a gap, send <a href="#worldresync"><code>world.resync</code></a> for that zone and you get a fresh
+<p>On a gap, send <a href="#world-resync"><code>world.resync</code></a> for that zone and you get a fresh
 keyframe.</p>
 <h3 id="binary-worldtick" tabindex="-1">Binary <code>world.tick</code></h3>
 <p>A client that negotiated <code>&quot;wire&quot;: &quot;binary&quot;</code> at
-<a href="#choosing-a-wire"><code>session.connect</code></a> receives <code>world.tick</code> as a <strong>WebSocket
+<a href="#session-connect"><code>session.connect</code></a> receives <code>world.tick</code> as a <strong>WebSocket
 binary frame</strong> carrying the same information in about a quarter of the bytes, and
 materially cheaper to decode: measured against native JSON, 2.4x faster in
 Godot's GDScript and 33x faster than the pure-Lua parser Defold and LOVE ship.
@@ -711,6 +712,31 @@ A <code>2</code> frame is the leave-removal list, and it is applied ungated.</p>
 <code>x, y, vx, vy</code> pay for four names rather than a hundred and sixty. The frame is
 self-describing: nothing is negotiated up front and nothing survives a
 reconnect.</p>
+<p><strong>Five bits of index means a frame carries at most 32 distinct field names</strong>, and
+this is a budget worth knowing before you hit it. It is counted across the whole
+frame, not per entity, but one entity is what usually spends it: a delta names
+only the fields that changed, while the <code>add</code> that introduces an entity names all
+of them. An entity with 33 fields therefore cannot ride this wire at all.</p>
+<p>A frame past the budget is sent as text instead. That is safe for the frame and
+not safe on its own for what follows: <strong>a text add carries no slot</strong>, so the
+entities it introduced are not in your table, and the next binary frame names
+them in <code>op:&quot;u&quot;</code> records you have to drop - with a contiguous <code>frame_seq</code> that
+gives you no reason to resync.</p>
+<p>So the server repairs it rather than leaving it to you. The frame after a refused
+one is a <strong>keyframe</strong> - <code>kf: true</code>, all adds - which re-establishes every binding.
+Nothing is required of a client that already applies keyframes the way this guide
+describes. If that keyframe is refused too, the cause is the shape of the game's
+entities rather than one frame, and the zone gives the binary wire up: every
+client on it falls back to text, which carries everything, and the datagram
+plane switches off with it. The zone asks again later on a doubling backoff -
+a minute, then two, up to an hour - so an entity that was briefly unencodable
+costs a pause rather than the rest of the zone's life. A successful retry is
+itself a keyframe, so every client is rebound by it.</p>
+<p>Both outcomes are visible server-side, and neither is silent on the client's
+behalf. If a game seems to be missing the datagram plane, count the fields on its
+widest entity and look for <code>binary world.tick frame refused</code> or
+<code>binary wire disabled for this zone</code> in the server log; both name the zone, the
+distinct-name count and the widest entity.</p>
 <p><strong>Entities are 2-byte slots, and the slot is scoped to the zone.</strong> A record
 carries the full entity id on an <strong>add only</strong>, which is where the binding is
 established; update and remove carry the slot and generation alone.</p>
@@ -739,20 +765,78 @@ authoritative state already includes - is a first-class primitive:</p>
 of <code>payload</code>) and applies the input locally right away (the prediction).</li>
 <li>The server records the highest <code>seq</code> it consumed for that player - a rejected
 input still counts, so a dropped input never strands the client - and sends it
-back on the next broadcast as a <a href="#worldack-server-push"><code>world.ack</code></a>
+back on the next broadcast as a <a href="#world-ack-server-push"><code>world.ack</code></a>
 addressed to that connection alone.</li>
 <li>The client discards every predicted input up to that <code>seq</code> and replays the
 rest on top of the authoritative <code>world.tick</code> state (the reconciliation).</li>
 </ol>
 <p>Set <a href="/docs/world-server"><code>broadcast_interval</code></a> to 1 so the ack returns every tick.</p>
-<p>The ack is addressed to one connection: it is sent only to clients that opted in
-by stamping a <code>seq</code>, and never rides the shared <code>world.tick</code>, so one player's
-input stream is never broadcast to the rest of the zone.</p>
+<p>The ack is addressed to one connection and never rides the shared <code>world.tick</code>,
+so one player's input stream is never broadcast to the rest of the zone. It is
+sent to clients that opted in by stamping a <code>seq</code>, and to clients whose game
+module reports a consumed seq for them - see
+<a href="#client-side-prediction">Batched input and the ack</a>, where numbering the
+steps inside the payload replaces stamping the frame.</p>
 <p><strong><code>seq</code> never goes backwards on a connection.</strong> The high-water mark is recorded
 per zone, and a player is subscribed to their whole interest ring, so during a
 crossing more than one zone can hold a mark for them. The connection drops any
 ack that does not advance the highest <code>seq</code> it has already sent you, so you can
 prune against the value you receive without tracking a maximum yourself.</p>
+<h4 id="batched-input-and-the-ack" tabindex="-1">Batched input and the ack</h4>
+<p>Step 2 says &quot;the highest <code>seq</code> it consumed&quot;, and by default that is the <code>seq</code>
+stamped on the frame: one input frame, one input, nothing to disagree about.</p>
+<p>A client predicting faster than the zone ticks changes that. At 60 Hz against a
+12.5 Hz zone there are roughly five simulation steps per tick, so a frame
+carries a <em>batch</em> of steps rather than one, and a zone that caps how many steps
+it runs per tick parks the rest for the next one. The frame stamp then no longer
+describes what ran:</p>
+<ul>
+<li>Stamp the frame with the <strong>last</strong> seq in the batch and the ack overclaims
+whenever steps are parked. The client discards predicted steps the server has
+not applied yet, cannot replay them, and drifts until something resyncs it.</li>
+<li>Stamp it with the <strong>first</strong> seq and the ack underclaims. The client replays
+steps the server already applied and overshoots on every reconciliation.</li>
+</ul>
+<p>Return the seq you actually consumed and the ack carries that instead:</p>
+<pre><code class="language-erlang">handle_input(PlayerId, #{~&quot;steps&quot; := Steps}, Entities) -&gt;
+    {Entities1, Watermark} = apply_steps(PlayerId, Steps, Entities),
+    {ok, Entities1, Watermark}.
+</code></pre>
+<pre><code class="language-lua">function handle_input(player_id, input, entities)
+  local watermark = apply_steps(input.steps, entities)
+  return entities, watermark
+end
+</code></pre>
+<p>The number is in your client's own sequence space - the same numbering the steps
+inside the payload carry - and must be a non-negative integer no larger than
+2^53-1, the same bound the client-stamped <code>seq</code> is held to. Anything else is
+refused with a warning and the frame stamp is used instead: the value is echoed
+to your client on every broadcast tick, so a wider one would be an encode
+amplifier and unreadable to any SDK holding it in an int64. The rules that come
+with it:</p>
+<ul>
+<li><strong>Report on every input or on none.</strong> Within a tick a report always beats a
+frame stamp, whatever order they arrive in. Across ticks it does not: a tick
+in which you reported nothing records the frame stamp instead, and the ack
+keeps the highest value it has recorded, so one unreported tick pins the ack
+above your watermark for good.</li>
+<li><strong>Reporting acks a client that never stamped a <code>seq</code>.</strong> If your client numbers
+its steps inside the payload it never needs to stamp the frame at all. SDK
+authors: this means <code>world.ack</code> can arrive unsolicited, so a client that never
+opted in must drop it silently rather than log or raise per frame.</li>
+<li><strong>Draining parked steps in <code>zone_tick</code> has no report channel.</strong> The watermark
+rides out on the next input you handle, which a client re-sending
+unacknowledged steps produces every tick - so it costs a tick, except for a
+player at rest, whose final drain stays unacked until they move.</li>
+<li><strong><code>{error, Reason}</code> still acks the frame stamp</strong>, because a client must never
+wait forever on an input the server chose to drop - unless a report already
+landed this tick, which outranks it. Refusing one input does not unrun the
+steps another already consumed. A game that parks should model refusal as
+<code>{ok, Entities, Watermark}</code> instead.</li>
+<li><strong>Deduplicate by the same watermark.</strong> A client that re-sends unacknowledged
+steps for redundancy (what makes an unreliable carrier safe) will hand you
+steps you have already run; skip them, and report the watermark either way.</li>
+</ul>
 <p><strong>If your SDK does not yet surface <code>world.ack</code></strong>, the same reconciliation works
 in userland: write the <code>seq</code> onto the player's entity in <code>handle_input/3</code>
 (<code>entity.last_seq = input.seq</code>) and read it back off the <code>world.tick</code> delta. The
@@ -1351,13 +1435,14 @@ frame that happens to arrive.
 Asking for binary changes `world.tick` and nothing else. `world.ack`,
 `world.terrain`, `match.*`, `module.*` and every `error` stay JSON text on both
 wires, so a binary client is one that handles both frame types, not one that
-stops handling text. A frame the server cannot encode as binary (an entity field
-holding a list or a nested map, for instance) also arrives as text.
+stops handling text. A frame the server cannot encode as binary also arrives as
+text: an entity field holding a list or a nested map, or a frame needing more
+than the 32 field names the dictionary can index.
 
 The uplink is text-only on both wires. A binary frame sent to the server answers
 `error` with reason `binary_uplink_unsupported`.
 
-See [Binary `world.tick`](#binary-worldtick) for the encoding.
+See [Binary `world.tick`](#binary-world-tick) for the encoding.
 
 ### `session.heartbeat`
 
@@ -1504,7 +1589,7 @@ The full match info, including the roster:
 `join_refused` carries the game's own reason string in
 `error.details.refused_reason` when the script gave one. It is game
 vocabulary, never an asobi code - see
-[Refusing a join](https://asobi.dev/docs/lua/api#refusing-a-join).
+[Refusing a join](https://asobi.dev/docs/lua/api#join-player_id-state-or-join-player_id-state-ctx).
 
 ```json
 {"type": "error", "cid": "j-1", "payload": {"reason": "join_refused", "error": {"code": "match.join_refused", "message": "The game refused this join. See `details.refused_reason`.", "details": {"refused_reason": "wrong_code"}}}}
@@ -1564,7 +1649,7 @@ Send game input to the match server.
 {"type": "match.input", "payload": {"action": "move", "x": 10, "y": 5}}
 ```
 
-As with [`world.input`](#worldinput), the `payload` IS the input map. Two
+As with [`world.input`](#world-input), the `payload` IS the input map. Two
 **deprecated** compatibility shapes survive here and will go at the next
 protocol break: a payload whose only key is `data` mapped to an object is
 unwrapped to that object, and one whose only key is `data` mapped to a JSON
@@ -1606,7 +1691,7 @@ request that caused it when there was one:
   several common failures. On this page that covers the world capacity pair
   (`world_capacity_reached`, `player_world_limit_reached`, which REST answers
   as `world.capacity_reached` and `world.player_limit_reached`) and every
-  join-context rejection listed under [Join context](#join-context). Match a
+  join-context rejection listed under [Join context](#match-join). Match a
   reason string on `details.reason` for those, not a code.
 - `error.message` is prose for a human reading a log. Do not parse it.
 - `error.details` is **always** an object, `{}` when there is nothing to add.
@@ -1921,7 +2006,7 @@ reason `invalid_payload`. It is not silently treated as empty input.
 
 For client-side prediction, add an optional `seq` *alongside* `payload` (a
 sibling, so "the payload IS the input map" stays true). The server echoes the
-highest consumed `seq` back as a [`world.ack`](#worldack-server-push); see
+highest consumed `seq` back as a [`world.ack`](#world-ack-server-push); see
 [Client-side prediction](#client-side-prediction). A `seq` that is not a
 non-negative integer below 2^53 is ignored.
 
@@ -1998,13 +2083,13 @@ Two frames are applied **ungated**, without the sequence check:
 - A frame with no `frame_seq` at all, which is the removal list you get for the
   zone you are leaving. Gating it would leave you holding ghosts forever.
 
-On a gap, send [`world.resync`](#worldresync) for that zone and you get a fresh
+On a gap, send [`world.resync`](#world-resync) for that zone and you get a fresh
 keyframe.
 
 ### Binary `world.tick`
 
 A client that negotiated `"wire": "binary"` at
-[`session.connect`](#choosing-a-wire) receives `world.tick` as a **WebSocket
+[`session.connect`](#session-connect) receives `world.tick` as a **WebSocket
 binary frame** carrying the same information in about a quarter of the bytes, and
 materially cheaper to decode: measured against native JSON, 2.4x faster in
 Godot's GDScript and 33x faster than the pure-Lua parser Defold and LOVE ship.
@@ -2047,6 +2132,35 @@ A `2` frame is the leave-removal list, and it is applied ungated.
 self-describing: nothing is negotiated up front and nothing survives a
 reconnect.
 
+**Five bits of index means a frame carries at most 32 distinct field names**, and
+this is a budget worth knowing before you hit it. It is counted across the whole
+frame, not per entity, but one entity is what usually spends it: a delta names
+only the fields that changed, while the `add` that introduces an entity names all
+of them. An entity with 33 fields therefore cannot ride this wire at all.
+
+A frame past the budget is sent as text instead. That is safe for the frame and
+not safe on its own for what follows: **a text add carries no slot**, so the
+entities it introduced are not in your table, and the next binary frame names
+them in `op:"u"` records you have to drop - with a contiguous `frame_seq` that
+gives you no reason to resync.
+
+So the server repairs it rather than leaving it to you. The frame after a refused
+one is a **keyframe** - `kf: true`, all adds - which re-establishes every binding.
+Nothing is required of a client that already applies keyframes the way this guide
+describes. If that keyframe is refused too, the cause is the shape of the game's
+entities rather than one frame, and the zone gives the binary wire up: every
+client on it falls back to text, which carries everything, and the datagram
+plane switches off with it. The zone asks again later on a doubling backoff -
+a minute, then two, up to an hour - so an entity that was briefly unencodable
+costs a pause rather than the rest of the zone's life. A successful retry is
+itself a keyframe, so every client is rebound by it.
+
+Both outcomes are visible server-side, and neither is silent on the client's
+behalf. If a game seems to be missing the datagram plane, count the fields on its
+widest entity and look for `binary world.tick frame refused` or
+`binary wire disabled for this zone` in the server log; both name the zone, the
+distinct-name count and the widest entity.
+
 **Entities are 2-byte slots, and the slot is scoped to the zone.** A record
 carries the full entity id on an **add only**, which is where the binding is
 established; update and remove carry the slot and generation alone.
@@ -2080,22 +2194,87 @@ authoritative state already includes - is a first-class primitive:
    of `payload`) and applies the input locally right away (the prediction).
 2. The server records the highest `seq` it consumed for that player - a rejected
    input still counts, so a dropped input never strands the client - and sends it
-   back on the next broadcast as a [`world.ack`](#worldack-server-push)
+   back on the next broadcast as a [`world.ack`](#world-ack-server-push)
    addressed to that connection alone.
 3. The client discards every predicted input up to that `seq` and replays the
    rest on top of the authoritative `world.tick` state (the reconciliation).
 
 Set [`broadcast_interval`](https://asobi.dev/docs/world-server) to 1 so the ack returns every tick.
 
-The ack is addressed to one connection: it is sent only to clients that opted in
-by stamping a `seq`, and never rides the shared `world.tick`, so one player's
-input stream is never broadcast to the rest of the zone.
+The ack is addressed to one connection and never rides the shared `world.tick`,
+so one player's input stream is never broadcast to the rest of the zone. It is
+sent to clients that opted in by stamping a `seq`, and to clients whose game
+module reports a consumed seq for them - see
+[Batched input and the ack](#client-side-prediction), where numbering the
+steps inside the payload replaces stamping the frame.
 
 **`seq` never goes backwards on a connection.** The high-water mark is recorded
 per zone, and a player is subscribed to their whole interest ring, so during a
 crossing more than one zone can hold a mark for them. The connection drops any
 ack that does not advance the highest `seq` it has already sent you, so you can
 prune against the value you receive without tracking a maximum yourself.
+
+#### Batched input and the ack
+
+Step 2 says "the highest `seq` it consumed", and by default that is the `seq`
+stamped on the frame: one input frame, one input, nothing to disagree about.
+
+A client predicting faster than the zone ticks changes that. At 60 Hz against a
+12.5 Hz zone there are roughly five simulation steps per tick, so a frame
+carries a *batch* of steps rather than one, and a zone that caps how many steps
+it runs per tick parks the rest for the next one. The frame stamp then no longer
+describes what ran:
+
+- Stamp the frame with the **last** seq in the batch and the ack overclaims
+  whenever steps are parked. The client discards predicted steps the server has
+  not applied yet, cannot replay them, and drifts until something resyncs it.
+- Stamp it with the **first** seq and the ack underclaims. The client replays
+  steps the server already applied and overshoots on every reconciliation.
+
+Return the seq you actually consumed and the ack carries that instead:
+
+```erlang
+handle_input(PlayerId, #{~"steps" := Steps}, Entities) ->
+    {Entities1, Watermark} = apply_steps(PlayerId, Steps, Entities),
+    {ok, Entities1, Watermark}.
+```
+
+```lua
+function handle_input(player_id, input, entities)
+  local watermark = apply_steps(input.steps, entities)
+  return entities, watermark
+end
+```
+
+The number is in your client's own sequence space - the same numbering the steps
+inside the payload carry - and must be a non-negative integer no larger than
+2^53-1, the same bound the client-stamped `seq` is held to. Anything else is
+refused with a warning and the frame stamp is used instead: the value is echoed
+to your client on every broadcast tick, so a wider one would be an encode
+amplifier and unreadable to any SDK holding it in an int64. The rules that come
+with it:
+
+- **Report on every input or on none.** Within a tick a report always beats a
+  frame stamp, whatever order they arrive in. Across ticks it does not: a tick
+  in which you reported nothing records the frame stamp instead, and the ack
+  keeps the highest value it has recorded, so one unreported tick pins the ack
+  above your watermark for good.
+- **Reporting acks a client that never stamped a `seq`.** If your client numbers
+  its steps inside the payload it never needs to stamp the frame at all. SDK
+  authors: this means `world.ack` can arrive unsolicited, so a client that never
+  opted in must drop it silently rather than log or raise per frame.
+- **Draining parked steps in `zone_tick` has no report channel.** The watermark
+  rides out on the next input you handle, which a client re-sending
+  unacknowledged steps produces every tick - so it costs a tick, except for a
+  player at rest, whose final drain stays unacked until they move.
+- **`{error, Reason}` still acks the frame stamp**, because a client must never
+  wait forever on an input the server chose to drop - unless a report already
+  landed this tick, which outranks it. Refusing one input does not unrun the
+  steps another already consumed. A game that parks should model refusal as
+  `{ok, Entities, Watermark}` instead.
+- **Deduplicate by the same watermark.** A client that re-sends unacknowledged
+  steps for redundancy (what makes an unreliable carrier safe) will hand you
+  steps you have already run; skip them, and report the watermark either way.
 
 **If your SDK does not yet surface `world.ack`**, the same reconciliation works
 in userland: write the `seq` onto the player's entity in `handle_input/3`
